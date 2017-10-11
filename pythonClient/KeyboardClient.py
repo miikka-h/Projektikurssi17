@@ -7,18 +7,19 @@ try:
     s.connect(("localhost", 25000))
     server = "localhost"
     message = ""
-    snd = message #Encoding.ASCII.GetBytes(message)
+    snd = message  # Encoding.ASCII.GetBytes(message)
 
-    while (message != "exit" ):
+    while (message != "exit"):
         message = input()
-        snd = message.encode("ascii") #Encoding.ASCII.GetBytes(message)
+        snd = message.encode("ascii")  # Encoding.ASCII.GetBytes(message)
         s.send(snd)
         paluu = s.recv(128)
         print(paluu)
-        #sivu = #Encoding.ASCII.GetString(rec, 0, paljon)
-        #palaset = sivu.Split()
-        #loput = palaset
-        #loput = palaset.Skip(1).ToArray()
+        # sivu = #Encoding.ASCII.GetString(rec, 0, paljon)
+        # palaset = sivu.Split()
+        # loput = palaset
+        # loput = palaset.Skip(1).ToArray()
+
 
 finally:
     s.close()

@@ -34,10 +34,10 @@ EVDEV_TO_HID_MAP = {
 
 class HidReport:
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.clear()
 
-    def clear(self):
+    def clear(self) -> None:
         self.left_control = False
         self.left_shift = False
         self.left_alt = False
@@ -71,16 +71,16 @@ class HidReport:
 
         return bytes([bit_flag])
 
-    def add_key(self, evdev_key: int):
+    def add_key(self, evdev_key: int) -> None:
         if len(self.keycodes) >= 6:
             return
 
         self.keycodes[evdev_key] = EVDEV_TO_HID_MAP[evdev_key]
 
-    def remove_key(self, evdev_key: int):
+    def remove_key(self, evdev_key: int) -> None:
         del self.keycodes[evdev_key]
 
-    def send(self):
+    def send(self) -> None:
         byte_1 = self.modifier_keys()
         print("modifier_keys: {0:#b}".format(byte_1[0]))
 

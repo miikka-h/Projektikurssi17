@@ -49,6 +49,8 @@ class HidReport:
 
         self.keycodes = {}
 
+        self.report = bytearray(8)
+
     def modifier_keys(self) -> bytes:
         bit_flag = 0x00
 
@@ -75,17 +77,29 @@ class HidReport:
         if len(self.keycodes) >= 6:
             return
 
-        self.keycodes[evdev_key] = EVDEV_TO_HID_MAP[evdev_key]
+        try:
+            self.keycodes[evdev_key] = EVDEV_TO_HID_MAP[evdev_key]
+        except KeyError:
+            print("unknown key: " + str(evdev_key))
+
 
     def remove_key(self, evdev_key: int) -> None:
-        del self.keycodes[evdev_key]
+        try:
+            del self.keycodes[evdev_key]
+        except KeyError:
+            print("unknown key: " + str(evdev_key))
 
-    def send(self) -> None:
-        byte_1 = self.modifier_keys()
-        print("modifier_keys: {0:#b}".format(byte_1[0]))
+    def update_report(self) -> None:
+        self.report[0] = self.modifier_keys()[0]
 
-        for key in self.keycodes:
-            print("keycode: {0:#x}".format(self.keycodes[key]))
+        i = 2
+
+        for _, item in self.keycodes.items():
+            self.report[i] = item
+            i += 1
+
+        for j in range(i, 8):
+            self.report[j] = 0x00
 
 
 

@@ -9,8 +9,9 @@ import time
 import evdev
 
 from web_server import WebServer
-from evdev import KeyEvent, ecodes
+from evdev import ecodes
 from hid_report import HidReport
+
 
 def main():
 
@@ -59,7 +60,8 @@ def main():
 
     print("waiting for client")
 
-    (connection_socket, address) = (None, None)
+    connection_socket = None
+    address = None
 
     try:
         (connection_socket, address) = server_socket.accept()
@@ -127,7 +129,6 @@ def main():
         connection_socket.close()
         server_socket.close()
         input_device.close()
-
 
 
 if __name__ == "__main__":

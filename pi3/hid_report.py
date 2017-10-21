@@ -82,7 +82,6 @@ class HidReport:
         except KeyError:
             print("unknown key: " + str(evdev_key))
 
-
     def remove_key(self, evdev_key: int) -> None:
         try:
             del self.keycodes[evdev_key]

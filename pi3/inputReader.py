@@ -1,8 +1,27 @@
 import evdev
 
-device = evdev.InputDevice('/dev/input/event1')
-print(device)
 
-for event in device.read_loop():
-    if event.type == evdev.ecodes.EV_KEY:
-         print(evdev.categorize(event))
+class hasKeyboard:
+
+    def __init__(self):
+        print("")
+
+    def evaluator():
+        devices = [evdev.InputDevice(fn) for fn in evdev.list_devices()]
+        for device in devices:
+            capabilityMap = device.capabilities(True, False)
+            print(capabilityMap)
+
+
+class Reader:
+
+    def __init__(self, device):
+        self.device = device
+
+    device = evdev.InputDevice('/dev/input/event3')
+    print(device)
+
+    def reader(self):
+        for event in self.device.read_loop():
+            if event.type == evdev.ecodes.EV_KEY:
+                print(evdev.categorize(event))

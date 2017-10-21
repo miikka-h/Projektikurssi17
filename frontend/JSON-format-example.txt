@@ -1,0 +1,654 @@
+{
+	"profileName": "testi",
+	"profileID": 1,
+	"keyData": [
+		{
+			"keyID": 0,
+			"keyName": "Esc",
+			"mappedID": 0,
+			"mappedName": "Esc"
+		},
+		{
+			"keyID": 1,
+			"keyName": "F1",
+			"mappedID": 1,
+			"mappedName": "F1"
+		},
+		{
+			"keyID": 2,
+			"keyName": "F2",
+			"mappedID": 2,
+			"mappedName": "F2"
+		},
+		{
+			"keyID": 3,
+			"keyName": "F3",
+			"mappedID": 3,
+			"mappedName": "F3"
+		},
+		{
+			"keyID": 4,
+			"keyName": "F4",
+			"mappedID": 4,
+			"mappedName": "F4"
+		},
+		{
+			"keyID": 5,
+			"keyName": "F5",
+			"mappedID": 5,
+			"mappedName": "F5"
+		},
+		{
+			"keyID": 6,
+			"keyName": "F6",
+			"mappedID": 6,
+			"mappedName": "F6"
+		},
+		{
+			"keyID": 7,
+			"keyName": "F7",
+			"mappedID": 7,
+			"mappedName": "F7"
+		},
+		{
+			"keyID": 8,
+			"keyName": "F8",
+			"mappedID": 8,
+			"mappedName": "F8"
+		},
+		{
+			"keyID": 9,
+			"keyName": "F9",
+			"mappedID": 9,
+			"mappedName": "F9"
+		},
+		{
+			"keyID": 10,
+			"keyName": "F10",
+			"mappedID": 10,
+			"mappedName": "F10"
+		},
+		{
+			"keyID": 11,
+			"keyName": "F11",
+			"mappedID": 11,
+			"mappedName": "F11"
+		},
+		{
+			"keyID": 12,
+			"keyName": "F12",
+			"mappedID": 12,
+			"mappedName": "F12"
+		},
+		{
+			"keyID": 13,
+			"keyName": "Print Screen",
+			"mappedID": 13,
+			"mappedName": "Print Screen"
+		},
+		{
+			"keyID": 14,
+			"keyName": "Scroll Lock",
+			"mappedID": 14,
+			"mappedName": "Scroll Lock"
+		},
+		{
+			"keyID": 15,
+			"keyName": "Pause",
+			"mappedID": 15,
+			"mappedName": "Pause"
+		},
+		{
+			"keyID": 16,
+			"keyName": "§",
+			"mappedID": 16,
+			"mappedName": "§"
+		},
+		{
+			"keyID": 17,
+			"keyName": "1",
+			"mappedID": 17,
+			"mappedName": "1"
+		},
+		{
+			"keyID": 18,
+			"keyName": "2",
+			"mappedID": 18,
+			"mappedName": "2"
+		},
+		{
+			"keyID": 19,
+			"keyName": "3",
+			"mappedID": 19,
+			"mappedName": "3"
+		},
+		{
+			"keyID": 20,
+			"keyName": "4",
+			"mappedID": 20,
+			"mappedName": "4"
+		},
+		{
+			"keyID": 21,
+			"keyName": "5",
+			"mappedID": 21,
+			"mappedName": "5"
+		},
+		{
+			"keyID": 22,
+			"keyName": "6",
+			"mappedID": 22,
+			"mappedName": "6"
+		},
+		{
+			"keyID": 23,
+			"keyName": "7",
+			"mappedID": 23,
+			"mappedName": "7"
+		},
+		{
+			"keyID": 24,
+			"keyName": "8",
+			"mappedID": 24,
+			"mappedName": "8"
+		},
+		{
+			"keyID": 25,
+			"keyName": "9",
+			"mappedID": 25,
+			"mappedName": "9"
+		},
+		{
+			"keyID": 26,
+			"keyName": "0",
+			"mappedID": 26,
+			"mappedName": "0"
+		},
+		{
+			"keyID": 27,
+			"keyName": "+",
+			"mappedID": 27,
+			"mappedName": "+"
+		},
+		{
+			"keyID": 28,
+			"keyName": "´",
+			"mappedID": 28,
+			"mappedName": "´"
+		},
+		{
+			"keyID": 29,
+			"keyName": "<=",
+			"mappedID": 29,
+			"mappedName": "<="
+		},
+		{
+			"keyID": 30,
+			"keyName": "Insert",
+			"mappedID": 30,
+			"mappedName": "Insert"
+		},
+		{
+			"keyID": 31,
+			"keyName": "Home",
+			"mappedID": 31,
+			"mappedName": "Home"
+		},
+		{
+			"keyID": 32,
+			"keyName": "Page Up",
+			"mappedID": 32,
+			"mappedName": "Page Up"
+		},
+		{
+			"keyID": 33,
+			"keyName": "Num Lock",
+			"mappedID": 33,
+			"mappedName": "Num Lock"
+		},
+		{
+			"keyID": 34,
+			"keyName": "/",
+			"mappedID": 34,
+			"mappedName": "/"
+		},
+		{
+			"keyID": 35,
+			"keyName": "*",
+			"mappedID": 35,
+			"mappedName": "*"
+		},
+		{
+			"keyID": 36,
+			"keyName": "num-",
+			"mappedID": 36,
+			"mappedName": "num-"
+		},
+		{
+			"keyID": 37,
+			"keyName": "Tab",
+			"mappedID": 37,
+			"mappedName": "Tab"
+		},
+		{
+			"keyID": 38,
+			"keyName": "q",
+			"mappedID": 38,
+			"mappedName": "q"
+		},
+		{
+			"keyID": 39,
+			"keyName": "w",
+			"mappedID": 39,
+			"mappedName": "w"
+		},
+		{
+			"keyID": 40,
+			"keyName": "e",
+			"mappedID": 40,
+			"mappedName": "e"
+		},
+		{
+			"keyID": 41,
+			"keyName": "r",
+			"mappedID": 41,
+			"mappedName": "r"
+		},
+		{
+			"keyID": 42,
+			"keyName": "t",
+			"mappedID": 42,
+			"mappedName": "t"
+		},
+		{
+			"keyID": 43,
+			"keyName": "y",
+			"mappedID": 43,
+			"mappedName": "y"
+		},
+		{
+			"keyID": 44,
+			"keyName": "u",
+			"mappedID": 44,
+			"mappedName": "u"
+		},
+		{
+			"keyID": 45,
+			"keyName": "i",
+			"mappedID": 45,
+			"mappedName": "i"
+		},
+		{
+			"keyID": 46,
+			"keyName": "o",
+			"mappedID": 46,
+			"mappedName": "o"
+		},
+		{
+			"keyID": 47,
+			"keyName": "p",
+			"mappedID": 47,
+			"mappedName": "p"
+		},
+		{
+			"keyID": 48,
+			"keyName": "å",
+			"mappedID": 48,
+			"mappedName": "å"
+		},
+		{
+			"keyID": 49,
+			"keyName": "^",
+			"mappedID": 49,
+			"mappedName": "^"
+		},
+		{
+			"keyID": 50,
+			"keyName": "Enter",
+			"mappedID": 50,
+			"mappedName": "Enter"
+		},
+		{
+			"keyID": 51,
+			"keyName": "Del",
+			"mappedID": 51,
+			"mappedName": "Del"
+		},
+		{
+			"keyID": 52,
+			"keyName": "End",
+			"mappedID": 52,
+			"mappedName": "End"
+		},
+		{
+			"keyID": 53,
+			"keyName": "Page Down",
+			"mappedID": 53,
+			"mappedName": "Page Down"
+		},
+		{
+			"keyID": 54,
+			"keyName": "num7",
+			"mappedID": 54,
+			"mappedName": "num7"
+		},
+		{
+			"keyID": 55,
+			"keyName": "num8",
+			"mappedID": 55,
+			"mappedName": "num8"
+		},
+		{
+			"keyID": 56,
+			"keyName": "num9",
+			"mappedID": 56,
+			"mappedName": "num9"
+		},
+		{
+			"keyID": 57,
+			"keyName": "num+",
+			"mappedID": 57,
+			"mappedName": "num+"
+		},
+		{
+			"keyID": 58,
+			"keyName": "Caps",
+			"mappedID": 58,
+			"mappedName": "Caps"
+		},
+		{
+			"keyID": 59,
+			"keyName": "a",
+			"mappedID": 59,
+			"mappedName": "a"
+		},
+		{
+			"keyID": 60,
+			"keyName": "s",
+			"mappedID": 60,
+			"mappedName": "s"
+		},
+		{
+			"keyID": 61,
+			"keyName": "d",
+			"mappedID": 61,
+			"mappedName": "d"
+		},
+		{
+			"keyID": 62,
+			"keyName": "f",
+			"mappedID": 62,
+			"mappedName": "f"
+		},
+		{
+			"keyID": 63,
+			"keyName": "g",
+			"mappedID": 63,
+			"mappedName": "g"
+		},
+		{
+			"keyID": 64,
+			"keyName": "h",
+			"mappedID": 64,
+			"mappedName": "h"
+		},
+		{
+			"keyID": 65,
+			"keyName": "j",
+			"mappedID": 65,
+			"mappedName": "j"
+		},
+		{
+			"keyID": 66,
+			"keyName": "k",
+			"mappedID": 66,
+			"mappedName": "k"
+		},
+		{
+			"keyID": 67,
+			"keyName": "l",
+			"mappedID": 67,
+			"mappedName": "l"
+		},
+		{
+			"keyID": 68,
+			"keyName": "ö",
+			"mappedID": 68,
+			"mappedName": "ö"
+		},
+		{
+			"keyID": 69,
+			"keyName": "ä",
+			"mappedID": 69,
+			"mappedName": "ä"
+		},
+		{
+			"keyID": 70,
+			"keyName": "'",
+			"mappedID": 70,
+			"mappedName": "'"
+		},
+		{
+			"keyID": 71,
+			"keyName": "Enter",
+			"mappedID": 71,
+			"mappedName": "Enter"
+		},
+		{
+			"keyID": 72,
+			"keyName": "num4",
+			"mappedID": 72,
+			"mappedName": "num4"
+		},
+		{
+			"keyID": 73,
+			"keyName": "num5",
+			"mappedID": 73,
+			"mappedName": "num5"
+		},
+		{
+			"keyID": 74,
+			"keyName": "num6",
+			"mappedID": 74,
+			"mappedName": "num6"
+		},
+		{
+			"keyID": 75,
+			"keyName": "num+",
+			"mappedID": 75,
+			"mappedName": "num+"
+		},
+		{
+			"keyID": 76,
+			"keyName": "Shift",
+			"mappedID": 76,
+			"mappedName": "Shift"
+		},
+		{
+			"keyID": 77,
+			"keyName": "<",
+			"mappedID": 77,
+			"mappedName": "<"
+		},
+		{
+			"keyID": 78,
+			"keyName": "z",
+			"mappedID": 78,
+			"mappedName": "z"
+		},
+		{
+			"keyID": 79,
+			"keyName": "x",
+			"mappedID": 79,
+			"mappedName": "x"
+		},
+		{
+			"keyID": 80,
+			"keyName": "c",
+			"mappedID": 80,
+			"mappedName": "c"
+		},
+		{
+			"keyID": 81,
+			"keyName": "v",
+			"mappedID": 81,
+			"mappedName": "v"
+		},
+		{
+			"keyID": 82,
+			"keyName": "b",
+			"mappedID": 82,
+			"mappedName": "b"
+		},
+		{
+			"keyID": 83,
+			"keyName": "n",
+			"mappedID": 83,
+			"mappedName": "n"
+		},
+		{
+			"keyID": 84,
+			"keyName": "m",
+			"mappedID": 84,
+			"mappedName": "m"
+		},
+		{
+			"keyID": 85,
+			"keyName": ",",
+			"mappedID": 85,
+			"mappedName": ","
+		},
+		{
+			"keyID": 86,
+			"keyName": ".",
+			"mappedID": 86,
+			"mappedName": "."
+		},
+		{
+			"keyID": 87,
+			"keyName": "-",
+			"mappedID": 87,
+			"mappedName": "-"
+		},
+		{
+			"keyID": 88,
+			"keyName": "RShift",
+			"mappedID": 88,
+			"mappedName": "RShift"
+		},
+		{
+			"keyID": 89,
+			"keyName": "Up",
+			"mappedID": 89,
+			"mappedName": "Up"
+		},
+		{
+			"keyID": 90,
+			"keyName": "num1",
+			"mappedID": 90,
+			"mappedName": "num1"
+		},
+		{
+			"keyID": 91,
+			"keyName": "num2",
+			"mappedID": 91,
+			"mappedName": "num2"
+		},
+		{
+			"keyID": 92,
+			"keyName": "num3",
+			"mappedID": 92,
+			"mappedName": "num3"
+		},
+		{
+			"keyID": 93,
+			"keyName": "numEnter",
+			"mappedID": 93,
+			"mappedName": "numEnter"
+		},
+		{
+			"keyID": 94,
+			"keyName": "Ctrl",
+			"mappedID": 94,
+			"mappedName": "Ctrl"
+		},
+		{
+			"keyID": 95,
+			"keyName": "Win/Function",
+			"mappedID": 95,
+			"mappedName": "Win/Function"
+		},
+		{
+			"keyID": 96,
+			"keyName": "Alt",
+			"mappedID": 96,
+			"mappedName": "Alt"
+		},
+		{
+			"keyID": 97,
+			"keyName": "Space",
+			"mappedID": 97,
+			"mappedName": "Space"
+		},
+		{
+			"keyID": 98,
+			"keyName": "RAlt",
+			"mappedID": 98,
+			"mappedName": "RAlt"
+		},
+		{
+			"keyID": 99,
+			"keyName": "win/Function",
+			"mappedID": 99,
+			"mappedName": "win/Function"
+		},
+		{
+			"keyID": 100,
+			"keyName": "Menu",
+			"mappedID": 100,
+			"mappedName": "Menu"
+		},
+		{
+			"keyID": 101,
+			"keyName": "Ctrl",
+			"mappedID": 101,
+			"mappedName": "Ctrl"
+		},
+		{
+			"keyID": 102,
+			"keyName": "Left",
+			"mappedID": 102,
+			"mappedName": "Left"
+		},
+		{
+			"keyID": 103,
+			"keyName": "Down",
+			"mappedID": 103,
+			"mappedName": "Down"
+		},
+		{
+			"keyID": 104,
+			"keyName": "Right",
+			"mappedID": 104,
+			"mappedName": "Right"
+		},
+		{
+			"keyID": 105,
+			"keyName": "num0",
+			"mappedID": 105,
+			"mappedName": "num0"
+		},
+		{
+			"keyID": 106,
+			"keyName": "numDel",
+			"mappedID": 106,
+			"mappedName": "numDel"
+		},
+		{
+			"keyID": 107,
+			"keyName": "numEnter",
+			"mappedID": 107,
+			"mappedName": "numEnter"
+		}
+	]
+}

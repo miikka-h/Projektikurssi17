@@ -1,0 +1,87 @@
+.rowwrapper {
+    display:inline-flex;
+    height:30px;
+    padding-bottom:5px;
+}
+.buttonwrapper {
+    display:inline-block;
+    height:30px;
+    width:30px;
+    padding-right: 5px;
+    overflow:hidden;
+}
+.keyboardwrapper {
+    border: 5px solid;
+    background-color: rgba(40,40,40,0.8);
+    display:inline-block;
+    width:950px;
+    float:right;
+}
+.keybutton {
+    padding: 0px;
+    height:30px;
+}
+.inputwrapper {
+    height: 2px;
+    background-color: rgba(40,40,40,0.8);
+    border: 5px solid;
+    width: 950px;
+    height:255px;
+    margin-bottom: 5px;
+    float:right;
+}
+.profilewrapper {
+    width: 200px;
+    background-color: rgba(40,40,40,0.8);
+    height: 255px;
+    border: solid 5px;
+    display: inline-block;
+    padding-right: 5px;
+    float:left;
+    margin-bottom:5px;
+}
+.keyexpwrapper {
+    padding-top: 5px;
+    width: 200px;
+    background-color: rgba(40,40,40,0.8);
+    height: 240px;
+    border: solid 5px;
+    display: inline-block;
+    padding-right: 5px;
+    float:left;
+}
+.wrapper {
+    width:1185px;
+}
+.submitchangeswrapper {
+    display:inline-block;
+    margin-top: 5px;
+    width:1175px;
+    height:20px;
+    background-color: rgba(40,40,40,0.8);
+    border: solid 5px;
+}
+.inputchange {
+    width:83%;
+}
+.keyexpl {
+    width:5%;
+    display:inline-block;
+}
+.submitbutton {
+    width:10%;
+    padding:0px;
+}
+.innerwrapper {
+    width:100%;
+    height:100%;
+    overflow:auto;
+}
+.card {
+    width:95%;
+    height:auto;
+    display:inline-block;
+    background-color:(255,255,255,0.5);
+    border: solid 1px;
+    transition: background-color 0.25s;
+}

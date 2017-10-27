@@ -60,6 +60,7 @@ try:
             exit(-1)
 
         file.write(data)
+        file.flush()
 except OSError as error:
     print("error: " + error.strerror)
     file.close()

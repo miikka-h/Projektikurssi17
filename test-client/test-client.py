@@ -5,7 +5,7 @@ import socket
 
 HID_REPORT_SIZE_BYTES = 8
 
-if len(sys.argv) < 2:
+if len(sys.argv) <= 2:
     print("give server address and server port number as arguments")
     exit(-1)
 

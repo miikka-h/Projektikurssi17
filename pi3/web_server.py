@@ -1,6 +1,5 @@
 
 
-from http import HTTPStatus
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from queue import Queue
 from threading import Event
@@ -43,7 +42,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         message_bytes = b"<html><body><h1>Hello world</h1></body></html>"
 
-        self.send_response(HTTPStatus.OK)
+        self.send_response(200)
         self.send_header("Content-Length", str(len(message_bytes)))
         self.send_header("Content-Encoding", "UTF-8")
         self.send_header("Content-Type", "text/html; charset=utf-8")
@@ -63,7 +62,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         # Send new settings to main thread.
         self.server.settings_queue.put_nowait(self.server.settings)
 
-        self.send_response(HTTPStatus.OK)
+        self.send_response(200)
         self.send_header("Content-Length", "0")
         self.end_headers()
         print("response sent")

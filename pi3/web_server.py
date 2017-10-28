@@ -1,8 +1,8 @@
-
-
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from queue import Queue
 from threading import Event
+import keyprofile
+import json
 
 # Import Tuple type which is used in optional function type annotations.
 from typing import Tuple
@@ -21,9 +21,7 @@ class WebServer(HTTPServer):
         # Some object attributes specific to this class. You can modify
         # them from RequestHandler's methods.
         self.settings_queue = settings_queue
-        self.settings = {
-            "profile_name": "TODO: real settings"
-        }
+        self.settings = keyprofile.settings
 
         # Check exit event every 0.5 seconds if there is no new TCP connections.
         self.timeout = 0.5
@@ -55,30 +53,48 @@ class RequestHandler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:
         # Print some information about the HTTP request.
         print("GET")
-        print("path: " + self.path)
+        print("path: " + self.path) 
         print("client_address: " + str(self.client_address))
         print("request_version: " + self.request_version)
         print("headers: " + str(self.headers))
 
-        message_bytes = b"<html><body><h1>Hello world</h1></body></html>"
+        
+        
+        if self.path == "/json.api":
+            message = json.dumps(self.server.settings)
+            message_bytearray = bytearray()
+            message_bytearray.extend(map(ord, message))
+             # 200 is HTTP status code for successfull request.
+            self.send_response(200)
+            # Content-Length is length of the HTTP message body in bytes.
+            self.send_header("Content-Length", str(len(message_bytearray)))
+            self.send_header("Content-Encoding", "UTF-8")
+            self.send_header("Content-Type", "text/json; charset=utf-8")
+            self.end_headers()
+            # Write HTTP message body which is the HTML web page.
+            self.wfile.write(message_bytearray)
+            self.wfile.flush()
+            print("response sent")
+        else:
+            message_bytearray = b"<html><body><h1>Hello world</h1></body></html>"
+            # 200 is HTTP status code for successfull request.
+            self.send_response(200)
+            # Content-Length is length of the HTTP message body in bytes.
+            self.send_header("Content-Length", str(len(message_bytearray)))
+            self.send_header("Content-Encoding", "UTF-8")
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.end_headers()
 
-        # 200 is HTTP status code for successfull request.
-        self.send_response(200)
-        # Content-Length is length of the HTTP message body in bytes.
-        self.send_header("Content-Length", str(len(message_bytes)))
-        self.send_header("Content-Encoding", "UTF-8")
-        self.send_header("Content-Type", "text/html; charset=utf-8")
-        self.end_headers()
-
-        # Write HTTP message body which is the HTML web page.
-        self.wfile.write(message_bytes)
-        self.wfile.flush()
-        print("response sent")
+            # Write HTTP message body which is the HTML web page.
+            self.wfile.write(message_bytearray)
+            self.wfile.flush()
+            print("response sent")
 
     # Handler for HTTP POST requests.
     def do_POST(self) -> None:
         print("POST")
         print("path: " + self.path)
+        keyprofile_data = self.path[self.path.index("?")+1:]
         print("client_address: " + str(self.client_address))
         print("request_version: " + self.request_version)
         print("headers: " + str(self.headers))
@@ -90,4 +106,5 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", "0")
         self.end_headers()
         print("response sent")
+
 

@@ -91,14 +91,14 @@
 }
 .card {
     width:95%;
-    height:30px;
+    height:10%;
     display:inline-block;
     background-color:(255,255,255,0.5);
     border: solid 1px;
     transition: background-color 0.25s;
 }
 .cardclicker {
-   display: inline-block;
+display: inline-block;
 min-width: 80%;
 height: 100%;
 }

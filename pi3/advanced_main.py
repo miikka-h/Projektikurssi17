@@ -11,6 +11,7 @@ import evdev
 from web_server import WebServer
 from evdev import ecodes
 from hid_report import HidReport
+from device_finder import FindDevices
 
 input_devices = []
 
@@ -18,10 +19,12 @@ def main():
 
     try:
 
-        if len(sys.argv) < 2:
-            print("give evdev device file path as argument")
-            exit(-1)
+        # if len(sys.argv) < 2:
+        #    print("give evdev device file path as argument")
+        #    exit(-1)
 
+        device = Devices()
+        
         # Firts we load all necessary components and form connections.
 
         server = Server()
@@ -39,10 +42,6 @@ def main():
 
         print("waiting for client")
 
-        # Initialize input event reading.
-        input_device = evdev.InputDevice(sys.argv[1])
-        print(input_device)
-
         socket_out.findConnection()
         print("client from " + str(socket_out.address) + " connected")
 
@@ -51,7 +50,7 @@ def main():
 
 
         # Actual server logic loop.
-        run(server, socket_out, hid_report, input_device)
+        run(server, socket_out, hid_report)
 
     except KeyboardInterrupt:
         # handle ctrl-c
@@ -61,11 +60,21 @@ def main():
         exit(0)
 
 
-def run(server, socket_out, hid_report, input_device):
+def run(server, socket_out, hid_report):
 
     clear_keys = True
 
     while True:
+
+        #
+        #Initialize input event reading.
+        #input_device = evdev.InputDevice(sys.argv[1])
+        #print(input_device)
+        #
+        #
+        
+
+        
         try:
             new_settings = server.settings_queue.get(block=False)
             print(str(new_settings))
@@ -109,6 +118,19 @@ def run(server, socket_out, hid_report, input_device):
             time.sleep(0.01)
 
 
+class Devices():
+
+    def __init__(self):
+        device_queue = Queue()
+        self.exit_event = Event()
+        self.device_search_thread = Thread(group=None, target=FindDevices, args=(device_queue, exit_event))
+        self.device_search_thread.start()
+
+    def close(self):
+        self.exit_event.set()
+        self.device_search_thread.join()
+        
+
 class Socket_out():
 
     def __init__(self):
@@ -132,7 +154,7 @@ class Server():
         self.exit_event = Event()
         web_server_settings = ("", 8080)
         self.settings_queue = Queue()
-        self.web_server_thread =Thread(group=None, target=WebServer, args=(web_server_settings, self.settings_queue, self.exit_event))
+        self.web_server_thread = Thread(group=None, target=WebServer, args=(web_server_settings, self.settings_queue, self.exit_event))
         self.web_server_thread.start()
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 

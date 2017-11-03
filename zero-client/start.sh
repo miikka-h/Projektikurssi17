@@ -1,6 +1,9 @@
 
-#!/bin/bash
+#!/bin/bash -eu
 
+# Bash options:
+# "-e" - exit the script if some command fails.
+# "-u" - exit the script if uninitialized variable is used.
 
 # TODO: Check that script is running as root.
 
@@ -9,9 +12,11 @@
 
 cd /
 
-export CONFIGFS_HOME=/configfs_dir
+export CONFIGFS_HOME="/configfs_dir"
 
-# TODO: If CONFIGFS_HOME does not exist, then create it
+if [[ ! -d "$CONFIGFS_HOME" ]] ; then
+    mkdir "$CONFIGFS_HOME"
+fi
 
 modprobe libcomposite
 mount none $CONFIGFS_HOME -t configfs
@@ -54,22 +59,22 @@ cd functions/hid.usb0
 #       file path to variable.
 python3 /copy-usb-hid-description.py
 
-# TODO: Check if running the python script failed.
-
 cd ../..
 
 ln -s functions/hid.usb0 configs/c.1
 
 
-# Setup ethernet usb function
+if [[ "$#" = "1" && "$1" = "--enable-usb-ethernet-gadget" ]] ; then
+    # Setup ethernet usb function
 
-mkdir functions/ecm.usb0
+    mkdir functions/ecm.usb0
 
-# Set MAC addresses because otherwise they would be random
-echo 16:c4:b2:24:c0:03 > functions/ecm.usb0/dev_addr
-echo fa:4d:9e:fa:5a:d6 > functions/ecm.usb0/host_addr
+    # Set MAC addresses because otherwise they would be random
+    echo 16:c4:b2:24:c0:03 > functions/ecm.usb0/dev_addr
+    echo fa:4d:9e:fa:5a:d6 > functions/ecm.usb0/host_addr
 
-ln -s functions/ecm.usb0 configs/c.1
+    ln -s functions/ecm.usb0 configs/c.1
+fi
 
 
 # Start usb gadget mode
@@ -77,4 +82,6 @@ ln -s functions/ecm.usb0 configs/c.1
 echo 20980000.usb > UDC
 
 
-# TODO: Start Raspberry Pi Zero keyboard client.
+# Start Raspberry Pi Zero keyboard client.
+cd /
+python3 zero-client.py "192.168.0.1" "25001"

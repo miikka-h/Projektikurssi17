@@ -107,6 +107,7 @@ var chosenLayout = layoutList[0];
 var kbProfiles = [];
 kbProfiles[0] = new Profile("Profile-0", 0, []);
 var chosenProfile = kbProfiles[0];
+initializeProfiles();
 var chosenKey = "";
 initiateKeyboard();
 addProfilecards();
@@ -359,7 +360,7 @@ function getRealname(input){
         if(evdevIDs[i][0] == input){
             return evdevIDs[i][0];
         }
-    }
+}
 }
 
 //Parses the evdev name, returning any and all evdev ids.
@@ -384,4 +385,35 @@ function postKeys(data,urli) {
       postRequest.send(JSON.stringify(data));
       postRequest.onloadend = function () {
       };
+}
+
+//Prototype to load a profile
+function initializeProfiles(){
+    var profileJson = geProfile("/json.api");
+    profileJson = JSON.parse(profileJson);
+    chosenProfile = new Profile(profileJson.profileName,profileJson.profileID,[]);
+    for(var i = 0; i<profileJson.keyData.length; i++){
+        chosenProfile.keyData[i] = new Key(profileJson.keyData.displayName,profileJson.keyData.mappedEvdevName,profileJson.keyData.evdevName);
+    }
+}
+
+
+//Gets profile from the url
+function getProfile(url){
+    var xmlhttp;
+    if (window.XMLHttpRequest) {
+        xmlhttp = new XMLHttpRequest();
+    } else {
+        xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+    }
+
+    xmlhttp.onreadystatechange = function () {
+        if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+            return xmlhttp.responseText;
+        }
+    }
+
+    xmlhttp.open("GET", myurl, false);
+    xmlhttp.send();
+    return xmlhttp.onreadystatechange();
 }

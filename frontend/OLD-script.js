@@ -1,4 +1,4 @@
-// Deletes the old key definition cards, and then rebuilds new o// Class for profiles.
+// Class for profiles.
 class Profile {
     constructor(profileName, profileID, keyData) {
         this.profileName = profileName;
@@ -6,7 +6,6 @@ class Profile {
         this.keyData = keyData;
     }
 
-    //Gets the evdev id of a key.
     getKeybyID(keyID){
         for(var i = 0; i<this.keyData.length; i++){
             if(keyID == this.keyData[i].EvdevID){
@@ -16,29 +15,11 @@ class Profile {
         console.log("No key found with ID of " + keyID);
         return "";
     }
-
-    //Gets the key by its name.
-    getKeybyName(keyName){
-        for(var i = 0; i<this.keyData.length; i++){
-            if(keyName == this.keyData[i].displayName){
-                return this.keyData[i];
-            }
-        }
-    }
-
-    //Gets the index of a key.
-    getKeyIndex(key){
-        for (var i = 0; i<this.keyData.length; i++){
-            if(key == this.keyData[i]){
-                return i;
-            }
-        }
-    }
 }
 
 // Class for keys.
 class Key {
-    constructor(displayName, mappedEvdevName, evdevName) {
+    constructor(keyID, displayName, mappedID, mappedEvdevName, evdevName) {
         this.displayName = displayName;
         this.evdevName = evdevName;
         this.EvdevID = getEvdevID(this.evdevName);
@@ -84,7 +65,6 @@ class Key {
 ]
 */
 
-//Class for a layout.
 class Layout {
     constructor(layoutArray, countryCode){
     this.layoutArray = layoutArray;
@@ -105,7 +85,7 @@ layoutList[0] = new Layout([[["Esc",1],["",1],["F1",1],["F2",1],["F3",1],["F4",1
     ]],"Fin");
 var chosenLayout = layoutList[0];
 var kbProfiles = [];
-kbProfiles[0] = new Profile("Profile-0", 0, []);
+kbProfiles[0] = new Profile("Profile-0", 0, createEmptyKeyData());
 var chosenProfile = kbProfiles[0];
 var chosenKey = "";
 initiateKeyboard();
@@ -127,12 +107,12 @@ function initiateKeyboard() {
             keybutton.className = "keybutton";
             keybutton.id = "button-" + chosenLayout.layoutArray[i][j][0];
             if (chosenLayout.layoutArray[i][j][0] != "") {
-                keybutton.setAttribute("keyName", chosenLayout.layoutArray[i][j][0]);
+                keybutton.setAttribute("keyID",chosenProfile.keyData[k].EvdevID);
                 k++;
             }
             // Adding listeners to the buttons as they are created.
             keybutton.addEventListener("click", function() {
-                modifyKey(this.getAttribute("keyName"));
+                modifyKey(this.getAttribute("keyID"));
             }, false);
             // If the name of the key contains "kp", we remove the "kp" in the display but keep it in data.
             if (chosenLayout.layoutArray[i][j][0].includes("kp")) {
@@ -141,7 +121,7 @@ function initiateKeyboard() {
                 keybutton.textContent = chosenLayout.layoutArray[i][j][0];
             }
             // If the key has empty string in it, it is not displayed.
-            if (keybutton.textContent === "") keybutton.style.display = "none";
+            if (keybutton.textContent == "") keybutton.style.display = "none";
             // Parsing the width of the key.
             var newwidth = chosenLayout.layoutArray[i][j][1] * parseInt(30);
             newwidth = newwidth + "px";
@@ -155,7 +135,7 @@ function initiateKeyboard() {
     }
     //Adds listener to the button that is used to submit changes.
     var submitBut = document.getElementById("submitchange");
-    submitBut.addEventListener("click", function() {
+                submitchange.addEventListener("click", function() {
                 submitMod();
     }, false);
 }
@@ -169,7 +149,6 @@ function addKeycards() {
     }
 }
 
-//Gets the evdev id of a key by name.
 function getEvdevID(keyName){
     for(var i = 0; i<evdevIDs.length; i++){
         if(keyName == evdevIDs[i][0]){
@@ -187,9 +166,9 @@ function addKeycard(keyName, mappedEvdevName, keyID) {
         keyCard.className = "card";
         keyCard.id = "keycard-" + keyName;
         keyCard.addEventListener("click", function() {
-                modifyKey(this.getAttribute("keyName"));
+                modifyKey(this.getAttribute("keyID"));
         }, false);
-        keyCard.setAttribute("keyName",keyID);
+        keyCard.setAttribute("keyID",keyID);
         keyCard.textContent = keyName + " - " + mappedEvdevName;Profile-3
         defWrap.appendChild(keyCard);
 }
@@ -203,7 +182,7 @@ function addProfilecards(){
     addCardbutton.textContent = "New profile";
     addCardbutton.id = "profileadder";
     addCardbutton.addEventListener("click", function() {
-    addProfile("Profile-" + parseInt(kbProfiles[kbProfiles.length-1].profileID+1),[]);
+    addProfile("Profile-" + parseInt(kbProfiles[kbProfiles.length-1].profileID+1),createEmptyKeyData());
 }, false);
     profWrap.appendChild(addCardbutton);
     for(var i = 0; i<kbProfiles.length; i++){
@@ -262,6 +241,27 @@ function addProfilecard(profile){
     profWrap.insertBefore(profileCard,document.getElementById("profileadder"));
 }
 
+// Creates a fresh key data.
+function createEmptyKeyData(){
+    var keyData = [];
+    var k = 0;
+    for(var i = 0; i<chosenLayout.layoutArray.length; i++){
+        for(var j = 0; j<chosenLayout.layoutArray[i].length; j++){
+            if (chosenLayout.layoutArray[i][j][0] != "") {
+                var evdevName = "";
+                if (typeof chosenLayout.layoutArray[i][j][2] === 'undefined') { 
+                    evdevName = "KEY_" + chosenLayout.layoutArray[i][j][0].toUpperCase(); 
+                } else {
+                    evdevName = "KEY_" + chosenLayout.layoutArray[i][j][2].toUpperCase();
+                }
+                keyData[k] = new Key(k, chosenLayout.layoutArray[i][j][0], k, evdevName, evdevName);
+                k++;
+            }
+        }
+    }
+    return keyData;
+}
+
 // Changes the chosen profile, resetting the background color of the old chosen profile.
 function changeProfile(newID, profileCard){
     var oldProfilecard = document.getElementById("profile-" + chosenProfile.profileID);
@@ -274,45 +274,32 @@ function changeProfile(newID, profileCard){
 }
 
 // When a key is chosen on the visualized keyboard, this is fired. It updates the chosen key and highlights the keycard, as well as removes any older highlights.
-function modifyKey(keyName) {
-    var keyfield = document.getElementById("keyfield");
-    if(chosenProfile.getKeybyName(keyName) !== undefined) var keyid = chosenProfile.getKeybyName(keyName).EvdevID;
-    if (document.getElementById("keycard-" + chosenKey) !== null){
-        document.getElementById("keycard-" + chosenKey).style.backgroundColor = "";
+function modifyKey(keyid) {
+    var keyField = document.getElementById("keyfield");
+    var keyName = chosenProfile.getKeybyID(keyid).displayName;
+    if (document.getElementById("keycard-" + chosenKey.displayName) != null){
+        document.getElementById("keycard-" + chosenKey.displayName).style.backgroundColor = "";
         keyfield.textContent = "";
     }
-    if (keyid !== undefined && keyid !== "") {
+    if (keyid != undefined && keyid != "") {
+        keyfield.textContent = keyName.replace("kp", "") + ":";
         var keyCard = document.getElementById("keycard-" + keyName);
         keyCard.style.backgroundColor = "green";
+        chosenKey = chosenProfile.getKeybyID(keyid);
+    } else {
+        chosenKey = "";
     }
-    chosenKey = keyName;
-    keyfield.textContent = keyName.replace("kp", "") + ":";
-}
-
-//Deletes a key definition from the keydata, since we don't need "unmodifieds" - it's unnecessary information.
-function deleteKey(key){
-var keyCard = document.getElementById("keycard-" + key.displayName);
-keyCard.parentElement.removeChild(keyCard);
-var indexToremove = chosenProfile.getKeyIndex(key);
-chosenProfile.keyData.splice(indexToremove,1);
 }
 
 // A function for submitting a change to the key.
 function submitMod() {
-    if(chosenKey!==""){
-    if(chosenProfile.getKeybyName(chosenKey) === undefined){
-        chosenProfile.keyData[chosenProfile.keyData.length] = new Key(chosenKey,getRealname(chosenKey),getRealname(chosenKey));
-        addKeycard(chosenKey,getRealname(chosenKey),chosenProfile.keyData[chosenProfile.keyData.length-1]);
-        modifyKey(chosenKey);
-    }
+    if(chosenKey!=""){
+    var chosenKeyName = chosenKey.displayName;
+    var keyCard = document.getElementById("keycard-" + chosenKeyName);
     var mapping = document.getElementById("inputmod").value;
-    var chosenKeylocal = chosenProfile.getKeybyName(chosenKey);
-    chosenKeylocal.mappedEvdevName = parseMapping(mapping, chosenKeylocal);
-    chosenKeylocal.mappedEvdevID = parseEvdevName(chosenKeylocal.mappedEvdevName);
-    document.getElementById("keycard-" + chosenKey).textContent = chosenKeylocal.displayName + " - " + chosenKeylocal.mappedEvdevName;
-    if(chosenKeylocal.EvdevID == chosenKeylocal.mappedEvdevID){
-        deleteKey(chosenKeylocal);
-    }
+    chosenKey.mappedEvdevName = parseMapping(mapping);
+    chosenKey.mappedEvdevID = parseEvdevName(chosenKey.mappedEvdevName);
+    document.getElementById("keycard-" + chosenKeyName).textContent = chosenKey.displayName + " - " + chosenKey.mappedEvdevName;
     document.getElementById("ainput").textContent = JSON.stringify(chosenProfile, null, 4);
 //    postKeys(chosenProfile,"/update-profile");
     }
@@ -330,15 +317,15 @@ function getProfilebyID(profileID){
 }
 
 //Parses the string sent from submit, splitting it at designated char and then searching for the 'real names' or 'evdev names' of the mapped keystrokes, returning the resulting string of all those names.
-function parseMapping(mapping, chosenKeylocal){
+function parseMapping(mapping){
     if(mapping.includes(":")){var mappingArray = mapping.split(":")} else {var mappingArray = []; mappingArray[0] = mapping;};
     var realnameString = "";
     for(var i = 0; i<mappingArray.length; i++){
-    if(getRealname(mappingArray[i])===undefined || mappingArray[i]===""){
+    if(getRealname(mappingArray[i])===undefined){
         alert("Invalid input with " + mappingArray[i] + "!");
-        return chosenKeylocal.mappedEvdevName;
+        return chosenKey.mappedEvdevName;
     } else {
-        if(realnameString!==""){
+        if(realnameString!=""){
         realnameString = realnameString + " " + getRealname(mappingArray[i]);
         } else {
             realnameString = getRealname(mappingArray[i]);
@@ -355,11 +342,6 @@ function getRealname(input){
             if(input.toUpperCase() == chosenLayout.layoutArray[i][j][0].toUpperCase() && typeof chosenLayout.layoutArray[i][j][2] !== 'undefined'){return "KEY_" + chosenLayout.layoutArray[i][j][2].toUpperCase()} else if(input.toUpperCase() == chosenLayout.layoutArray[i][j][0].toUpperCase()) {return "KEY_" + chosenLayout.layoutArray[i][j][0].toUpperCase()};
         }
     }
-    for(var i = 0; i<evdevIDs.length; i++){
-        if(evdevIDs[i][0] == input){
-            return evdevIDs[i][0];
-        }
-    }
 }
 
 //Parses the evdev name, returning any and all evdev ids.
@@ -367,7 +349,7 @@ function parseEvdevName(input){
     if(input.includes(" ")){var mappingArray = input.split(" ")} else {var mappingArray = []; mappingArray[0] = input;};
     var realidString = "";
     for(var i = 0; i<mappingArray.length; i++){
-        if(realidString!==""){
+        if(realidString!=""){
         realidString = realidString + " " + getEvdevID(mappingArray[i]);
         } else {
             realidString = getEvdevID(mappingArray[i]);
@@ -376,7 +358,6 @@ function parseEvdevName(input){
     return realidString;
 }
 
-//Posts the JSON to server.
 function postKeys(data,urli) {
       var postRequest = new XMLHttpRequest();
       postRequest.open("POST", urli, true);

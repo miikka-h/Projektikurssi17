@@ -5,6 +5,7 @@ from queue import Queue, Empty
 from threading import Thread, Event
 import socket
 import time
+import keyprofile
 
 import evdev
 
@@ -61,7 +62,7 @@ def main():
 def run(server, socket_out, hid_report, input_device):
 
     clear_keys = True
-
+    new_settings = keyprofile.settings
     while True:
         try:
             new_settings = server.settings_queue.get(block=False)
@@ -81,13 +82,27 @@ def run(server, socket_out, hid_report, input_device):
             # add keys that are currently pressed down to the hid report.
             if event.type == ecodes.EV_KEY and not clear_keys:
                 key_event = evdev.categorize(event)
+                
+               
+                mappedIDs = []
+                for key in new_settings["keyData"]:
+                    if key["EvdevID"] == key_event.scancode:
+                        if isinstance(key["mappedEvdevID"], str): 
+                            mappedIDs = [int(x) for x in key["mappedEvdevID"].split(" ")]
+                        else:
+                            mappedIDs.append(key["mappedEvdevID"])
+                            
+                        break
 
                 if key_event.keystate == key_event.key_down:
-                    if hid_report.add_key(key_event.scancode):
-                        key_update = True
+                    for k in mappedIDs:
+                        if hid_report.add_key(k):
+                            key_update = True
+                
                 elif key_event.keystate == key_event.key_up:
-                    if hid_report.remove_key(key_event.scancode):
-                        key_update = True
+                    for k in mappedIDs:
+                        if hid_report.remove_key(k):
+                            key_update = True
 
                 if key_update:
                     hid_report.update_report()
@@ -100,6 +115,8 @@ def run(server, socket_out, hid_report, input_device):
                         socket_out.findConnection()
                         clear_keys = True
         time.sleep(0.01)
+
+
 
 
 class Socket_out():

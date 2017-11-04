@@ -3,6 +3,7 @@ from queue import Queue
 from threading import Event
 import keyprofile
 import json
+import codecs
 
 # Import Tuple type which is used in optional function type annotations.
 from typing import Tuple
@@ -47,7 +48,7 @@ class RequestHandler(BaseHTTPRequestHandler):
     # Note that HTTP 1.1 will use single TCP connection for every HTTP
     # request, so Content-Length header must be set for every HTTP response.
     # Otherwise web browser does not know when TCP connection should be closed.
-    protocol_version = "HTTP/1.1"
+    #protocol_version = "HTTP/1.1"
 
     # Handler for HTTP GET requests.
     def do_GET(self) -> None:
@@ -57,6 +58,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         print("client_address: " + str(self.client_address))
         print("request_version: " + self.request_version)
         print("headers: " + str(self.headers))
+        
 
         
         
@@ -75,6 +77,69 @@ class RequestHandler(BaseHTTPRequestHandler):
             self.wfile.write(message_bytearray)
             self.wfile.flush()
             print("response sent")
+        elif self.path == "/":
+            
+            f = codecs.open("../frontend/control.html", 'r')
+            message = f.read()
+            f.close()
+           
+            message_bytearray = bytearray()
+            message_bytearray.extend(map(ord, message))
+             # 200 is HTTP status code for successfull request.
+            self.send_response(200)
+            # Content-Length is length of the HTTP message body in bytes.
+            self.send_header("Content-Length", str(len(message_bytearray)))
+            self.send_header("Content-Encoding", "UTF-8")
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.end_headers()
+
+            # Write HTTP message body which is the HTML web page.
+            
+            self.wfile.write(message_bytearray)
+            self.wfile.flush()
+            print("response sent")    
+        elif self.path == "/styles.css":
+            
+            f = codecs.open("../frontend/styles.css", 'r')
+            message = f.read()
+            f.close()
+           
+            message_bytearray = bytearray()
+            message_bytearray.extend(map(ord, message))
+             # 200 is HTTP status code for successfull request.
+            self.send_response(200)
+            # Content-Length is length of the HTTP message body in bytes.
+            self.send_header("Content-Length", str(len(message_bytearray)))
+            self.send_header("Content-Encoding", "UTF-8")
+            self.send_header("Content-Type", "text/css; charset=utf-8")
+            self.end_headers()
+
+            # Write HTTP message body which is the HTML web page.
+            
+            self.wfile.write(message_bytearray)
+            self.wfile.flush()
+            print("response sent")
+        elif self.path == "/script.js":
+            
+            f = codecs.open("../frontend/script.js", 'r')
+            message = f.read()
+            f.close()
+           
+            message_bytearray = bytearray()
+            message_bytearray.extend(map(ord, message))
+             # 200 is HTTP status code for successfull request.
+            self.send_response(200)
+            # Content-Length is length of the HTTP message body in bytes.
+            self.send_header("Content-Length", str(len(message_bytearray)))
+            self.send_header("Content-Encoding", "UTF-8")
+            self.send_header("Content-Type", "application/javascript; charset=utf-8")
+            self.end_headers()
+
+            # Write HTTP message body which is the HTML web page.
+            
+            self.wfile.write(message_bytearray)
+            self.wfile.flush()
+            print("response sent")                
         else:
             message_bytearray = b"<html><body><h1>Hello world</h1></body></html>"
             # 200 is HTTP status code for successfull request.
@@ -94,7 +159,13 @@ class RequestHandler(BaseHTTPRequestHandler):
     def do_POST(self) -> None:
         print("POST")
         print("path: " + self.path)
-        keyprofile_data = self.path[self.path.index("?")+1:]
+        headerLength =  self.headers.get("Content-Length",0)
+
+        response = self.rfile.read(int(headerLength))
+       
+        keyprofile_data = json.loads(response.decode("utf-8"))
+        if len(keyprofile_data) > 1:
+            self.server.settings = keyprofile_data
         print("client_address: " + str(self.client_address))
         print("request_version: " + self.request_version)
         print("headers: " + str(self.headers))
@@ -106,5 +177,8 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", "0")
         self.end_headers()
         print("response sent")
+        print(self.server.settings)
+        with open('data.txt', 'w') as outfile:
+            json.dump(self.server.settings, outfile)
 
 

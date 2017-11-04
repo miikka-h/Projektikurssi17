@@ -12,7 +12,6 @@ from web_server import WebServer
 from evdev import ecodes
 from hid_report import HidReport
 
-input_devices = []
 
 def main():
 
@@ -22,7 +21,7 @@ def main():
             print("give evdev device file path as argument")
             exit(-1)
 
-        # Firts we load all necessary components and form connections.
+        # First we load all necessary components and form connections.
 
         server = Server()
 
@@ -84,24 +83,23 @@ def run(server, socket_out, hid_report, input_device):
                 key_event = evdev.categorize(event)
 
                 if key_event.keystate == key_event.key_down:
-                    hid_report.add_key(key_event.scancode)
-                    key_update = True
+                    if hid_report.add_key(key_event.scancode):
+                        key_update = True
                 elif key_event.keystate == key_event.key_up:
-                    hid_report.remove_key(key_event.scancode)
-                    key_update = True
+                    if hid_report.remove_key(key_event.scancode):
+                        key_update = True
 
-            if key_update:
-                hid_report.update_report()
+                if key_update:
+                    hid_report.update_report()
 
-                try:
-                    socket_out.connection_socket.sendall(hid_report.report)
-                except OSError as error:
-                    print("error: " + error.strerror)
-                    print("disconnecting client from: " + str(socket_out.address))
-                    socket_out.findConnection()
-                    clear_keys = True
-
-            time.sleep(0.01)
+                    try:
+                        socket_out.connection_socket.sendall(hid_report.report)
+                    except OSError as error:
+                        print("error: " + error.strerror)
+                        print("disconnecting client from: " + str(socket_out.address))
+                        socket_out.findConnection()
+                        clear_keys = True
+        time.sleep(0.01)
 
 
 class Socket_out():

@@ -1,5 +1,8 @@
 import evdev
 
+# http://www.usb.org/developers/hidpage/Hut1_12v2.pdf
+# See chapter 10 for keycodes.
+
 EVDEV_TO_HID_MAP = {
     evdev.ecodes.KEY_A: 0x04,
     evdev.ecodes.KEY_B: 0x05,
@@ -85,8 +88,19 @@ EVDEV_TO_HID_MAP = {
     evdev.ecodes.KEY_KP9: 0x61,
     evdev.ecodes.KEY_KP0: 0x62,
     evdev.ecodes.KEY_APOSTROPHE: 0x63,
-	#TODO find out how to refer to the rest of the keys	
+	#TODO find out how to refer to the rest of the keys
 
+}
+
+MODIFIER_KEY_BITMASKS =  {
+    evdev.ecodes.KEY_LEFTCTRL:   0b10000000,
+    evdev.ecodes.KEY_LEFTSHIFT:  0b01000000,
+    evdev.ecodes.KEY_LEFTALT:    0b00100000,
+    evdev.ecodes.KEY_LEFTMETA:   0b00010000,
+    evdev.ecodes.KEY_RIGHTCTRL:  0b00001000,
+    evdev.ecodes.KEY_RIGHTSHIFT: 0b00000100,
+    evdev.ecodes.KEY_RIGHTALT:   0b00000010,
+    evdev.ecodes.KEY_RIGHTMETA:  0b00000001,
 }
 
 class HidReport:
@@ -95,59 +109,43 @@ class HidReport:
         self.clear()
 
     def clear(self) -> None:
-        self.left_control = False
-        self.left_shift = False
-        self.left_alt = False
-        self.left_gui = False
-        self.right_control = False
-        self.right_shift = False
-        self.right_alt = False
-        self.right_gui = False
-
         self.keycodes = {}
-
         self.report = bytearray(8)
 
-    def modifier_keys(self) -> bytes:
-        bit_flag = 0x00
-
-        if self.left_control:
-            bit_flag = bit_flag | 0b10000000
-        if self.left_shift:
-            bit_flag = bit_flag | 0b01000000
-        if self.left_alt:
-            bit_flag = bit_flag | 0b00100000
-        if self.left_gui:
-            bit_flag = bit_flag | 0b00010000
-        if self.right_control:
-            bit_flag = bit_flag | 0b00001000
-        if self.right_shift:
-            bit_flag = bit_flag | 0b00000100
-        if self.right_alt:
-            bit_flag = bit_flag | 0b00000010
-        if self.right_gui:
-            bit_flag = bit_flag | 0b00000001
-
-        return bytes([bit_flag])
-
-    def add_key(self, evdev_key: int) -> None:
+    def add_key(self, evdev_key: int) -> bool:
         if len(self.keycodes) >= 6:
             return
 
         try:
+            bitmask = MODIFIER_KEY_BITMASKS[evdev_key]
+            self.report[0] = self.report[0] | bitmask
+            return True
+        except KeyError:
+            pass
+
+        try:
             self.keycodes[evdev_key] = EVDEV_TO_HID_MAP[evdev_key]
+            return True
         except KeyError:
             print("unknown key: " + str(evdev_key))
+            return False
 
-    def remove_key(self, evdev_key: int) -> None:
+    def remove_key(self, evdev_key: int) -> bool:
+        try:
+            bitmask = MODIFIER_KEY_BITMASKS[evdev_key]
+            self.report[0] = self.report[0] & (~bitmask)
+            return True
+        except KeyError:
+            pass
+
         try:
             del self.keycodes[evdev_key]
+            return True
         except KeyError:
             print("unknown key: " + str(evdev_key))
+            return False
 
     def update_report(self) -> None:
-        self.report[0] = self.modifier_keys()[0]
-
         i = 2
 
         for _, item in self.keycodes.items():

@@ -346,7 +346,7 @@ function getRealname(input){
 
 //Parses the evdev name, returning any and all evdev ids.
 function parseEvdevName(input){
-    if(input.includes(":")){var mappingArray = input.split(":")} else {var mappingArray = []; mappingArray[0] = input;};
+    if(input.includes(" ")){var mappingArray = input.split(" ")} else {var mappingArray = []; mappingArray[0] = input;};
     var realidString = "";
     for(var i = 0; i<mappingArray.length; i++){
         if(realidString!=""){

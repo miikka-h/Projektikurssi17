@@ -105,13 +105,13 @@ layoutList[0] = new Layout([[["Esc",1],["",1],["F1",1],["F2",1],["F3",1],["F4",1
     ]],"Fin");
 var chosenLayout = layoutList[0];
 var kbProfiles = [];
-kbProfiles[0] = new Profile("Profile-0", 0, []);
-var chosenProfile = kbProfiles[0];
+var chosenProfile;
 initializeProfiles();
+kbProfiles[0] = chosenProfile;
 var chosenKey = "";
 initiateKeyboard();
 addProfilecards();
-changeProfile(0,document.getElementById("profile-" + kbProfiles[0].profileID));
+changeProfile(kbProfiles[0].profileID,document.getElementById("profile-" + kbProfiles[0].profileID));
 
 // Builds the visualized keyboard based on an array. Array has rows of keys, with each key containing two values - the displayed characters and the width in relation to a "normal" key.
 function initiateKeyboard() {
@@ -389,11 +389,12 @@ function postKeys(data,urli) {
 
 //Prototype to load a profile
 function initializeProfiles(){
-    var profileJson = geProfile("/json.api");
+    var profileJson = getProfile("/json.api");
     profileJson = JSON.parse(profileJson);
+	console.log(profileJson);
     chosenProfile = new Profile(profileJson.profileName,profileJson.profileID,[]);
     for(var i = 0; i<profileJson.keyData.length; i++){
-        chosenProfile.keyData[i] = new Key(profileJson.keyData.displayName,profileJson.keyData.mappedEvdevName,profileJson.keyData.evdevName);
+        chosenProfile.keyData[i] = new Key(profileJson.keyData[i].displayName,profileJson.keyData[i].mappedEvdevName,profileJson.keyData[i].evdevName);
     }
 }
 
@@ -409,11 +410,12 @@ function getProfile(url){
 
     xmlhttp.onreadystatechange = function () {
         if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+		console.log(xmlhttp.responseText);
             return xmlhttp.responseText;
         }
     }
 
-    xmlhttp.open("GET", myurl, false);
+    xmlhttp.open("GET", url, false);
     xmlhttp.send();
     return xmlhttp.onreadystatechange();
 }

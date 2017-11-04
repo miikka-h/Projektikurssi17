@@ -37,14 +37,12 @@ def main():
             socket_out.close()
             exit(-1)
 
-        print("waiting for client")
+
+        socket_out.findConnection()
 
         # Initialize input event reading.
         input_device = evdev.InputDevice(sys.argv[1])
         print(input_device)
-
-        socket_out.findConnection()
-        print("client from " + str(socket_out.address) + " connected")
 
         # Create evdev keycode to USB HID report converter.
         hid_report = HidReport()
@@ -99,11 +97,8 @@ def run(server, socket_out, hid_report, input_device):
                     socket_out.connection_socket.sendall(hid_report.report)
                 except OSError as error:
                     print("error: " + error.strerror)
-                    print("disconnecting client from: " + str(server.address))
-                    socket_out.connection_socket.close()
-                    print("waiting for new client")
-                    (connection_socket, address) = server_socket.accept()
-                    print("client from " + str(address) + " connected")
+                    print("disconnecting client from: " + str(socket_out.address))
+                    socket_out.findConnection()
                     clear_keys = True
 
             time.sleep(0.01)
@@ -123,7 +118,12 @@ class Socket_out():
         self.server_socket.close()
 
     def findConnection(self):
+        if self.connection_socket is not None:
+            self.connection_socket.close()
+
+        print("waiting for client")
         (self.connection_socket, self.address) = self.server_socket.accept()
+        print("client from " + str(self.address) + " connected")
 
 
 class Server():

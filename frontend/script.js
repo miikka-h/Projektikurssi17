@@ -297,10 +297,11 @@ function submitMod() {
     var chosenKeyName = chosenKey.displayName;
     var keyCard = document.getElementById("keycard-" + chosenKeyName);
     var mapping = document.getElementById("inputmod").value;
-    chosenProfile.getKeybyID(keyCard.getAttribute("keyID")).mappedEvdevName = parseMapping(mapping);
-    chosenProfile.getKeybyID(keyCard.getAttribute("keyID")).mappedEvdevID = parseEvdevName(chosenProfile.getKeybyID(keyCard.getAttribute("keyID")).mappedEvdevName);
+    chosenKey.mappedEvdevName = parseMapping(mapping);
+    chosenKey.mappedEvdevID = parseEvdevName(chosenKey.mappedEvdevName);
     document.getElementById("keycard-" + chosenKeyName).textContent = chosenKey.displayName + " - " + chosenKey.mappedEvdevName;
     document.getElementById("ainput").textContent = JSON.stringify(chosenProfile, null, 4);
+//    postKeys(chosenProfile,"/update-profile");
     }
 }
 
@@ -315,16 +316,21 @@ function getProfilebyID(profileID){
     return;
 }
 
-//Parses the string sent from submit, splitting it at "-" and then searching for the 'real names' or 'evdev names' of the mapped keystrokes, returning the resulting string.
+//Parses the string sent from submit, splitting it at designated char and then searching for the 'real names' or 'evdev names' of the mapped keystrokes, returning the resulting string of all those names.
 function parseMapping(mapping){
-    var mappingArray = mapping.split("-");
+    if(mapping.includes(":")){var mappingArray = mapping.split(":")} else {var mappingArray = []; mappingArray[0] = mapping;};
     var realnameString = "";
     for(var i = 0; i<mappingArray.length; i++){
+    if(getRealname(mappingArray[i])===undefined){
+        alert("Invalid input with " + mappingArray[i] + "!");
+        return chosenKey.mappedEvdevName;
+    } else {
         if(realnameString!=""){
-        realnameString = realnameString + "-" + getRealname(mappingArray[i]);
+        realnameString = realnameString + " " + getRealname(mappingArray[i]);
         } else {
             realnameString = getRealname(mappingArray[i]);
         }
+    }
     }
     return realnameString;
 }
@@ -340,14 +346,23 @@ function getRealname(input){
 
 //Parses the evdev name, returning any and all evdev ids.
 function parseEvdevName(input){
-    var mappingArray = input.split("-");
+    if(input.includes(":")){var mappingArray = input.split(":")} else {var mappingArray = []; mappingArray[0] = input;};
     var realidString = "";
     for(var i = 0; i<mappingArray.length; i++){
         if(realidString!=""){
-        realidString = realidString + "-" + getEvdevID(mappingArray[i]);
+        realidString = realidString + " " + getEvdevID(mappingArray[i]);
         } else {
             realidString = getEvdevID(mappingArray[i]);
         }
     }
     return realidString;
+}
+
+function postKeys(data,urli) {
+      var postRequest = new XMLHttpRequest();
+      postRequest.open("POST", urli, true);
+      postRequest.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+      postRequest.send(JSON.stringify(data));
+      postRequest.onloadend = function () {
+      };
 }

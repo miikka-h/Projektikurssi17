@@ -359,8 +359,8 @@ function getRealname(input){
     for(var i = 0; i<evdevIDs.length; i++){
         if(evdevIDs[i][0] == input){
             return evdevIDs[i][0];
-        }    function loadXMLDoc(myurl) {
-    }
+        }
+}
 }
 
 //Parses the evdev name, returning any and all evdev ids.
@@ -400,20 +400,20 @@ function initializeProfiles(){
 
 //Gets profile from the url
 function getProfile(url){
-        var xmlhttp;
-        if (window.XMLHttpRequest) {
-            xmlhttp = new XMLHttpRequest();
-        } else {
-            xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+    var xmlhttp;
+    if (window.XMLHttpRequest) {
+        xmlhttp = new XMLHttpRequest();
+    } else {
+        xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+    }
+
+    xmlhttp.onreadystatechange = function () {
+        if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+            return xmlhttp.responseText;
         }
-    
-        xmlhttp.onreadystatechange = function () {
-            if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-                return xmlhttp.responseText;
-            }
-        }
-    
-        xmlhttp.open("GET", myurl, false);
-        xmlhttp.send();
-        return xmlhttp.onreadystatechange();
+    }
+
+    xmlhttp.open("GET", myurl, false);
+    xmlhttp.send();
+    return xmlhttp.onreadystatechange();
 }

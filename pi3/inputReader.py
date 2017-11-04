@@ -1,7 +1,7 @@
 import evdev
 
 
-class hasKeyboard:
+class HasKeyboard:
 
     def __init__(self):
         print("")
@@ -12,6 +12,8 @@ class hasKeyboard:
             #capabilityMap = device.capabilities(True, False)
             print(device.name + " " + device.fn )
 
+
+HasKeyboard.evaluator()
 
 class Reader:
 

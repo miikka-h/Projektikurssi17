@@ -91,3 +91,9 @@ def main() -> None:
     except KeyboardInterrupt:
         file.close()
         socket_object.close()
+
+
+# Start main function
+
+if __name__ == "__main__":
+    main()

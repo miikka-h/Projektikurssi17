@@ -39,16 +39,33 @@ def log_event(action, device):
     devinput = "/dev/input/"
     if 'ID_INPUT_KEYBOARD' in device:
         try:
+            print (device_list)
             event_location = device.device_node
             print('{0} - {1}'.format(action, event_location))
             if event_location[0:(len(devinput))] == devinput:
                 if action == "add":
                     device_list.append(evdev.InputDevice(event_location))
                 else:
-                    try:
-                        device_list.remove(event_location)
-                    except ValueError:
-                        pass
+                    print("removing" + event_location)
+                    for i in device_list:
+                        try:
+                            print(i.device_node)
+                        except AttributeError:
+                            print("actual removal happening")
+                            device_list.remove(i)
+                            
+                        
+                   # i = len (device_list) -1
+                   # while i >= 0:
+                   #     try:
+                   #         if device
+                   #     except FileNotFoundError:
+                   #         del device_list[i]
+                   #     i -= 1
+                   # try:
+                   #     device_list.remove(evdev.InputDevice(event_location))
+                   # except ValueError:
+                   #     pass
                 print(device_list)
         except TypeError:
             pass
@@ -123,51 +140,55 @@ def run(server, socket_out, hid_report):
             pass
 
         for input_device in device_list:
-            key_update = False
-            print(input_device)
+            try:
+                key_update = False
+                print(input_device)
 
-            while True:
-                event = input_device.read_one()
+                while True:
+                    event = input_device.read_one()
 
-                if event is None:
-                    clear_keys = False
-                    break
+                    if event is None:
+                        clear_keys = False
+                        break
 
-                # add keys that are currently pressed down to the hid report.
-                if event.type == ecodes.EV_KEY and not clear_keys:
-                    key_event = evdev.categorize(event)
+                    # add keys that are currently pressed down to the hid report.
+                    if event.type == ecodes.EV_KEY and not clear_keys:
+                        key_event = evdev.categorize(event)
 
-                    mappedIDs = []
-                    for key in new_settings["keyData"]:
-                        if key["EvdevID"] == key_event.scancode:
-                            if isinstance(key["mappedEvdevID"], str):
-                                mappedIDs = [int(x) for x in key["mappedEvdevID"].split(" ")]
-                            else:
-                                mappedIDs.append(key["mappedEvdevID"])
-                            break
+                        mappedIDs = []
+                        for key in new_settings["keyData"]:
+                            if key["EvdevID"] == key_event.scancode:
+                                if isinstance(key["mappedEvdevID"], str):
+                                    mappedIDs = [int(x) for x in key["mappedEvdevID"].split(" ")]
+                                else:
+                                    mappedIDs.append(key["mappedEvdevID"])
+                                break
 
-                    if key_event.keystate == key_event.key_down:
-                        for k in mappedIDs:
-                            if hid_report.add_key(k):
-                                key_update = True
+                        if key_event.keystate == key_event.key_down:
+                            for k in mappedIDs:
+                                if hid_report.add_key(k):
+                                    key_update = True
 
-                    elif key_event.keystate == key_event.key_up:
-                        for k in mappedIDs:
-                            if hid_report.remove_key(k):
-                                key_update = True
+                        elif key_event.keystate == key_event.key_up:
+                            for k in mappedIDs:
+                                if hid_report.remove_key(k):
+                                    key_update = True
 
-                    if key_update:
-                        hid_report.update_report()
+                        if key_update:
+                            hid_report.update_report()
 
-                        try:
-                            socket_out.connection_socket.sendall(hid_report.report)
-                        except OSError as error:
-                            print("error: " + error.strerror)
-                            print("disconnecting client from: " + str(server.address))
-                            socket_out.connection_socket.close()
-                            clear_keys = True
-
-            time.sleep(0.01)
+                            try:
+                                socket_out.connection_socket.sendall(hid_report.report)
+                            except OSError as error:
+                                print("error: " + error.strerror)
+                                print("disconnecting client from: " + str(server.address))
+                                socket_out.connection_socket.close()
+                                clear_keys = True
+            except OSError as error:
+                print("error: " + error.strerror)
+                print(device_list)
+                pass
+            time.sleep(0.1)
 
 
 # class Devices():

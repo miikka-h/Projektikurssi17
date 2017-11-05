@@ -21,6 +21,8 @@ is no WLAN chip included on the board, so you probably have use Raspberry Pi Zer
 3. Add line `bash -eu /start.sh &` to `rc.local` before `exit` command. This will make
 Zero-client to automatically start at boot. See also: [https://www.raspberrypi.org/documentation/linux/usage/rc-local.md](https://www.raspberrypi.org/documentation/linux/usage/rc-local.md)
 
-4. Reboot Raspberry Pi.
+4. Add line `dtoverlay=dwc2` to end of `/boot/config.txt`.
 
-5. Connect Raspberry Pi to some computer with USB cable.
+5. Reboot Raspberry Pi.
+
+6. Connect Raspberry Pi to some computer with USB cable.

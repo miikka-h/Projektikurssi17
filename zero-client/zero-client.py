@@ -4,6 +4,7 @@ import os
 import sys
 import socket
 import time
+import io
 
 # http://www.usb.org/developers/hidpage/Hut1_12v2.pdf
 # See chapter 10 for keycodes.
@@ -38,6 +39,10 @@ def connection_retry_loop(socket_object: socket.SocketType, server_address: str,
             print("trying to reconnect to the server in 5 seconds")
             time.sleep(5.0)
 
+def reset_keys(file: io.BufferedWriter) -> None:
+    file.write(bytes(HID_REPORT_SIZE_BYTES))
+    file.flush()
+
 def main() -> None:
     # Check arguments
 
@@ -71,12 +76,14 @@ def main() -> None:
             if byte_count == 0:
                 print("server disconnected")
                 print("trying to reconnect")
+                reset_keys(file)
                 socket_object.close()
                 socket_object = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 connection_retry_loop(socket_object, server_address, port_number)
             elif byte_count != HID_REPORT_SIZE_BYTES:
                 print("error: USB HID report size " + str(byte_count) + " bytes is unsupported")
                 socket_object.close()
+                reset_keys(file)
                 file.close()
                 exit(-1)
             else:
@@ -86,9 +93,15 @@ def main() -> None:
 
     except OSError as error:
         print("error: " + error.strerror)
+        try:
+            reset_keys(file)
+        except OSError as error:
+            print("couldn't reset keyboard keys")
+            print("error: " + error.strerror)
         file.close()
         socket_object.close()
     except KeyboardInterrupt:
+        reset_keys(file)
         file.close()
         socket_object.close()
 

@@ -1,31 +1,77 @@
 #!/bin/python3
 
-import sys
 from queue import Queue, Empty
 from threading import Thread, Event
 import socket
 import time
+import keyprofile
 
+import pyudev
 import evdev
 
 from web_server import WebServer
 from evdev import ecodes
 from hid_report import HidReport
-from device_finder import FindDevices
 
-input_devices = []
+
+def initkeyboards():
+    device_list = []
+    event_location = ""
+    devinput = "/dev/input/"
+    context = pyudev.Context()
+    for device in context.list_devices():
+        if 'ID_INPUT_KEYBOARD' in device:
+            try:
+                event_location = device.device_node
+                if event_location[0:(len(devinput))] == devinput:
+                    device_list.append(evdev.InputDevice(event_location))
+            except TypeError:
+                pass
+
+    return device_list
+
+
+device_list = initkeyboards()
+
+
+def log_event(action, device):
+    event_location = ""
+    devinput = "/dev/input/"
+    if 'ID_INPUT_KEYBOARD' in device:
+        try:
+            event_location = device.device_node
+            print('{0} - {1}'.format(action, event_location))
+            if event_location[0:(len(devinput))] == devinput:
+                if action == "add":
+                    device_list.append(evdev.InputDevice(event_location))
+                else:
+                    try:
+                        device_list.remove(event_location)
+                    except ValueError:
+                        pass
+                print(device_list)
+        except TypeError:
+            pass
+# keyboard detection
+
 
 def main():
 
     try:
 
-        # if len(sys.argv) < 2:
-        #    print("give evdev device file path as argument")
-        #    exit(-1)
+        # initialize all connected keyboards
+        # initKeyboards()
 
-        device = Devices()
-        
-        # Firts we load all necessary components and form connections.
+        # Starts looking for new connected keyboards
+        context = pyudev.Context()
+        monitor = pyudev.Monitor.from_netlink(context)
+        monitor.filter_by('input')
+
+        print("Waiting for keyboards to be connected")
+        observer = pyudev.MonitorObserver(monitor, log_event)
+        observer.start()
+
+        # Lets load all necessary components and form connections.
 
         server = Server()
 
@@ -48,7 +94,6 @@ def main():
         # Create evdev keycode to USB HID report converter.
         hid_report = HidReport()
 
-
         # Actual server logic loop.
         run(server, socket_out, hid_report)
 
@@ -56,7 +101,6 @@ def main():
         # handle ctrl-c
         server.close()
         socket_out.close()
-        input_device.close()
         exit(0)
 
 
@@ -64,72 +108,80 @@ def run(server, socket_out, hid_report):
 
     clear_keys = True
 
+    new_settings = keyprofile.settings
+
     while True:
 
-        #
-        #Initialize input event reading.
-        #input_device = evdev.InputDevice(sys.argv[1])
-        #print(input_device)
-        #
-        #
-        
+        if len(device_list) < 1:
+            time.sleep(0.1)
+            continue
 
-        
         try:
             new_settings = server.settings_queue.get(block=False)
             print(str(new_settings))
         except Empty:
             pass
 
-        key_update = False
+        for input_device in device_list:
+            key_update = False
+            print(input_device)
 
-        while True:
-            event = input_device.read_one()
+            while True:
+                event = input_device.read_one()
 
-            if event is None:
-                clear_keys = False
-                break
+                if event is None:
+                    clear_keys = False
+                    break
 
-            # add keys that are currently pressed down to the hid report.
-            if event.type == ecodes.EV_KEY and not clear_keys:
-                key_event = evdev.categorize(event)
+                # add keys that are currently pressed down to the hid report.
+                if event.type == ecodes.EV_KEY and not clear_keys:
+                    key_event = evdev.categorize(event)
 
-                if key_event.keystate == key_event.key_down:
-                    hid_report.add_key(key_event.scancode)
-                    key_update = True
-                elif key_event.keystate == key_event.key_up:
-                    hid_report.remove_key(key_event.scancode)
-                    key_update = True
+                    mappedIDs = []
+                    for key in new_settings["keyData"]:
+                        if key["EvdevID"] == key_event.scancode:
+                            if isinstance(key["mappedEvdevID"], str):
+                                mappedIDs = [int(x) for x in key["mappedEvdevID"].split(" ")]
+                            else:
+                                mappedIDs.append(key["mappedEvdevID"])
+                            break
 
-            if key_update:
-                hid_report.update_report()
+                    if key_event.keystate == key_event.key_down:
+                        for k in mappedIDs:
+                            if hid_report.add_key(k):
+                                key_update = True
 
-                try:
-                    socket_out.connection_socket.sendall(hid_report.report)
-                except OSError as error:
-                    print("error: " + error.strerror)
-                    print("disconnecting client from: " + str(server.address))
-                    socket_out.connection_socket.close()
-                    print("waiting for new client")
-                    (connection_socket, address) = server_socket.accept()
-                    print("client from " + str(address) + " connected")
-                    clear_keys = True
+                    elif key_event.keystate == key_event.key_up:
+                        for k in mappedIDs:
+                            if hid_report.remove_key(k):
+                                key_update = True
+
+                    if key_update:
+                        hid_report.update_report()
+
+                        try:
+                            socket_out.connection_socket.sendall(hid_report.report)
+                        except OSError as error:
+                            print("error: " + error.strerror)
+                            print("disconnecting client from: " + str(server.address))
+                            socket_out.connection_socket.close()
+                            clear_keys = True
 
             time.sleep(0.01)
 
 
-class Devices():
+# class Devices():
+# 
+#     def __init__(self):
+#         device_queue = Queue()
+#         self.exit_event = Event()
+#         self.device_search_thread = Thread(group=None, target=FindDevices, args=(device_queue, exit_event))
+#         self.device_search_thread.start()
+# 
+#     def close(self):
+#         self.exit_event.set()
+#         self.device_search_thread.join()
 
-    def __init__(self):
-        device_queue = Queue()
-        self.exit_event = Event()
-        self.device_search_thread = Thread(group=None, target=FindDevices, args=(device_queue, exit_event))
-        self.device_search_thread.start()
-
-    def close(self):
-        self.exit_event.set()
-        self.device_search_thread.join()
-        
 
 class Socket_out():
 

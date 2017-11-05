@@ -10,7 +10,7 @@ class HasKeyboard:
         devices = [evdev.InputDevice(fn) for fn in evdev.list_devices()]
         for device in devices:
             #capabilityMap = device.capabilities(True, False)
-            print(device.name + " " + device.fn )
+            print(device.name + " " + device.fn)
 
 
 HasKeyboard.evaluator()

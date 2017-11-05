@@ -82,23 +82,22 @@ def run(server, socket_out, hid_report, input_device):
             # add keys that are currently pressed down to the hid report.
             if event.type == ecodes.EV_KEY and not clear_keys:
                 key_event = evdev.categorize(event)
-                
-               
+
                 mappedIDs = []
                 for key in new_settings["keyData"]:
                     if key["EvdevID"] == key_event.scancode:
-                        if isinstance(key["mappedEvdevID"], str): 
+                        if isinstance(key["mappedEvdevID"], str):
                             mappedIDs = [int(x) for x in key["mappedEvdevID"].split(" ")]
                         else:
                             mappedIDs.append(key["mappedEvdevID"])
-                            
+
                         break
 
                 if key_event.keystate == key_event.key_down:
                     for k in mappedIDs:
                         if hid_report.add_key(k):
                             key_update = True
-                
+
                 elif key_event.keystate == key_event.key_up:
                     for k in mappedIDs:
                         if hid_report.remove_key(k):

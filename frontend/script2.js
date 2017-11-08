@@ -190,8 +190,8 @@ function addKeycard(keyName, mappedEvdevName, keyID) {
         keyCard.addEventListener("click", function() {
                 modifyKey(this.getAttribute("keyName"));
         }, false);
-        keyCard.setAttribute("keyName",keyID);
-        keyCard.textContent = keyName + " - " + mappedEvdevName;Profile-3
+        keyCard.setAttribute("keyName",keyName);
+        keyCard.textContent = keyName + " - " + mappedEvdevName;
         defWrap.appendChild(keyCard);
 }
 

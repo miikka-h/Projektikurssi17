@@ -1,4 +1,4 @@
-// Deletes the old key definition cards, and then rebuilds new o// Class for profiles.
+// Class for profiles.
 class Profile {
     constructor(profileName, profileID, keyData) {
         this.profileName = profileName;
@@ -41,9 +41,9 @@ class Key {
     constructor(displayName, mappedEvdevName, evdevName) {
         this.displayName = displayName;
         this.evdevName = evdevName;
-        this.EvdevID = getEvdevID(this.evdevName);
+        this.EvdevID = parseEvdevName(this.evdevName);
         this.mappedEvdevName = mappedEvdevName;
-        this.mappedEvdevID = getEvdevID(this.mappedEvdevName);
+        this.mappedEvdevID = parseEvdevName(this.mappedEvdevName);
     }
 }
 
@@ -106,7 +106,7 @@ layoutList[0] = new Layout([[["Esc",1],["",1],["F1",1],["F2",1],["F3",1],["F4",1
 var chosenLayout = layoutList[0];
 var kbProfiles = [];
 var chosenProfile;
-initializeProfiles();
+loadProfiles();
 kbProfiles[0] = chosenProfile;
 var chosenKey = "";
 initiateKeyboard();
@@ -377,7 +377,7 @@ function parseEvdevName(input){
     return realidString;
 }
 
-//Posts the JSON to server.
+//Posts the JSON to server. PARAMS: Profile, url to post
 function postKeys(data,urli) {
       var postRequest = new XMLHttpRequest();
       postRequest.open("POST", urli, true);
@@ -388,9 +388,10 @@ function postKeys(data,urli) {
 }
 
 //Prototype to load a profile
-function initializeProfiles(){
-    var profileJson = getProfile("/json.api");
-    profileJson = JSON.parse(profileJson);
+function loadProfiles(){
+  var profileJson = getProfile("/json.api");
+ // var profileJson =new Profile("Profile-1",1,[]);
+  profileJson = JSON.parse(profileJson);
 	console.log(profileJson);
     chosenProfile = new Profile(profileJson.profileName,profileJson.profileID,[]);
     for(var i = 0; i<profileJson.keyData.length; i++){
@@ -412,10 +413,13 @@ function getProfile(url){
         if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
 		console.log(xmlhttp.responseText);
             return xmlhttp.responseText;
+        } else {
+    var emptyProfile = new Profile("Profile-1",1,[]);
+    return emptyProfile;
         }
     }
 
     xmlhttp.open("GET", url, false);
     xmlhttp.send();
     return xmlhttp.onreadystatechange();
-}
+    }

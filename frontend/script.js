@@ -1,4 +1,4 @@
-// Deletes the old key definition cards, and then rebuilds new o// Class for profiles.
+// Class for profiles.
 class Profile {
     constructor(profileName, profileID, keyData) {
         this.profileName = profileName;
@@ -41,9 +41,9 @@ class Key {
     constructor(displayName, mappedEvdevName, evdevName) {
         this.displayName = displayName;
         this.evdevName = evdevName;
-        this.EvdevID = getEvdevID(this.evdevName);
+        this.EvdevID = parseEvdevName(this.evdevName);
         this.mappedEvdevName = mappedEvdevName;
-        this.mappedEvdevID = getEvdevID(this.mappedEvdevName);
+        this.mappedEvdevID = parseEvdevName(this.mappedEvdevName);
     }
 }
 
@@ -105,12 +105,13 @@ layoutList[0] = new Layout([[["Esc",1],["",1],["F1",1],["F2",1],["F3",1],["F4",1
     ]],"Fin");
 var chosenLayout = layoutList[0];
 var kbProfiles = [];
-kbProfiles[0] = new Profile("Profile-0", 0, []);
-var chosenProfile = kbProfiles[0];
+var chosenProfile;
+loadProfiles();
+kbProfiles[0] = chosenProfile;
 var chosenKey = "";
 initiateKeyboard();
 addProfilecards();
-changeProfile(0,document.getElementById("profile-" + kbProfiles[0].profileID));
+changeProfile(kbProfiles[0].profileID,document.getElementById("profile-" + kbProfiles[0].profileID));
 
 // Builds the visualized keyboard based on an array. Array has rows of keys, with each key containing two values - the displayed characters and the width in relation to a "normal" key.
 function initiateKeyboard() {
@@ -189,8 +190,8 @@ function addKeycard(keyName, mappedEvdevName, keyID) {
         keyCard.addEventListener("click", function() {
                 modifyKey(this.getAttribute("keyName"));
         }, false);
-        keyCard.setAttribute("keyName",keyID);
-        keyCard.textContent = keyName + " - " + mappedEvdevName;Profile-3
+        keyCard.setAttribute("keyName",keyName);
+        keyCard.textContent = keyName + " - " + mappedEvdevName;
         defWrap.appendChild(keyCard);
 }
 
@@ -359,7 +360,7 @@ function getRealname(input){
         if(evdevIDs[i][0] == input){
             return evdevIDs[i][0];
         }
-    }
+}
 }
 
 //Parses the evdev name, returning any and all evdev ids.
@@ -376,7 +377,7 @@ function parseEvdevName(input){
     return realidString;
 }
 
-//Posts the JSON to server.
+//Posts the JSON to server. PARAMS: Profile, url to post
 function postKeys(data,urli) {
       var postRequest = new XMLHttpRequest();
       postRequest.open("POST", urli, true);
@@ -385,3 +386,40 @@ function postKeys(data,urli) {
       postRequest.onloadend = function () {
       };
 }
+
+//Prototype to load a profile
+function loadProfiles(){
+  var profileJson = getProfile("/json.api");
+ // var profileJson =new Profile("Profile-1",1,[]);
+  profileJson = JSON.parse(profileJson);
+	console.log(profileJson);
+    chosenProfile = new Profile(profileJson.profileName,profileJson.profileID,[]);
+    for(var i = 0; i<profileJson.keyData.length; i++){
+        chosenProfile.keyData[i] = new Key(profileJson.keyData[i].displayName,profileJson.keyData[i].mappedEvdevName,profileJson.keyData[i].evdevName);
+    }
+}
+
+
+//Gets profile from the url
+function getProfile(url){
+    var xmlhttp;
+    if (window.XMLHttpRequest) {
+        xmlhttp = new XMLHttpRequest();
+    } else {
+        xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+    }
+
+    xmlhttp.onreadystatechange = function () {
+        if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+		console.log(xmlhttp.responseText);
+            return xmlhttp.responseText;
+        } else {
+    var emptyProfile = new Profile("Profile-1",1,[]);
+    return emptyProfile;
+        }
+    }
+
+    xmlhttp.open("GET", url, false);
+    xmlhttp.send();
+    return xmlhttp.onreadystatechange();
+    }

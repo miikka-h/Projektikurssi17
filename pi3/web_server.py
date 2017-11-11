@@ -164,8 +164,17 @@ class RequestHandler(BaseHTTPRequestHandler):
         response = self.rfile.read(int(headerLength))
        
         keyprofile_data = json.loads(response.decode("utf-8"))
+        modified_keys = []
         if len(keyprofile_data) > 1:
-            self.server.settings = keyprofile_data
+            modified_keys = keyprofile_data
+        for k in self.server.settings["keyData"]:
+            for j in modified_keys["keyData"]:
+                if k["EvdevID"] == j["EvdevID"]:
+                    k["mappedEvdevID"] = j["mappedEvdevID"]   
+                    k["mappedEvdevName"] = j["mappedEvdevName"]
+
+        
+        
         print("client_address: " + str(self.client_address))
         print("request_version: " + self.request_version)
         print("headers: " + str(self.headers))

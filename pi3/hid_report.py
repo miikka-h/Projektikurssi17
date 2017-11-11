@@ -47,6 +47,18 @@ EVDEV_TO_HID_MAP = {
     ecodes.KEY_TAB: 0x2B,
     ecodes.KEY_SPACE: 0x2C,
     ecodes.KEY_MINUS: 0x2D,
+    ecodes.KEY_EQUAL: 0x2E,
+    ecodes.KEY_LEFTBRACE: 0x2F,
+    ecodes.KEY_RIGHTBRACE:0x30,
+    ecodes.KEY_BACKSLASH: 0x31,
+    # Some key here, internet said it would be "HASHTILDE", but didn't find it from ecodes.
+    ecodes.KEY_SEMICOLON: 0x33,
+    ecodes.KEY_APOSTROPHE: 0x34,
+    ecodes.KEY_GRAVE: 0x35,
+    ecodes.KEY_COMMA: 0x36,
+    ecodes.KEY_DOT: 0x37,
+    ecodes.KEY_SLASH: 0x38,
+    ecodes.KEY_CAPSLOCK: 0x39,
     ecodes.KEY_F1: 0x3A,
     ecodes.KEY_F2: 0x3B,
     ecodes.KEY_F3: 0x3C,
@@ -88,7 +100,13 @@ EVDEV_TO_HID_MAP = {
     ecodes.KEY_KP8: 0x60,
     ecodes.KEY_KP9: 0x61,
     ecodes.KEY_KP0: 0x62,
-    ecodes.KEY_APOSTROPHE: 0x63,
+    ecodes.KEY_KPDOT: 0x63,
+    ecodes.KEY_102ND: 0x64,
+    ecodes.KEY_COMPOSE: 0x65,
+    ecodes.KEY_POWER: 0x66,
+    ecodes.KEY_KPEQUAL: 0x67,
+    ecodes.key
+
 	#TODO find out how to refer to the rest of the keys
 
 }

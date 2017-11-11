@@ -108,3 +108,13 @@ height: 100%;
     border:0;
     padding:0;
 }
+.helpwrapper {
+        width: 1170px;
+        background-color:yellowgreen;
+        height: 255px;
+        border: solid 5px;
+        display: inline-block;
+        padding-right: 5px;
+        float:left;
+        margin-bottom:5px;
+}

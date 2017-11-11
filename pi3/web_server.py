@@ -168,7 +168,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         if len(keyprofile_data) > 1:
             modified_keys = keyprofile_data
         for k in self.server.settings["keyData"]:
-            for j in modified_keys["keyData"]:
+            for j in modified_keys["keyData"]: 
                 if k["EvdevID"] == j["EvdevID"]:
                     k["mappedEvdevID"] = j["mappedEvdevID"]   
                     k["mappedEvdevName"] = j["mappedEvdevName"]
@@ -186,7 +186,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", "0")
         self.end_headers()
         print("response sent")
-        print(self.server.settings)
+        #print(self.server.settings)
         with open('data.txt', 'w') as outfile:
             json.dump(self.server.settings, outfile)
 

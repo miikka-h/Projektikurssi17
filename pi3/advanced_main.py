@@ -12,6 +12,52 @@ from web_server import WebServerManager
 from evdev import ecodes
 from hid_report import HidReport
 
+class HidDataSocket():
+
+    def __init__(self) -> None:
+        self.server_socket = None # type: socket.SocketType
+        self.connection_socket = None # type: socket.SocketType
+        self.address = None
+
+    # Return False if there is socket creation error.
+    def create_socket(self) -> bool:
+        try:
+            self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            self.server_socket.bind(("", 25001))
+            self.server_socket.listen(0)
+            return True
+        except OSError as error:
+            print("error: " + error.strerror)
+            return False
+
+    def close(self) -> None:
+        if self.connection_socket is not None:
+            self.connection_socket.close()
+
+            self.server_socket.close()
+
+    def wait_connection(self) -> None:
+        if self.connection_socket is not None:
+            self.connection_socket.close()
+
+        print("waiting for client")
+        (self.connection_socket, self.address) = self.server_socket.accept()
+        print("client from " + str(self.address) + " connected")
+
+    # Returns False if client disconnected.
+    def send_hid_report(self, hid_report: HidReport) -> bool:
+        hid_report.update_report()
+
+        try:
+            self.connection_socket.sendall(hid_report.report)
+            return True
+        except OSError as error:
+            print("error: " + error.strerror)
+            print("client " + str(self.address) + "disconnected")
+            return False
+
+
 
 def initkeyboards():
     device_list = []
@@ -91,36 +137,30 @@ def main():
 
         web_server_manager = WebServerManager()
 
-        # hid data will be sent here. defined in the try block.
-        socket_out = None
+        hid_data_socket = HidDataSocket()
 
-        try:
-            socket_out = Socket_out()
-        except OSError as error:
-            print("error: " + error.strerror)
+        if not hid_data_socket.create_socket():
+            print("error: Could not create socket for HidDataSocket.")
             web_server_manager.close()
-            socket_out.close()
+            hid_data_socket.close()
             exit(-1)
 
-        print("waiting for client")
-
-        socket_out.findConnection()
-        print("client from " + str(socket_out.address) + " connected")
+        hid_data_socket.wait_connection()
 
         # Create evdev keycode to USB HID report converter.
         hid_report = HidReport()
 
         # Actual server logic loop.
-        run(web_server_manager, socket_out, hid_report)
+        run(web_server_manager, hid_data_socket, hid_report)
 
     except KeyboardInterrupt:
         # handle ctrl-c
         web_server_manager.close()
-        socket_out.close()
+        hid_data_socket.close()
         exit(0)
 
 
-def run(web_server_manager: WebServerManager, socket_out, hid_report) -> None:
+def run(web_server_manager: WebServerManager, hid_data_socket: HidDataSocket, hid_report: HidReport) -> None:
 
     clear_keys = True
 
@@ -141,54 +181,44 @@ def run(web_server_manager: WebServerManager, socket_out, hid_report) -> None:
             pass
 
         for input_device in device_list:
-            try:
-                key_update = False
-                print(input_device)
+            key_update = False
+            print(input_device)
 
-                while True:
-                    event = input_device.read_one()
+            while True:
+                event = input_device.read_one()
 
-                    if event is None:
-                        clear_keys = False
-                        break
+                if event is None:
+                    clear_keys = False
+                    break
 
-                    # add keys that are currently pressed down to the hid report.
-                    if event.type == ecodes.EV_KEY and not clear_keys:
-                        key_event = evdev.categorize(event)
+                # add keys that are currently pressed down to the hid report.
+                if event.type == ecodes.EV_KEY and not clear_keys:
+                    key_event = evdev.categorize(event)
 
-                        mappedIDs = []
-                        for key in new_settings["keyData"]:
-                            if key["EvdevID"] == key_event.scancode:
-                                if isinstance(key["mappedEvdevID"], str):
-                                    mappedIDs = [int(x) for x in key["mappedEvdevID"].split(" ")]
-                                else:
-                                    mappedIDs.append(key["mappedEvdevID"])
-                                break
+                    mappedIDs = []
+                    for key in new_settings["keyData"]:
+                        if key["EvdevID"] == key_event.scancode:
+                            if isinstance(key["mappedEvdevID"], str):
+                                mappedIDs = [int(x) for x in key["mappedEvdevID"].split(" ")]
+                            else:
+                                mappedIDs.append(key["mappedEvdevID"])
+                            break
 
-                        if key_event.keystate == key_event.key_down:
-                            for k in mappedIDs:
-                                if hid_report.add_key(k):
-                                    key_update = True
+                    if key_event.keystate == key_event.key_down:
+                        for k in mappedIDs:
+                            if hid_report.add_key(k):
+                                key_update = True
 
-                        elif key_event.keystate == key_event.key_up:
-                            for k in mappedIDs:
-                                if hid_report.remove_key(k):
-                                    key_update = True
+                    elif key_event.keystate == key_event.key_up:
+                        for k in mappedIDs:
+                            if hid_report.remove_key(k):
+                                key_update = True
 
-                        if key_update:
-                            hid_report.update_report()
+                    if key_update:
+                        if not hid_data_socket.send_hid_report(hid_report):
+                            hid_data_socket.wait_connection()
+                            clear_keys = True
 
-                            try:
-                                socket_out.connection_socket.sendall(hid_report.report)
-                            except OSError as error:
-                                print("error: " + error.strerror)
-                                print("disconnecting client from: " + str(socket_out.address))
-                                socket_out.connection_socket.close()
-                                clear_keys = True
-            except OSError as error:
-                print("error: " + error.strerror)
-                print(device_list)
-                pass
             time.sleep(0.1)
 
 
@@ -205,21 +235,6 @@ def run(web_server_manager: WebServerManager, socket_out, hid_report) -> None:
 #         self.device_search_thread.join()
 
 
-class Socket_out():
-
-    def __init__(self):
-        self.connection_socket = None
-        self.address = None
-        self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.server_socket.bind(("", 25001))
-        self.server_socket.listen(0)
-
-    def close(self):
-        self.server_socket.close()
-
-    def findConnection(self):
-        (self.connection_socket, self.address) = self.server_socket.accept()
 
 if __name__ == "__main__":
     main()

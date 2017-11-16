@@ -4,12 +4,13 @@ from queue import Queue, Empty
 from threading import Thread, Event
 import socket
 import time
+from typing import List
 
 import pyudev
 import evdev
+from evdev import ecodes
 
 from web_server import WebServerManager
-from evdev import ecodes
 from hid_report import HidReport
 
 class HidDataSocket():
@@ -56,6 +57,31 @@ class HidDataSocket():
             print("error: " + error.strerror)
             print("client " + str(self.address) + "disconnected")
             return False
+
+
+class KeyRemapper:
+    def __init__(self, settings) -> None:
+        self.settings = settings
+
+    def set_new_settings(self, settings) -> None:
+        self.settings = settings
+
+    def remap_key(self, evdev_id: int) -> List[List[int]]:
+        key_reports = [] # type: List[List[int]]
+
+        mapped_ids = [] # type: List[int]
+
+        # TODO: Remove for loop. That requires changes in JSON structure.
+        for key in self.settings["keyData"]:
+            if key["EvdevID"] == evdev_id:
+                if isinstance(key["mappedEvdevID"], str):
+                    mapped_ids = [int(x) for x in key["mappedEvdevID"].split(" ")]
+                else:
+                    mapped_ids.append(key["mappedEvdevID"])
+                key_reports.append(mapped_ids)
+                break
+
+        return key_reports
 
 
 
@@ -165,7 +191,7 @@ def run(web_server_manager: WebServerManager, hid_data_socket: HidDataSocket, hi
     clear_keys = True
 
     print("waiting for settings from web server thread")
-    new_settings = web_server_manager.get_settings_queue().get()
+    key_remapper = KeyRemapper(web_server_manager.get_settings_queue().get())
     print("received settings from web server thread")
 
     while True:
@@ -176,7 +202,7 @@ def run(web_server_manager: WebServerManager, hid_data_socket: HidDataSocket, hi
 
         try:
             new_settings = web_server_manager.get_settings_queue().get(block=False)
-            print(str(new_settings))
+            key_remapper.set_new_settings(new_settings)
         except Empty:
             pass
 
@@ -191,28 +217,26 @@ def run(web_server_manager: WebServerManager, hid_data_socket: HidDataSocket, hi
                     clear_keys = False
                     break
 
-                # add keys that are currently pressed down to the hid report.
                 if event.type == ecodes.EV_KEY and not clear_keys:
-                    key_event = evdev.categorize(event)
 
-                    mappedIDs = []
-                    for key in new_settings["keyData"]:
-                        if key["EvdevID"] == key_event.scancode:
-                            if isinstance(key["mappedEvdevID"], str):
-                                mappedIDs = [int(x) for x in key["mappedEvdevID"].split(" ")]
-                            else:
-                                mappedIDs.append(key["mappedEvdevID"])
-                            break
+                    new_keys_list = key_remapper.remap_key(event.code)
 
-                    if key_event.keystate == key_event.key_down:
-                        for k in mappedIDs:
-                            if hid_report.add_key(k):
-                                key_update = True
+                    if len(new_keys_list) == 1:
+                        key_list = new_keys_list[0]
 
-                    elif key_event.keystate == key_event.key_up:
-                        for k in mappedIDs:
-                            if hid_report.remove_key(k):
-                                key_update = True
+                        # key_down = 1
+                        if event.value == 1:
+                            for k in key_list:
+                                if hid_report.add_key(k):
+                                    key_update = True
+                        # key_up = 0
+                        elif event.value == 0:
+                            for k in key_list:
+                                if hid_report.remove_key(k):
+                                    key_update = True
+                    else:
+                        pass
+                        # TODO: Handle more complicated key remaps.
 
                     if key_update:
                         if not hid_data_socket.send_hid_report(hid_report):

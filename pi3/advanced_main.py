@@ -4,12 +4,11 @@ from queue import Queue, Empty
 from threading import Thread, Event
 import socket
 import time
-import keyprofile
 
 import pyudev
 import evdev
 
-from web_server import WebServer
+from web_server import WebServerManager
 from evdev import ecodes
 from hid_report import HidReport
 
@@ -53,8 +52,8 @@ def log_event(action, device):
                         except AttributeError:
                             print("actual removal happening")
                             device_list.remove(i)
-                            
-                        
+
+
                    # i = len (device_list) -1
                    # while i >= 0:
                    #     try:
@@ -90,7 +89,7 @@ def main():
 
         # Lets load all necessary components and form connections.
 
-        server = Server()
+        web_server_manager = WebServerManager()
 
         # hid data will be sent here. defined in the try block.
         socket_out = None
@@ -99,7 +98,7 @@ def main():
             socket_out = Socket_out()
         except OSError as error:
             print("error: " + error.strerror)
-            server.close()
+            web_server_manager.close()
             socket_out.close()
             exit(-1)
 
@@ -112,20 +111,22 @@ def main():
         hid_report = HidReport()
 
         # Actual server logic loop.
-        run(server, socket_out, hid_report)
+        run(web_server_manager, socket_out, hid_report)
 
     except KeyboardInterrupt:
         # handle ctrl-c
-        server.close()
+        web_server_manager.close()
         socket_out.close()
         exit(0)
 
 
-def run(server, socket_out, hid_report):
+def run(web_server_manager: WebServerManager, socket_out, hid_report) -> None:
 
     clear_keys = True
 
-    new_settings = keyprofile.settings
+    print("waiting for settings from web server thread")
+    new_settings = web_server_manager.get_settings_queue().get()
+    print("received settings from web server thread")
 
     while True:
 
@@ -134,7 +135,7 @@ def run(server, socket_out, hid_report):
             continue
 
         try:
-            new_settings = server.settings_queue.get(block=False)
+            new_settings = web_server_manager.get_settings_queue().get(block=False)
             print(str(new_settings))
         except Empty:
             pass
@@ -181,7 +182,7 @@ def run(server, socket_out, hid_report):
                                 socket_out.connection_socket.sendall(hid_report.report)
                             except OSError as error:
                                 print("error: " + error.strerror)
-                                print("disconnecting client from: " + str(server.address))
+                                print("disconnecting client from: " + str(socket_out.address))
                                 socket_out.connection_socket.close()
                                 clear_keys = True
             except OSError as error:
@@ -192,13 +193,13 @@ def run(server, socket_out, hid_report):
 
 
 # class Devices():
-# 
+#
 #     def __init__(self):
 #         device_queue = Queue()
 #         self.exit_event = Event()
 #         self.device_search_thread = Thread(group=None, target=FindDevices, args=(device_queue, exit_event))
 #         self.device_search_thread.start()
-# 
+#
 #     def close(self):
 #         self.exit_event.set()
 #         self.device_search_thread.join()
@@ -219,22 +220,6 @@ class Socket_out():
 
     def findConnection(self):
         (self.connection_socket, self.address) = self.server_socket.accept()
-
-
-class Server():
-
-    def __init__(self):
-        self.exit_event = Event()
-        web_server_settings = ("", 8080)
-        self.settings_queue = Queue()
-        self.web_server_thread = Thread(group=None, target=WebServer, args=(web_server_settings, self.settings_queue, self.exit_event))
-        self.web_server_thread.start()
-        self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-    def close(self):
-        self.exit_event.set()
-        self.web_server_thread.join()
-
 
 if __name__ == "__main__":
     main()

@@ -1,12 +1,30 @@
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from queue import Queue
-from threading import Event
+from threading import Thread, Event
 import json
 
 # Import Tuple type which is used in optional function type annotations.
 from typing import Tuple
 
 import keyprofile
+
+# Creates new web server thread.
+class WebServerManager():
+    def __init__(self):
+        self.exit_event = Event()
+        web_server_settings = ("", 8080)
+        self.settings_queue = Queue()
+        self.web_server_thread = Thread(group=None, target=WebServer, args=(web_server_settings, self.settings_queue, self.exit_event))
+        self.web_server_thread.start()
+
+    # Blocks until web server is closed.
+    def close(self):
+        self.exit_event.set()
+        self.web_server_thread.join()
+
+    def get_settings_queue(self) -> Queue:
+        return self.settings_queue
+
 
 # Class WebServer inherits HTTPServer class which is from Python standard library.
 # https://docs.python.org/3/library/http.server.html
@@ -31,7 +49,7 @@ class WebServer(HTTPServer):
         self.settings = keyprofile.settings
 
         # Main thread is waiting for profiles/settings so lets send them.
-        # self.settings_queue.put_nowait(self.settings)
+        self.settings_queue.put_nowait(self.settings)
 
         print("web server running")
         while True:

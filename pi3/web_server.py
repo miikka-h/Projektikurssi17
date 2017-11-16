@@ -1,12 +1,12 @@
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from queue import Queue
 from threading import Event
-import keyprofile
 import json
-import codecs
 
 # Import Tuple type which is used in optional function type annotations.
 from typing import Tuple
+
+import keyprofile
 
 # Class WebServer inherits HTTPServer class which is from Python standard library.
 # https://docs.python.org/3/library/http.server.html
@@ -22,10 +22,16 @@ class WebServer(HTTPServer):
         # Some object attributes specific to this class. You can modify
         # them from RequestHandler's methods.
         self.settings_queue = settings_queue
-        self.settings = keyprofile.settings
 
         # Check exit event every 0.5 seconds if there is no new TCP connections.
         self.timeout = 0.5
+
+        # TODO: Load saved profiles/settings from file
+        #       if file is not found default to keyprofile.settings
+        self.settings = keyprofile.settings
+
+        # Main thread is waiting for profiles/settings so lets send them.
+        # self.settings_queue.put_nowait(self.settings)
 
         print("web server running")
         while True:
@@ -38,156 +44,87 @@ class WebServer(HTTPServer):
                 break
 
         self.server_close()
+
+        # Save profiles/settings.
+        with open('data.txt', 'w') as outfile:
+            json.dump(self.settings, outfile)
+
         print("web server exited")
 
 
 # Python standard library HTTPServer works with request handler system, so lets
 # make our own request handler.
 class RequestHandler(BaseHTTPRequestHandler):
-    # By default the HTTP version would be 1.0, so lets override it.
-    # Note that HTTP 1.1 will use single TCP connection for every HTTP
-    # request, so Content-Length header must be set for every HTTP response.
-    # Otherwise web browser does not know when TCP connection should be closed.
-    #protocol_version = "HTTP/1.1"
+    # By default the HTTP version is 1.0.
 
     # Handler for HTTP GET requests.
     def do_GET(self) -> None:
         # Print some information about the HTTP request.
-        print("GET")
-        print("path: " + self.path) 
-        print("client_address: " + str(self.client_address))
-        print("request_version: " + self.request_version)
-        print("headers: " + str(self.headers))
-        
 
-        
-        
+        #print("HTTP GET Request, path: " + self.path)
+        #print("client_address: " + str(self.client_address))
+        #print("request_version: " + self.request_version)
+        #print("headers: " + str(self.headers))
+
         if self.path == "/json.api":
             message = json.dumps(self.server.settings)
-            message_bytearray = bytearray()
-            message_bytearray.extend(map(ord, message))
-             # 200 is HTTP status code for successfull request.
-            self.send_response(200)
-            # Content-Length is length of the HTTP message body in bytes.
-            self.send_header("Content-Length", str(len(message_bytearray)))
-            self.send_header("Content-Encoding", "UTF-8")
-            self.send_header("Content-Type", "text/json; charset=utf-8")
-            self.end_headers()
-            # Write HTTP message body which is the HTML web page.
-            self.wfile.write(message_bytearray)
-            self.wfile.flush()
-            print("response sent")
+            message_bytes = message.encode()
+
+            self.send_utf8_bytes(message_bytes, "text/json")
         elif self.path == "/":
-            
-            f = codecs.open("../frontend/control.html", 'r')
-            message = f.read()
-            f.close()
-           
-            message_bytearray = bytearray()
-            message_bytearray.extend(map(ord, message))
-             # 200 is HTTP status code for successfull request.
-            self.send_response(200)
-            # Content-Length is length of the HTTP message body in bytes.
-            self.send_header("Content-Length", str(len(message_bytearray)))
-            self.send_header("Content-Encoding", "UTF-8")
-            self.send_header("Content-Type", "text/html; charset=utf-8")
-            self.end_headers()
-
-            # Write HTTP message body which is the HTML web page.
-            
-            self.wfile.write(message_bytearray)
-            self.wfile.flush()
-            print("response sent")    
+            self.send_utf8_file("../frontend/control.html", "text/html")
         elif self.path == "/styles.css":
-            
-            f = codecs.open("../frontend/styles.css", 'r')
-            message = f.read()
-            f.close()
-           
-            message_bytearray = bytearray()
-            message_bytearray.extend(map(ord, message))
-             # 200 is HTTP status code for successfull request.
-            self.send_response(200)
-            # Content-Length is length of the HTTP message body in bytes.
-            self.send_header("Content-Length", str(len(message_bytearray)))
-            self.send_header("Content-Encoding", "UTF-8")
-            self.send_header("Content-Type", "text/css; charset=utf-8")
-            self.end_headers()
-
-            # Write HTTP message body which is the HTML web page.
-            
-            self.wfile.write(message_bytearray)
-            self.wfile.flush()
-            print("response sent")
+            self.send_utf8_file("../frontend/styles.css", "text/css")
         elif self.path == "/script.js":
-            
-            f = codecs.open("../frontend/script.js", 'r')
-            message = f.read()
-            f.close()
-           
-            message_bytearray = bytearray()
-            message_bytearray.extend(map(ord, message))
-             # 200 is HTTP status code for successfull request.
-            self.send_response(200)
-            # Content-Length is length of the HTTP message body in bytes.
-            self.send_header("Content-Length", str(len(message_bytearray)))
-            self.send_header("Content-Encoding", "UTF-8")
-            self.send_header("Content-Type", "application/javascript; charset=utf-8")
-            self.end_headers()
-
-            # Write HTTP message body which is the HTML web page.
-            
-            self.wfile.write(message_bytearray)
-            self.wfile.flush()
-            print("response sent")                
+            self.send_utf8_file("../frontend/script.js", "application/javascript")
         else:
-            message_bytearray = b"<html><body><h1>Hello world</h1></body></html>"
-            # 200 is HTTP status code for successfull request.
-            self.send_response(200)
-            # Content-Length is length of the HTTP message body in bytes.
-            self.send_header("Content-Length", str(len(message_bytearray)))
-            self.send_header("Content-Encoding", "UTF-8")
-            self.send_header("Content-Type", "text/html; charset=utf-8")
-            self.end_headers()
-
-            # Write HTTP message body which is the HTML web page.
-            self.wfile.write(message_bytearray)
-            self.wfile.flush()
-            print("response sent")
+            message_bytes = b"<html><body><h1>Hello world</h1></body></html>"
+            self.send_utf8_bytes(message_bytes, "text/html")
 
     # Handler for HTTP POST requests.
     def do_POST(self) -> None:
-        print("POST")
-        print("path: " + self.path)
-        headerLength =  self.headers.get("Content-Length",0)
+        #print("HTTP POST Request, path: " + self.path)
+        #print("client_address: " + str(self.client_address))
+        #print("request_version: " + self.request_version)
+        #print("headers: " + str(self.headers))
 
-        response = self.rfile.read(int(headerLength))
-       
+        content_length =  self.headers.get("Content-Length", 0)
+
+        response = self.rfile.read(int(content_length))
+
         keyprofile_data = json.loads(response.decode("utf-8"))
-        modified_keys = []
-        if len(keyprofile_data) > 1:
-            modified_keys = keyprofile_data
-        for k in self.server.settings["keyData"]:
-            for j in modified_keys["keyData"]:
-                if k["EvdevID"] == j["EvdevID"]:
-                    k["mappedEvdevID"] = j["mappedEvdevID"]   
-                    k["mappedEvdevName"] = j["mappedEvdevName"]
+        modified_keys_list = keyprofile_data["keyData"]
 
-        
-        
-        print("client_address: " + str(self.client_address))
-        print("request_version: " + self.request_version)
-        print("headers: " + str(self.headers))
+        if len(modified_keys_list) > 0:
+            # TODO: Remove for loops, this requires changing the JSON structure.
+            for k in self.server.settings["keyData"]:
+                for j in modified_keys_list:
+                    if k["EvdevID"] == j["EvdevID"]:
+                        k["mappedEvdevID"] = j["mappedEvdevID"]
+                        k["mappedEvdevName"] = j["mappedEvdevName"]
 
         # Send new settings to main thread.
         self.server.settings_queue.put_nowait(self.server.settings)
 
         self.send_response(200)
-        self.send_header("Content-Length", "0")
         self.end_headers()
-        print("response sent")
-        print(self.server.settings)
-        with open('data.txt', 'w') as outfile:
-            json.dump(self.server.settings, outfile)
 
+    # Mime type is string like "text/json"
+    def send_utf8_file(self, file_name: str, mime_type: str) -> None:
+        file = open(file_name, mode='rb')
+        file_as_bytes = file.read()
+        file.close()
+
+        self.send_utf8_bytes(file_as_bytes, mime_type)
+
+    # Mime type is string like "text/json"
+    def send_utf8_bytes(self, message_bytes: bytes, mime_type: str) -> None:
+        # 200 is HTTP status code for successfull request.
+        self.send_response(200)
+        self.send_header("Content-Encoding", "UTF-8")
+        self.send_header("Content-Type", mime_type + "; charset=utf-8")
+        self.end_headers()
+        # Write HTTP message body which is the HTML web page.
+        self.wfile.write(message_bytes)
+        self.wfile.flush()
 

@@ -21,7 +21,7 @@ pip3 install --upgrade pip
 ```
 
 ```
-pip3 install --user evdev
+pip3 install --user evdev pyudev
 
 ```
 

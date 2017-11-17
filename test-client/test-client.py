@@ -57,10 +57,19 @@ def main() -> None:
                 exit(-1)
             else:
                 # No errors
-                print("data: {0:#b} ".format(data[0]), end='')
-                for i in range(1, 8):
-                    print("{0:#x} ".format(data[i]), end='')
-                print()
+                if data[0] == 0:
+                    print("data:            ", end='')
+                else:
+                    print("data: {0:0=#10b} ".format(data[0]), end='')
+
+                print("| ", end='')
+
+                for i in range(2, 8):
+                    if data[i] == 0:
+                        print("     ", end='')
+                    else:
+                        print("{0:0=#4x} ".format(data[i]), end='')
+                print("|")
 
     except OSError as error:
         print("error: " + error.strerror)

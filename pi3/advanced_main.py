@@ -13,15 +13,22 @@ from evdev import ecodes
 from web_server import WebServerManager
 from hid_report import HidReport
 
+
 class HidDataSocket():
+    """
+    TCP Socket for sending USB HID report data.
+
+    Call `create_socket()` method before using other methods.
+    """
 
     def __init__(self) -> None:
         self.server_socket = None # type: socket.SocketType
         self.connection_socket = None # type: socket.SocketType
         self.address = None
 
-    # Return False if there is socket creation error.
+
     def create_socket(self) -> bool:
+        """Returns False if there is socket creation error."""
         try:
             self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -33,12 +40,15 @@ class HidDataSocket():
             return False
 
     def close(self) -> None:
+        """Close all sockets."""
         if self.connection_socket is not None:
             self.connection_socket.close()
 
+        if self.server_socket is not None:
             self.server_socket.close()
 
     def wait_connection(self) -> None:
+        """Close previous connection to client if it exists and wait for new connection."""
         if self.connection_socket is not None:
             self.connection_socket.close()
 
@@ -46,8 +56,8 @@ class HidDataSocket():
         (self.connection_socket, self.address) = self.server_socket.accept()
         print("client from " + str(self.address) + " connected")
 
-    # Returns False if client disconnected.
     def send_hid_report_if_there_is_new_changes(self, hid_report: HidReport) -> bool:
+        """Returns False if client disconnected."""
         if not hid_report.update_report():
             return True
 
@@ -61,13 +71,25 @@ class HidDataSocket():
 
 
 class KeyRemapper:
+    """Map one key to multiple keys."""
+
     def __init__(self, settings) -> None:
+        """Argument `settings` is profile JSON dictionary."""
         self.settings = settings
 
     def set_new_settings(self, settings) -> None:
+        """Argument `settings` is profile JSON dictionary."""
         self.settings = settings
 
     def remap_key(self, evdev_id: int) -> List[List[int]]:
+        """
+        Remaps one key to multiple keys.
+
+        Key id values are evdev id numbers.
+
+        Returns list containing lists of keys. List of keys
+        represents keys that are included in one USB hid report.
+        """
         key_reports = [] # type: List[List[int]]
 
         mapped_ids = [] # type: List[int]
@@ -86,6 +108,14 @@ class KeyRemapper:
 
 
 class KeyboardManager:
+    """Read input from all availlable keyboards.
+
+    Starts a new thread to monitor device events from Linux udev system.
+    This allows adding and removing keyboards at runtime without constantly
+    polling udev for new device events.
+
+    Call `close()` to close device monitoring thread.
+    """
     def __init__(self) -> None:
         self.context = pyudev.Context()
         self.device_list = [] # type: List[evdev.InputDevice]
@@ -101,17 +131,23 @@ class KeyboardManager:
 
         self.exit_event = Event()
         self.event_queue = Queue() # type: Queue
-        self.device_monitor_thread = Thread(group=None, target=send_keyboard_event, args=(self.exit_event, self.event_queue, monitor))
+        self.device_monitor_thread = Thread(group=None, target=monitor_device_events, args=(self.exit_event, self.event_queue, monitor))
         self.device_monitor_thread.start()
 
         self.key_event_buffer = [] # type: List[evdev.InputEvent]
         self.clear_keys = False
 
     def close(self) -> None:
+        """Send exit event to device monitoring thread. Waits until thread is closed."""
         self.exit_event.set()
         self.device_monitor_thread.join()
 
     def get_key_events(self) -> List[evdev.InputEvent]:
+        """
+        Returns list of evdev keyboard events from all currently connected keyboards.
+
+        If clearing current key events is requested, returns empty list.
+        """
         self.key_event_buffer.clear()
 
         for keyboard in self.device_list:
@@ -131,36 +167,48 @@ class KeyboardManager:
         return self.key_event_buffer
 
     def request_clear_key_events(self) -> None:
+        """
+        Request clearing key event buffers. Clearing key events will
+        happen at next `get_key_events()` method call.
+        """
         self.clear_keys = True
 
     def check_device_events(self) -> None:
-        try:
-            (event, device_node) = self.event_queue.get(block=False)
+        """
+        Check if there new device events from device monitoring thread.
+        Updates keyboard list if there is new events.
+        """
+        while True:
+            try:
+                (event, device_node) = self.event_queue.get(block=False)
 
-            if event == KEYBOARD_ADDED:
-                keyboard = evdev.InputDevice(device_node)
-                print("Keyboard '" + keyboard.name + "' added")
-                self.device_list.append(keyboard)
-            elif event == KEYBOARD_REMOVED:
-                removed_device = None
+                if event == KEYBOARD_ADDED:
+                    keyboard = evdev.InputDevice(device_node)
+                    print("Keyboard '" + keyboard.name + "' added")
+                    self.device_list.append(keyboard)
+                elif event == KEYBOARD_REMOVED:
+                    removed_device = None
 
-                for evdev_device in self.device_list:
-                    if evdev_device.fn == device_node:
-                        removed_device = evdev_device
-                        break
+                    for evdev_device in self.device_list:
+                        if evdev_device.fn == device_node:
+                            removed_device = evdev_device
+                            break
 
-                if removed_device != None:
-                    print("Keyboard '" + removed_device.name + "' removed")
-                    self.device_list.remove(removed_device)
-                    removed_device.close()
-        except Empty:
-            pass
+                    if removed_device != None:
+                        print("Keyboard '" + removed_device.name + "' removed")
+                        self.device_list.remove(removed_device)
+                        removed_device.close()
+            except Empty:
+                break
 
 
 KEYBOARD_ADDED = 0
 KEYBOARD_REMOVED = 1
 
-def send_keyboard_event(exit_event: Event, event_queue: Queue, monitor: pyudev.Monitor):
+def monitor_device_events(exit_event: Event, event_queue: Queue, monitor: pyudev.Monitor):
+    """
+    A new thread should be created to run this function.
+    """
     while True:
         device = monitor.poll(timeout=0.5)
 

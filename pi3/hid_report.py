@@ -123,55 +123,67 @@ MODIFIER_KEY_BITMASKS =  {
 }
 
 class HidReport:
+    """
+    Convert evdev keyboard key ids to USB HID keyboard report.
 
+    Attribute `self.report` contains USB HID keyboard report data.
+    Run method `update_report()` before accessing HID report data
+    to make sure that HID report data is up to date.
+    """
     def __init__(self) -> None:
         self.clear()
 
     def clear(self) -> None:
+        """Clears all keys from HID report."""
         self.keycodes = {}
         self.report = bytearray(8)
         self.report_update = False
 
-    def add_key(self, evdev_key: int) -> bool:
-        if len(self.keycodes) >= 6:
-            return
-
+    def add_key(self, evdev_key: int) -> None:
+        """
+        Add evdev key to HID report.
+        """
         try:
             bitmask = MODIFIER_KEY_BITMASKS[evdev_key]
             self.report[0] = self.report[0] | bitmask
             self.report_update = True
-            return True
+            return
         except KeyError:
             pass
+
+        if len(self.keycodes) >= 6:
+            return
 
         try:
             self.keycodes[evdev_key] = EVDEV_TO_HID_MAP[evdev_key]
             self.report_update = True
-            return True
         except KeyError:
             print("unknown key: " + str(evdev_key))
-            return False
 
-    def remove_key(self, evdev_key: int) -> bool:
+    def remove_key(self, evdev_key: int) -> None:
+        """
+        Remove evdev key from HID report.
+        """
         try:
             bitmask = MODIFIER_KEY_BITMASKS[evdev_key]
             self.report[0] = self.report[0] & (~bitmask)
             self.report_update = True
-            return True
+            return
         except KeyError:
             pass
 
         try:
             del self.keycodes[evdev_key]
             self.report_update = True
-            return True
         except KeyError:
             print("unknown key: " + str(evdev_key))
-            return False
 
-    # Returns True if there is changes in the report.
     def update_report(self) -> bool:
+        """
+        Update HID report data buffer if some keys were added or removed earlier.
 
+        Returns True if buffer was updated.
+        """
         if not self.report_update:
             return False
         else:

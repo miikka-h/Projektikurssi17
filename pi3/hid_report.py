@@ -130,6 +130,7 @@ class HidReport:
     def clear(self) -> None:
         self.keycodes = {}
         self.report = bytearray(8)
+        self.report_update = False
 
     def add_key(self, evdev_key: int) -> bool:
         if len(self.keycodes) >= 6:
@@ -138,12 +139,14 @@ class HidReport:
         try:
             bitmask = MODIFIER_KEY_BITMASKS[evdev_key]
             self.report[0] = self.report[0] | bitmask
+            self.report_update = True
             return True
         except KeyError:
             pass
 
         try:
             self.keycodes[evdev_key] = EVDEV_TO_HID_MAP[evdev_key]
+            self.report_update = True
             return True
         except KeyError:
             print("unknown key: " + str(evdev_key))
@@ -153,23 +156,36 @@ class HidReport:
         try:
             bitmask = MODIFIER_KEY_BITMASKS[evdev_key]
             self.report[0] = self.report[0] & (~bitmask)
+            self.report_update = True
             return True
         except KeyError:
             pass
 
         try:
             del self.keycodes[evdev_key]
+            self.report_update = True
             return True
         except KeyError:
             print("unknown key: " + str(evdev_key))
             return False
 
-    def update_report(self) -> None:
+    # Returns True if there is changes in the report.
+    def update_report(self) -> bool:
+
+        if not self.report_update:
+            return False
+
+        # Update hid report keycodes.
+
         i = 2
 
         for _, item in self.keycodes.items():
             self.report[i] = item
             i += 1
 
+        # Set rest of the hid report keycodes to zero.
+
         for j in range(i, 8):
             self.report[j] = 0x00
+
+        return True

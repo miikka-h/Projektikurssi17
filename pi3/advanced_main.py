@@ -47,15 +47,16 @@ class HidDataSocket():
         print("client from " + str(self.address) + " connected")
 
     # Returns False if client disconnected.
-    def send_hid_report(self, hid_report: HidReport) -> bool:
-        hid_report.update_report()
+    def send_hid_report_if_there_is_new_changes(self, hid_report: HidReport) -> bool:
+        if not hid_report.update_report():
+            return True
 
         try:
             self.connection_socket.sendall(hid_report.report)
             return True
         except OSError as error:
             print("error: " + error.strerror)
-            print("client " + str(self.address) + "disconnected")
+            print("client " + str(self.address) + " disconnected")
             return False
 
 
@@ -84,82 +85,102 @@ class KeyRemapper:
         return key_reports
 
 
+class KeyboardManager:
+    def __init__(self) -> None:
+        self.context = pyudev.Context()
+        self.device_list = [] # type: List[evdev.InputDevice]
 
-def initkeyboards():
-    device_list = []
-    event_location = ""
-    devinput = "/dev/input/"
-    context = pyudev.Context()
-    for device in context.list_devices():
-        if 'ID_INPUT_KEYBOARD' in device:
-            try:
-                event_location = device.device_node
-                if event_location[0:(len(devinput))] == devinput:
-                    device_list.append(evdev.InputDevice(event_location))
-            except TypeError:
-                pass
+        for keyboard in self.context.list_devices(subsystem="input", ID_INPUT_KEYBOARD=1):
+            if keyboard.device_node != None:
+                keyboard = evdev.InputDevice(keyboard.device_node)
+                print("Keyboard '" + keyboard.name + "' added")
+                self.device_list.append(keyboard)
 
-    return device_list
+        monitor = pyudev.Monitor.from_netlink(self.context)
+        monitor.filter_by("input")
 
+        self.exit_event = Event()
+        self.event_queue = Queue() # type: Queue
+        self.device_monitor_thread = Thread(group=None, target=send_keyboard_event, args=(self.exit_event, self.event_queue, monitor))
+        self.device_monitor_thread.start()
 
-device_list = initkeyboards()
+        self.key_event_buffer = [] # type: List[evdev.InputEvent]
+        self.clear_keys = False
 
+    def close(self) -> None:
+        self.exit_event.set()
+        self.device_monitor_thread.join()
 
-def log_event(action, device):
-    event_location = ""
-    devinput = "/dev/input/"
-    if 'ID_INPUT_KEYBOARD' in device:
+    def get_key_events(self) -> List[evdev.InputEvent]:
+        self.key_event_buffer.clear()
+
+        for keyboard in self.device_list:
+            while True:
+                try:
+                    evdev_event = keyboard.read_one()
+
+                    if evdev_event is None:
+                        break
+                    elif evdev_event.type == ecodes.EV_KEY and not self.clear_keys:
+                        self.key_event_buffer.append(evdev_event)
+                except OSError:
+                    break
+
+        self.clear_keys = False
+
+        return self.key_event_buffer
+
+    def request_clear_key_events(self) -> None:
+        self.clear_keys = True
+
+    def check_device_events(self) -> None:
         try:
-            print (device_list)
-            event_location = device.device_node
-            print('{0} - {1}'.format(action, event_location))
-            if event_location[0:(len(devinput))] == devinput:
-                if action == "add":
-                    device_list.append(evdev.InputDevice(event_location))
-                else:
-                    print("removing" + event_location)
-                    for i in device_list:
-                        try:
-                            print(i.device_node)
-                        except AttributeError:
-                            print("actual removal happening")
-                            device_list.remove(i)
+            (event, device_node) = self.event_queue.get(block=False)
 
+            if event == KEYBOARD_ADDED:
+                keyboard = evdev.InputDevice(device_node)
+                print("Keyboard '" + keyboard.name + "' added")
+                self.device_list.append(keyboard)
+            elif event == KEYBOARD_REMOVED:
+                removed_device = None
 
-                   # i = len (device_list) -1
-                   # while i >= 0:
-                   #     try:
-                   #         if device
-                   #     except FileNotFoundError:
-                   #         del device_list[i]
-                   #     i -= 1
-                   # try:
-                   #     device_list.remove(evdev.InputDevice(event_location))
-                   # except ValueError:
-                   #     pass
-                print(device_list)
-        except TypeError:
+                for evdev_device in self.device_list:
+                    if evdev_device.fn == device_node:
+                        removed_device = evdev_device
+                        break
+
+                if removed_device != None:
+                    print("Keyboard '" + removed_device.name + "' removed")
+                    self.device_list.remove(removed_device)
+                    removed_device.close()
+        except Empty:
             pass
-# keyboard detection
 
+
+KEYBOARD_ADDED = 0
+KEYBOARD_REMOVED = 1
+
+def send_keyboard_event(exit_event: Event, event_queue: Queue, monitor: pyudev.Monitor):
+    while True:
+        device = monitor.poll(timeout=0.5)
+
+        if device != None:
+            if not ('ID_INPUT_KEYBOARD' in device.properties and device.device_node != None):
+                continue
+
+            if device.action == "add":
+                event_queue.put_nowait((KEYBOARD_ADDED, device.device_node))
+            elif device.action == "remove":
+                event_queue.put_nowait((KEYBOARD_REMOVED, device.device_node))
+
+        if exit_event.is_set():
+            break
 
 def main():
 
     try:
-
-        # initialize all connected keyboards
-        # initKeyboards()
-
-        # Starts looking for new connected keyboards
-        context = pyudev.Context()
-        monitor = pyudev.Monitor.from_netlink(context)
-        monitor.filter_by('input')
-
-        print("Waiting for keyboards to be connected")
-        observer = pyudev.MonitorObserver(monitor, log_event)
-        observer.start()
-
         # Lets load all necessary components and form connections.
+        keyboard_manager = KeyboardManager()
 
         web_server_manager = WebServerManager()
 
@@ -177,28 +198,28 @@ def main():
         hid_report = HidReport()
 
         # Actual server logic loop.
-        run(web_server_manager, hid_data_socket, hid_report)
+        run(web_server_manager, hid_data_socket, hid_report, keyboard_manager)
 
     except KeyboardInterrupt:
         # handle ctrl-c
         web_server_manager.close()
         hid_data_socket.close()
+        keyboard_manager.close()
         exit(0)
 
 
-def run(web_server_manager: WebServerManager, hid_data_socket: HidDataSocket, hid_report: HidReport) -> None:
-
-    clear_keys = True
+def run(web_server_manager: WebServerManager, hid_data_socket: HidDataSocket, hid_report: HidReport, keyboard_manager: KeyboardManager) -> None:
 
     print("waiting for settings from web server thread")
     key_remapper = KeyRemapper(web_server_manager.get_settings_queue().get())
     print("received settings from web server thread")
 
-    while True:
+    keyboard_manager.request_clear_key_events()
 
-        if len(device_list) < 1:
-            time.sleep(0.1)
-            continue
+    while True:
+        time.sleep(0.001)
+
+        keyboard_manager.check_device_events()
 
         try:
             new_settings = web_server_manager.get_settings_queue().get(block=False)
@@ -206,58 +227,29 @@ def run(web_server_manager: WebServerManager, hid_data_socket: HidDataSocket, hi
         except Empty:
             pass
 
-        for input_device in device_list:
-            key_update = False
-            print(input_device)
+        for event in keyboard_manager.get_key_events():
+            new_keys_list = key_remapper.remap_key(event.code)
 
-            while True:
-                event = input_device.read_one()
+            if len(new_keys_list) == 1:
+                key_list = new_keys_list[0]
 
-                if event is None:
-                    clear_keys = False
-                    break
+                # key_down = 1
+                if event.value == 1:
+                    for k in key_list:
+                        hid_report.add_key(k)
+                # key_up = 0
+                elif event.value == 0:
+                    for k in key_list:
+                        hid_report.remove_key(k)
+            else:
+                pass
+                # TODO: Handle more complicated key remaps.
 
-                if event.type == ecodes.EV_KEY and not clear_keys:
-
-                    new_keys_list = key_remapper.remap_key(event.code)
-
-                    if len(new_keys_list) == 1:
-                        key_list = new_keys_list[0]
-
-                        # key_down = 1
-                        if event.value == 1:
-                            for k in key_list:
-                                if hid_report.add_key(k):
-                                    key_update = True
-                        # key_up = 0
-                        elif event.value == 0:
-                            for k in key_list:
-                                if hid_report.remove_key(k):
-                                    key_update = True
-                    else:
-                        pass
-                        # TODO: Handle more complicated key remaps.
-
-                    if key_update:
-                        if not hid_data_socket.send_hid_report(hid_report):
-                            hid_data_socket.wait_connection()
-                            clear_keys = True
-
-            time.sleep(0.1)
-
-
-# class Devices():
-#
-#     def __init__(self):
-#         device_queue = Queue()
-#         self.exit_event = Event()
-#         self.device_search_thread = Thread(group=None, target=FindDevices, args=(device_queue, exit_event))
-#         self.device_search_thread.start()
-#
-#     def close(self):
-#         self.exit_event.set()
-#         self.device_search_thread.join()
-
+            if not hid_data_socket.send_hid_report_if_there_is_new_changes(hid_report):
+                hid_data_socket.wait_connection()
+                keyboard_manager.request_clear_key_events()
+                hid_report.clear()
+                break
 
 
 if __name__ == "__main__":

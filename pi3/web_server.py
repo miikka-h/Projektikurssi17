@@ -8,8 +8,8 @@ from typing import Tuple
 
 import keyprofile
 
-# Creates new web server thread.
 class WebServerManager():
+    """Creates new web server thread."""
     def __init__(self):
         self.exit_event = Event()
         web_server_settings = ("", 8080)
@@ -17,8 +17,8 @@ class WebServerManager():
         self.web_server_thread = Thread(group=None, target=WebServer, args=(web_server_settings, self.settings_queue, self.exit_event))
         self.web_server_thread.start()
 
-    # Blocks until web server is closed.
     def close(self):
+        """Close web server. This method will block until web server is closed."""
         self.exit_event.set()
         self.web_server_thread.join()
 
@@ -75,8 +75,8 @@ class WebServer(HTTPServer):
 class RequestHandler(BaseHTTPRequestHandler):
     # By default the HTTP version is 1.0.
 
-    # Handler for HTTP GET requests.
     def do_GET(self) -> None:
+        """Handler for HTTP GET requests."""
         # Print some information about the HTTP request.
 
         #print("HTTP GET Request, path: " + self.path)
@@ -99,8 +99,8 @@ class RequestHandler(BaseHTTPRequestHandler):
             message_bytes = b"<html><body><h1>Hello world</h1></body></html>"
             self.send_utf8_bytes(message_bytes, "text/html")
 
-    # Handler for HTTP POST requests.
     def do_POST(self) -> None:
+        """Handler for HTTP POST requests."""
         #print("HTTP POST Request, path: " + self.path)
         #print("client_address: " + str(self.client_address))
         #print("request_version: " + self.request_version)
@@ -127,16 +127,16 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.end_headers()
 
-    # Mime type is string like "text/json"
     def send_utf8_file(self, file_name: str, mime_type: str) -> None:
+        """Mime type is string like 'text/json'"""
         file = open(file_name, mode='rb')
         file_as_bytes = file.read()
         file.close()
 
         self.send_utf8_bytes(file_as_bytes, mime_type)
 
-    # Mime type is string like "text/json"
     def send_utf8_bytes(self, message_bytes: bytes, mime_type: str) -> None:
+        """Mime type is string like 'text/json'"""
         # 200 is HTTP status code for successfull request.
         self.send_response(200)
         self.send_header("Content-Encoding", "UTF-8")

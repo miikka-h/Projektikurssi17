@@ -174,6 +174,8 @@ class HidReport:
 
         if not self.report_update:
             return False
+        else:
+            self.report_update = False
 
         # Update hid report keycodes.
 

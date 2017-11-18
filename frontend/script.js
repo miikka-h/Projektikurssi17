@@ -98,11 +98,11 @@ var evdevIDs = [["KEY_RESERVED",0],["KEY_ESC",1],["KEY_1",2],["KEY_2",3],["KEY_3
 var layoutList = [];
 layoutList[0] = new Layout([[["Esc",1],["",1],["F1",1],["F2",1],["F3",1],["F4",1],["",0.25],["F5",1],["F6",1],["F7",1],["F8",1],["",0.25],["F9",1],["F10",1],["F11",1],["F12",1],["",1],["Print",1],["ScrollLock",1],["Pause",1],["",1.5],["",1],["",1],["",1],["",1]],
     [["",1],["",1],["",1],["",1],["",1],["",1],["",1],["",1],["",1],["",1],["",1],["",1],["",1],["",1],["",1],["",1],["",1],["",1],["",1],["",1],["",1],["",1],["",1],["",1],[""]],
-    [["§",1,"Grave"],["1",1],["2",1],["3",1],["4",1],["5",1],["6",1],["7",1],["8",1],["9",1],["0",1],["+",1,"Minus"],["´",1,"Equal"],["<=",2,"Backspace"],["",1],["Insert",1],["Home",1],["PageUp",1],["",1],["NumLock",1],["/",1,"kpslash"],["*",1,"kpasterisk"],["kp-",1,"kpminus"],[""]],
+    [["§",1,"Grave"],["1",1],["2",1],["3",1],["4",1],["5",1],["6",1],["7",1],["8",1],["9",1],["0",1],["+",1,"Minus"],["´",1,"Equal"],["Backspace",2],["",1],["Insert",1],["Home",1],["PageUp",1],["",1],["NumLock",1],["/",1,"kpslash"],["*",1,"kpasterisk"],["kp-",1,"kpminus"],[""]],
     [["Tab",1.5],["q",1],["w",1],["e",1],["r",1],["t",1],["y",1],["u",1],["i",1],["o",1],["p",1],["å",1,"LeftBrace"],["^",1,"RightBrace"],["Enter",1.5],["",1],["Del",1,"Delete"],["End",1],["PageDown",1],["",1],["kp7",1],["kp8",1],["kp9",1],["kp+",1,"kpplus"],["",1],[""]],
     [["CapsLock",1.75],["a",1],["s",1],["d",1],["f",1],["g",1],["h",1],["j",1],["k",1],["l",1],["ö",1,"Semicolon"],["ä",1,"Apostrophe"],["'",1,"Backslash"],["",1.25],["",1],["",1],["",1],["",1],["",1],["kp4",1],["kp5",1],["kp6",1],["",1],[""]],
     [["LShift",1.25,"LeftShift"],["<",1,"102nd"],["z",1],["x",1],["c",1],["v",1],["b",1],["n",1],["m",1],[",",1,"Comma"],[".",1,"Dot"],["-",1,"Slash"],["RShift",2.9,"RightShift"],["",1],["",1],["Up",1],["",1],["",1],["kp1",1],["kp2",1],["kp3",1],["kpEnter",1],["",1],[""]],
-    [["LCtrl",1.5,"LeftCtrl"],["Win",1.25,"LeftMeta"],["LAlt",1.25,"LeftAlt"],["Space",7],["RAlt",1.25,"RightAlt"],["RWin",1.25,"RightMeta"],["Compose",1.25],["RCtrl",1.25,"RightCtrl"],["",1],["Left",1],["Down",1],["Right",1],["",1],["kp0",2.2],["kp,",1,"kpdot"],["",1],["",1],["",1]
+    [["LCtrl",1.5,"LeftCtrl"],["Win",1.25,"LeftMeta"],["LAlt",1.25,"LeftAlt"],[" ",7,"Space"],["RAlt",1.25,"RightAlt"],["RWin",1.25,"RightMeta"],["Compose",1.25],["RCtrl",1.25,"RightCtrl"],["",1],["Left",1],["Down",1],["Right",1],["",1],["kp0",2.2],["kp,",1,"kpdot"],["",1],["",1],["",1]
     ]],"Fin",true);
 var chosenLayout = layoutList[0];
 var kbProfiles = [];
@@ -155,11 +155,6 @@ function initiateKeyboard() {
         var kbwrapper = document.getElementById("kbwrap");
         kbwrapper.appendChild(rowwrapper);
     }
-    //Adds listener to the button that is used to submit changes.
-    var submitBut = document.getElementById("submitchange");
-    submitBut.addEventListener("click", function() {
-        submitMod();
-    }, false);
 }
 
 // Deletes the old key definition cards, and then rebuilds new ones. Used when changing profiles.
@@ -290,7 +285,7 @@ function changeProfile(newID, profileCard) {
     profileCard.style.backgroundColor = "green";
     addKeycards();
     modifyKey("");
-    document.getElementById("ainput").textContent = JSON.stringify(chosenProfile, null, 4);
+    document.getElementById("ainput").textContent = JSON.stringify(parsePostdata(), null, 4);
 }
 
 // When a key is chosen on the visualized keyboard, this is fired. It updates the chosen key and highlights the keycard, as well as removes any older highlights.
@@ -338,8 +333,8 @@ function submitMod() {
         if (chosenLayout.realNames === false) {
             button.textContent = chosenKeylocal.mappedEvdevName.replace(/KEY_/g, "");
         }
-        document.getElementById("ainput").textContent = JSON.stringify(chosenProfile, null, 4);
-        //    postKeys(chosenProfile,"/update-profile");
+        document.getElementById("ainput").textContent = JSON.stringify(parsePostdata(), null, 4);
+    postKeys(chosenProfile,"/update-profile");
     }
 }
 
@@ -397,9 +392,10 @@ function parseMapping(mapping, chosenKeylocal) {
 //Parses the string sent from submit, splitting it at designated char and then searching for the 'real names' or 'evdev names' of the mapped keystrokes, returning the resulting string of all those names.
 function parseMapping(mapping, chosenKeylocal){
     var realnameString = "";
-    if (mapping.includes("|")) {
+    if (mapping.includes("|") || mapping.includes("write(") || mapping.includes("repeat(")) {
         var mappingArray = mapping.split("|");
         for (var i = 0; i < mappingArray.length; i++) {
+            if(mappingArray[i].includes("write(") || mappingArray[i].includes("repeat(")) mappingArray[i] = eval(mappingArray[i]);
             if (realnameString !== "" && realnameString.slice(-1)!=="|") {
                 realnameString = realnameString + ":" + parseMapping(mappingArray[i]);
             } else {
@@ -474,6 +470,26 @@ function parseEvdevName(input) {
     return realidString;
 }
 
+//Changes the format of the data, so that it is fitting for the backend
+function parsePostdata(){
+    var postableProfiles = [];
+    for(var i = 0; i<kbProfiles.length; i++){
+    postableProfiles[i] = {};
+    postableProfiles[i].profileName = kbProfiles[i].profileName;
+    postableProfiles[i].profileID = kbProfiles[i].profileID;
+    postableProfiles[i].keyData = {};
+    for(var j = 0; j<kbProfiles[i].keyData.length; j++){
+    postableProfiles[i].keyData[kbProfiles[i].keyData[j].EvdevID] = {};
+    postableProfiles[i].keyData[kbProfiles[i].keyData[j].EvdevID].mappedEvdevID = kbProfiles[i].keyData[j].mappedEvdevID;
+    postableProfiles[i].keyData[kbProfiles[i].keyData[j].EvdevID].displayName = kbProfiles[i].keyData[j].displayName;
+    postableProfiles[i].keyData[kbProfiles[i].keyData[j].EvdevID].evdevName = kbProfiles[i].keyData[j].evdevName
+    postableProfiles[i].keyData[kbProfiles[i].keyData[j].EvdevID].mappedEvdevName = kbProfiles[i].keyData[j].mappedEvdevName;
+    }
+    }
+    console.log(JSON.stringify(postableProfiles, null, 4));
+    return postableProfiles;
+}
+
 //Posts the JSON to server. PARAMS: Profile, url to post
 function postKeys(data, urli) {
     var postRequest = new XMLHttpRequest();
@@ -518,4 +534,21 @@ function getProfile(url) {
     xmlhttp.open("GET", url, false);
     xmlhttp.send();
     return xmlhttp.onreadystatechange();
+}
+
+function write(string){
+    var newString = "";
+    for(var i = 0; i<string.length; i++){
+    newString = newString + string.charAt(i);
+    if(i<string.length-1) newString = newString + "|";
+    }
+    return newString;
+    }
+    
+    function repeat(string,count){
+    var oneCount = string;
+    for(var i = 1; i<count; i++){
+    string  = string + "|" + oneCount;
+    }
+    return string;
 }

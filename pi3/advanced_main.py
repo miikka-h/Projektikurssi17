@@ -95,15 +95,25 @@ class KeyRemapper:
         single_hid = [] # type: List[int]
 
         # TODO: Remove for loop. That requires changes in JSON structure.
+
         try:
             key = self.settings[0]["keyData"][evdev_id]  # TODO no parsing here. ["mappedEvdevID"]
             if isinstance(key["mappedEvdevID"], str):
-                single_hid = [int(x) for x in key["mappedEvdevID"].split(" ")]
+                if key["mappedEvdevID"].find("|") != -1:
+                        key_reports_strings = key["mappedEvdevID"].split("|")
+                        for i in key_reports_strings:
+                            single_hid = [int(x) for x in i.split(":")]    
+                            list_of_hid_reports.append(single_hid)
+                            print(list_of_hid_reports)
+                else:
+                        single_hid = [int(x) for x in key["mappedEvdevID"].split(":")]
+                        list_of_hid_reports.append(single_hid)
             else:
                 single_hid.append(key["mappedEvdevID"])
                 list_of_hid_reports.append(single_hid)
         except KeyError as error:
-            list_of_hid_reports.append(single_hid.append(evdev_id))
+            single_hid.append(evdev_id)
+            list_of_hid_reports.append(single_hid)
 
         return list_of_hid_reports
 
@@ -278,10 +288,10 @@ def run(web_server_manager: WebServerManager, hid_data_socket: HidDataSocket, hi
 
         for event in keyboard_manager.get_key_events():
             new_keys_list = key_remapper.remap_key(event.code)
-
+            
             if len(new_keys_list) == 1:
                 key_list = new_keys_list[0]
-
+                
                 # key_down = 1
                 if event.value == 1:
                     for k in key_list:
@@ -291,14 +301,31 @@ def run(web_server_manager: WebServerManager, hid_data_socket: HidDataSocket, hi
                     for k in key_list:
                         hid_report.remove_key(k)
             else:
-                pass
-                # TODO: Handle more complicated key remaps.
+                if event.value == 1:
+                    for report in new_keys_list:
+                        key_list = report
+                        print(key_list)
+                        for k in key_list:
+                            hid_report.add_key(k)
+                        send_and_reset_if_client_disconnected(hid_data_socket, hid_report, keyboard_manager)
+                        for k in key_list:
+                            hid_report.remove_key(k)
+                            
+                            #break    
 
-            if not hid_data_socket.send_hid_report_if_there_is_new_changes(hid_report):
-                hid_data_socket.wait_connection()
-                keyboard_manager.request_clear_key_events()
-                hid_report.clear()
-                break
+                
+
+                #pass
+                # TODO: Handle more complicated key remaps.
+        send_and_reset_if_client_disconnected(hid_data_socket, hid_report, keyboard_manager)
+        #break
+            
+def send_and_reset_if_client_disconnected(hid_data_socket: HidDataSocket, hid_report: HidReport, keyboard_manager: KeyboardManager) -> None:           
+    if not hid_data_socket.send_hid_report_if_there_is_new_changes(hid_report):
+        hid_data_socket.wait_connection()
+        keyboard_manager.request_clear_key_events()
+        hid_report.clear()
+        
 
 
 if __name__ == "__main__":

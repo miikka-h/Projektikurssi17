@@ -46,7 +46,7 @@ class WebServer(HTTPServer):
 
         # TODO: Load saved profiles/settings from file
         #       if file is not found default to keyprofile.settings
-        self.settings = []
+        self.settings = [{}]
         # keyprofile.setting
 
         # Main thread is waiting for profiles/settings so lets send them.

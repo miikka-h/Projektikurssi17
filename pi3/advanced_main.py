@@ -313,7 +313,7 @@ def run(web_server_manager: WebServerManager, hid_data_socket: HidDataSocket, hi
                         send_and_reset_if_client_disconnected(hid_data_socket, hid_report, keyboard_manager)
                         for k in key_list:
                             hid_report.remove_key(k)
-                            
+                        send_and_reset_if_client_disconnected(hid_data_socket, hid_report, keyboard_manager)    
                             #break    
 
                 

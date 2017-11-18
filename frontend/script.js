@@ -334,7 +334,7 @@ function submitMod() {
             button.textContent = chosenKeylocal.mappedEvdevName.replace(/KEY_/g, "");
         }
         document.getElementById("ainput").textContent = JSON.stringify(parsePostdata(), null, 4);
-    postKeys(chosenProfile,"/update-profile");
+    postKeys(parsePostdata(),"/update-profile");
     }
 }
 

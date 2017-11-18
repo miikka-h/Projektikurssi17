@@ -31,23 +31,21 @@
     float:right;
 }
 .profilewrapper {
-    width: 200px;
+    width: 205px;
     background-color: rgba(40,40,40,0.8);
     height: 255px;
     border: solid 5px;
     display: inline-block;
-    padding-right: 5px;
     float:left;
     margin-bottom:5px;
 }
 .keyexpwrapper {
     padding-top: 5px;
-    width: 200px;
+    width: 205px;
     background-color: rgba(40,40,40,0.8);
     height: 240px;
     border: solid 5px;
     display: inline-block;
-    padding-right: 5px;
     float:left;
 }
 .wrapper {
@@ -56,6 +54,7 @@
 .submitchangeswrapper {
     display:inline-block;
     margin-top: 5px;
+    margin-bottom: 5px;
     width:1175px;
     height:20px;
     background-color: rgba(40,40,40,0.8);
@@ -79,7 +78,7 @@
     display:inline-block;
 }
 .addbutton {
-    width:95%;
+    width:100%;
     height:30px;
     display:inline-block;
     border: solid 1px;
@@ -90,8 +89,8 @@
     overflow:auto;
 }
 .card {
-    width:95%;
-    height:10%;
+    min-width:100%;
+    height:auto;
     display:inline-block;
     background-color:(255,255,255,0.5);
     border: solid 1px;
@@ -109,12 +108,14 @@ height: 100%;
     padding:0;
 }
 .helpwrapper {
-        width: 1170px;
+        width: 1175px;
         background-color:yellowgreen;
         height: 255px;
         border: solid 5px;
         display: inline-block;
-        padding-right: 5px;
         float:left;
         margin-bottom:5px;
+}
+form{
+    display:inline;
 }

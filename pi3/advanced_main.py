@@ -90,21 +90,22 @@ class KeyRemapper:
         Returns list containing lists of keys. List of keys
         represents keys that are included in one USB hid report.
         """
-        key_reports = [] # type: List[List[int]]
+        list_of_hid_reports = [] # type: List[List[int]]
 
-        mapped_ids = [] # type: List[int]
+        single_hid = [] # type: List[int]
 
         # TODO: Remove for loop. That requires changes in JSON structure.
-        for key in self.settings["keyData"]:
-            if key["EvdevID"] == evdev_id:
-                if isinstance(key["mappedEvdevID"], str):
-                    mapped_ids = [int(x) for x in key["mappedEvdevID"].split(" ")]
-                else:
-                    mapped_ids.append(key["mappedEvdevID"])
-                key_reports.append(mapped_ids)
-                break
+        try:
+            key = self.settings[0]["keyData"][evdev_id]  # TODO no parsing here. ["mappedEvdevID"]
+            if isinstance(key["mappedEvdevID"], str):
+                single_hid = [int(x) for x in key["mappedEvdevID"].split(" ")]
+            else:
+                single_hid.append(key["mappedEvdevID"])
+                list_of_hid_reports.append(single_hid)
+        except KeyError as error:
+            list_of_hid_reports.append(single_hid.append(evdev_id))
 
-        return key_reports
+        return list_of_hid_reports
 
 
 class KeyboardManager:

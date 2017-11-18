@@ -46,7 +46,8 @@ class WebServer(HTTPServer):
 
         # TODO: Load saved profiles/settings from file
         #       if file is not found default to keyprofile.settings
-        self.settings = keyprofile.settings
+        self.settings = []
+        # keyprofile.setting
 
         # Main thread is waiting for profiles/settings so lets send them.
         self.settings_queue.put_nowait(self.settings)
@@ -110,17 +111,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         response = self.rfile.read(int(content_length))
 
-        keyprofile_data = json.loads(response.decode("utf-8"))
-        modified_keys_list = keyprofile_data["keyData"]
-
-        if len(modified_keys_list) > 0:
-            # TODO: Remove for loops, this requires changing the JSON structure.
-            for k in self.server.settings["keyData"]:
-                for j in modified_keys_list:
-                    if k["EvdevID"] == j["EvdevID"]:
-                        k["mappedEvdevID"] = j["mappedEvdevID"]
-                        k["mappedEvdevName"] = j["mappedEvdevName"]
-
+        self.server.settings = json.loads(response.decode("utf-8"))
         # Send new settings to main thread.
         self.server.settings_queue.put_nowait(self.server.settings)
 
@@ -145,4 +136,3 @@ class RequestHandler(BaseHTTPRequestHandler):
         # Write HTTP message body which is the HTML web page.
         self.wfile.write(message_bytes)
         self.wfile.flush()
-

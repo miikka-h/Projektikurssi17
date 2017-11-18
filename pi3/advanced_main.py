@@ -97,7 +97,7 @@ class KeyRemapper:
         # TODO: Remove for loop. That requires changes in JSON structure.
 
         try:
-            key = self.settings[0]["keyData"][evdev_id]  # TODO no parsing here. ["mappedEvdevID"]
+            key = self.settings[0]["keyData"][str(evdev_id)]  # TODO no parsing here. ["mappedEvdevID"]
             if isinstance(key["mappedEvdevID"], str):
                 if key["mappedEvdevID"].find("|") != -1:
                         key_reports_strings = key["mappedEvdevID"].split("|")
@@ -108,12 +108,15 @@ class KeyRemapper:
                 else:
                         single_hid = [int(x) for x in key["mappedEvdevID"].split(":")]
                         list_of_hid_reports.append(single_hid)
+                        print("list_of_hid_reports" +" kissa 1")
             else:
                 single_hid.append(key["mappedEvdevID"])
                 list_of_hid_reports.append(single_hid)
+                print("list_of_hid_reports" + "kissa 2")
         except KeyError as error:
             single_hid.append(evdev_id)
             list_of_hid_reports.append(single_hid)
+            print("list_of_hid_reports" + "kissa 3")
 
         return list_of_hid_reports
 

@@ -89,6 +89,15 @@ class RequestHandler(BaseHTTPRequestHandler):
             message = json.dumps(self.server.settings)
             message_bytes = message.encode()
 
+
+            self.send_utf8_bytes(message_bytes, "text/json")
+        elif self.path == "/heatmap.api":
+            f = open("heatmap_stats.txt", 'r')
+            heatmap_info = f.read()
+
+    
+        
+            message_bytes = heatmap_info.encode()
             self.send_utf8_bytes(message_bytes, "text/json")
         elif self.path == "/":
             self.send_utf8_file("../frontend/control.html", "text/html")

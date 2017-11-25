@@ -3,7 +3,7 @@ import evdev
 
 # http://www.usb.org/developers/hidpage/Hut1_12v2.pdf
 # See chapter 10 for keycodes.
-
+f = open('apu.txt','w')
 EVDEV_TO_HID_MAP = {
     ecodes.KEY_A: 0x04,
     ecodes.KEY_B: 0x05,
@@ -110,6 +110,11 @@ EVDEV_TO_HID_MAP = {
 	#TODO find out how to refer to the rest of the keys
 
 }
+
+for i in EVDEV_TO_HID_MAP:
+    f.write(str(i)+ ":" + str(0) + ",\n")
+
+f.close()    
 
 MODIFIER_KEY_BITMASKS =  {
     ecodes.KEY_LEFTCTRL:   0b00000001,

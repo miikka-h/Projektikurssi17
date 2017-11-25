@@ -239,7 +239,7 @@ def monitor_device_events(exit_event: Event, event_queue: Queue, monitor: pyudev
             break
 
 def main():
-
+    
     try:
         # Lets load all necessary components and form connections.
         keyboard_manager = KeyboardManager()
@@ -268,10 +268,13 @@ def main():
         hid_data_socket.close()
         keyboard_manager.close()
         exit(0)
+        
 
 
 def run(web_server_manager: WebServerManager, hid_data_socket: HidDataSocket, hid_report: HidReport, keyboard_manager: KeyboardManager) -> None:
-
+    
+    keypresses = ""
+    keyspressed = 0
     print("waiting for settings from web server thread")
     key_remapper = KeyRemapper(web_server_manager.get_settings_queue().get())
     print("received settings from web server thread")
@@ -290,6 +293,8 @@ def run(web_server_manager: WebServerManager, hid_data_socket: HidDataSocket, hi
             pass
 
         for event in keyboard_manager.get_key_events():
+            heatmap_key = str(event)[str(event).find("code")+ 5 :str(event).find("code") + 7]
+            print(event)            
             new_keys_list = key_remapper.remap_key(event.code)
             
             if len(new_keys_list) == 1:
@@ -299,6 +304,15 @@ def run(web_server_manager: WebServerManager, hid_data_socket: HidDataSocket, hi
                 if event.value == 1:
                     for k in key_list:
                         hid_report.add_key(k)
+                        keypresses += heatmap_key+"|"
+                        print(keypresses)
+                        keyspressed += 1
+                        if keyspressed == 10:
+                            f = open('heatmap_data.txt','w')
+                            f.write(keypresses)
+                            f.close()
+                            heatmap()
+                            keyspressed = 0
                 # key_up = 0
                 elif event.value == 0:
                     for k in key_list:
@@ -310,25 +324,68 @@ def run(web_server_manager: WebServerManager, hid_data_socket: HidDataSocket, hi
                         print(key_list)
                         for k in key_list:
                             hid_report.add_key(k)
+                            keypresses += heatmap_key+"|"
+                            keyspressed += 1
+                            if keyspressed == 10:
+                                f = open('heatmap_data.txt','w')
+                                f.write(keypresses)
+                                f.close()
+                                heatmap()
+                                keyspressed = 0
                         send_and_reset_if_client_disconnected(hid_data_socket, hid_report, keyboard_manager)
                         for k in key_list:
                             hid_report.remove_key(k)
                         send_and_reset_if_client_disconnected(hid_data_socket, hid_report, keyboard_manager)    
                             #break    
 
-                
+                  
 
                 #pass
                 # TODO: Handle more complicated key remaps.
         send_and_reset_if_client_disconnected(hid_data_socket, hid_report, keyboard_manager)
         #break
-            
+    f.close()
+    
+    
+  
 def send_and_reset_if_client_disconnected(hid_data_socket: HidDataSocket, hid_report: HidReport, keyboard_manager: KeyboardManager) -> None:           
     if not hid_data_socket.send_hid_report_if_there_is_new_changes(hid_report):
         hid_data_socket.wait_connection()
         keyboard_manager.request_clear_key_events()
         hid_report.clear()
         
+
+def heatmap() -> None:
+    
+    heatmap_stats = {} 
+    
+
+    with open("heatmap_stats.txt", 'r') as statfile:
+        help_dict = statfile.read().strip('{').strip('}').split(',')
+        for entry in help_dict:
+            (key, val) = entry.rstrip("\n").split(':')
+            heatmap_stats[int(key)] = int(val)
+    statfile.close()        
+
+    print(heatmap_stats)
+    
+    hmdata = open("heatmap_data.txt", 'r')
+    statfile = open("heatmap_stats.txt", 'w')
+    key_presses = hmdata.read().split('|')
+    hmdata.close()
+    print(key_presses)
+
+    for kpress in key_presses:
+        if kpress is not "":
+            heatmap_stats[int(kpress)] = heatmap_stats[int((kpress).rstrip())]
+            heatmap_stats[int(kpress)] += 1
+            print(heatmap_stats[int(kpress)])
+        
+    print(heatmap_stats)
+    
+    if heatmap_stats is not "":
+        statfile.write(str(heatmap_stats))
+    statfile.close()
 
 
 if __name__ == "__main__":

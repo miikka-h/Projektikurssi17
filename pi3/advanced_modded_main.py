@@ -79,51 +79,100 @@ class KeyRemapper:
     def __init__(self, settings) -> None:
         """Argument `settings` is profile JSON dictionary."""
         self.settings = settings
+        self.current_profile = 0
+        self.full_profile_history = [0]
+        self.self.currently_pressed = []
 
     def set_new_settings(self, settings) -> None:
         """Argument `settings` is profile JSON dictionary."""
         self.settings = settings
 
-    def remap_key(self, evdev_id: int) -> List[List[int]]:
+    def remap_key(self, key_event: int) -> List[List[int]]:
         """
-        Remaps one key to multiple keys.
+        Currently is specialized in handling the profile changes.
+
+        REMAPS one key to multiple keys.
 
         Key id values are evdev id numbers.
 
         Returns list containing lists of keys. List of keys
         represents keys that are included in one USB hid report.
         """
-        list_of_hid_reports = []  # type: List[List[int]]
 
+        # If full_profile_history goes trough any staying changes the currently
+        # pressed buttons have to be all risen except for the profile change
+        # buttons that were pressed before the lastly modified mode change
+        # button in the history
+
+        # If profile is toggled the full history has to be erased
+
+        # "clean" means doing the previous
+
+        list_of_hid_reports = []  # type: List[List[int]]
         single_hid = []  # type: List[int]
 
-        # TODO: Remove for loop. That requires changes in JSON structure.
-
         try:
-            key = self.settings[0]["keyData"][
-                str(evdev_id)]  # TODO no parsing here. ["mappedEvdevID"]
-            if isinstance(key["mappedEvdevID"], str):
-                if key["mappedEvdevID"].find("|") != -1:
-                        key_reports_strings = key["mappedEvdevID"].split("|")
-                        for i in key_reports_strings:
-                            single_hid = [int(x) for x in i.split(":")]
-                            list_of_hid_reports.append(single_hid)
-                            print(list_of_hid_reports)
-                else:
-                        single_hid = [int(x)
-                                      for x in key["mappedEvdevID"].split(":")]
-                        list_of_hid_reports.append(single_hid)
-                        print("list_of_hid_reports" + " kissa 1")
-            else:
-                single_hid.append(key["mappedEvdevID"])
-                list_of_hid_reports.append(single_hid)
-                print("list_of_hid_reports" + "kissa 2")
-        except KeyError as error:
-            single_hid.append(evdev_id)
-            list_of_hid_reports.append(single_hid)
-            print("list_of_hid_reports" + "kissa 3")
+            mapdata = self.settings[self.current_profile][
+                "keyData"][key_event.code]
 
-        return list_of_hid_reports
+            if "mappedEvdevID" in mapdata:
+                list_of_hid_reports = mapdata["mappedEvdevID"]
+
+            if "profiles" in mapdata:
+
+                list_of_hid_reports.append(single_hid)
+
+            # TODO follow keyboard limitations. Uper limit to the list of
+            # currently_pressed needed?
+
+            # key_down = 1
+            if key_event.value == 1:
+                self.currently_pressed.append(list_of_hid_reports)
+                if "profiles" in mapdata:
+                    if mapdata["toggle"]:
+                        self.currently_pressed = []
+                        self.full_profile_history = [0]
+                        self.current_profile = mapdata["profiles"][0]
+                        # TODO clean all
+
+                    else:
+                        self.full_profile_history.append(self.current_profile)
+                        self.current_profile = mapdata["profiles"][0]
+                        # TODO clean but no mods cleaned
+
+            # key_up = 0
+            else:   # if key_event.value == 0:
+                self.currently_pressed.remove(list_of_hid_reports)
+
+                if "profiles" in mapdata:
+                    profile = mapdata["profiles"][0]
+                    if profile in self.full_profile_history:
+                        self.cutfrom(profile, self.full_profile_history)
+                        # TODO clea but some mods not necessarily cleaned
+                        if len(self.full_profile_history) > 0:
+                            self.current_profile = self.full_profile_history[
+                                len(self.full_profile_history) - 1]
+                        else:
+                            self.full_profile_history = [0]
+                            self.current_profile = 0
+
+        except KeyError as error:
+            single_hid.append(key_event.code)
+            list_of_hid_reports.append(single_hid)
+
+            # TODO debug and make this all work
+            # TODO we need the ability to send button up command for all
+            # buttons that have to be risen in mode change.
+
+        return list_of_hid_reports  # TODO
+
+    def cutfrom(key: int, elements: list):
+        """Expects that the key is in the elements list and
+        remove all elements after and including that position."""
+
+        i = elements.index(key)
+        while (len(elements) >= i):
+            elements.pop([i])
 
 
 class KeyboardManager:

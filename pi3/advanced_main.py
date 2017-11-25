@@ -76,6 +76,8 @@ class KeyRemapper:
     def __init__(self, settings) -> None:
         """Argument `settings` is profile JSON dictionary."""
         self.settings = settings
+        self.profile = 0
+        self.returnProfile = 0
 
     def set_new_settings(self, settings) -> None:
         """Argument `settings` is profile JSON dictionary."""
@@ -83,6 +85,8 @@ class KeyRemapper:
 
     def remap_key(self, evdev_id: int) -> List[List[int]]:
         """
+        handles changing profiles if necessary
+
         Remaps one key to multiple keys.
 
         Key id values are evdev id numbers.
@@ -90,35 +94,113 @@ class KeyRemapper:
         Returns list containing lists of keys. List of keys
         represents keys that are included in one USB hid report.
         """
-        list_of_hid_reports = [] # type: List[List[int]]
 
-        single_hid = [] # type: List[int]
+        #################################
 
-        # TODO: Remove for loop. That requires changes in JSON structure.
 
-        try:
-            key = self.settings[0]["keyData"][str(evdev_id)]  # TODO no parsing here. ["mappedEvdevID"]
-            if isinstance(key["mappedEvdevID"], str):
-                if key["mappedEvdevID"].find("|") != -1:
-                        key_reports_strings = key["mappedEvdevID"].split("|")
-                        for i in key_reports_strings:
-                            single_hid = [int(x) for x in i.split(":")]    
-                            list_of_hid_reports.append(single_hid)
-                            print(list_of_hid_reports)
-                else:
-                        single_hid = [int(x) for x in key["mappedEvdevID"].split(":")]
-                        list_of_hid_reports.append(single_hid)
-                        print("list_of_hid_reports" +" kissa 1")
-            else:
-                single_hid.append(key["mappedEvdevID"])
+        profile = 0
+        returnProfile = []
+        profileButtons = []
+
+        new_keys_list = []
+
+        if returnProfile!=profile:
+            last_mode=profile
+            profile=returnProfile
+            for event in keyboard_manager.get_key_events():
+                if event.code == profileButton:
+                    profile = last_mode
+
+        if returnProfile = profile:
+
+        
+
+        for event in keyboard_manager.get_key_events():
+
+            list_of_hid_reports = []  # type: List[List[int]]
+
+            single_hid = []  # type: List[int]
+
+            try:
+                currentProfile = KeyRemapper.settings[profile]
+
+                if "profile" in currentProfile:
+
+                    if not(currentProfile["toggle"]):
+                        returnProfile = [profile]
+                        profile = currentProfile["profile"][0]
+                        profileButton = str(event.code)
+
+                    else:
+                        self.profile = currentProfile["profile"][0]
+                        returnProfile = [profile]
+
+                key = [[]]
+
+                if "mappedEvdevID" in currentProfile:
+                    key = KeyRemapper.settings[profile]["mappedEvdevID"][str(event.code)]
+                # key = self.settings[profile]["profile"][str(evdev_id)]
+
+            except KeyError as error:
+                single_hid.append(event.code)
                 list_of_hid_reports.append(single_hid)
-                print("list_of_hid_reports" + "kissa 2")
-        except KeyError as error:
-            single_hid.append(evdev_id)
-            list_of_hid_reports.append(single_hid)
-            print("list_of_hid_reports" + "kissa 3")
 
-        return list_of_hid_reports
+            new_keys_list.append(key)
+
+        #################################
+
+        if (returnProfile!=profile):
+
+        
+
+        for event in keyboard_manager.get_key_events():
+
+            list_of_hid_reports = []  # type: List[List[int]]
+    
+            single_hid = []  # type: List[int]
+    
+            try:
+                currentProfile = self.settings[profile]
+    
+                if "profile" in currentProfile:
+    
+                    if not(currentProfile["toggle"]):
+                        returnProfile = [profile]
+                        self.profile = currentProfile["profile"][0]
+    
+                    else:
+                        self.profile = currentProfile["profile"][0]
+                        returnProfile = [profile]
+    
+                key = [[]]
+    
+    
+                if "mappedEvdevID" in currentProfile:
+                    key = self.settings[profile]["mappedEvdevID"][str(evdev_id)]
+                # key = self.settings[profile]["profile"][str(evdev_id)]
+    
+            except KeyError as error:
+                single_hid.append(evdev_id)
+                list_of_hid_reports.append(single_hid)
+    
+            return key
+
+#            if isinstance(key["mappedEvdevID"], str):
+#                if key["mappedEvdevID"].find("|") != -1:
+#                        key_reports_strings = key["mappedEvdevID"].split("|")
+#                        for i in key_reports_strings:
+#                            single_hid = [int(x) for x in i.split(":")]
+#                            list_of_hid_reports.append(single_hid)
+#                            print(list_of_hid_reports)
+#                else:
+#                        single_hid = [int(x) for x in key["mappedEvdevID"].split(":")]
+#                        list_of_hid_reports.append(single_hid)
+#            else:
+#                single_hid.append(key["mappedEvdevID"])
+#                list_of_hid_reports.append(single_hid)
+
+
+
 
 
 class KeyboardManager:
@@ -272,12 +354,13 @@ def main():
 
 def run(web_server_manager: WebServerManager, hid_data_socket: HidDataSocket, hid_report: HidReport, keyboard_manager: KeyboardManager) -> None:
 
+
     print("waiting for settings from web server thread")
     key_remapper = KeyRemapper(web_server_manager.get_settings_queue().get())
     print("received settings from web server thread")
 
     keyboard_manager.request_clear_key_events()
-
+s
     while True:
         time.sleep(0.001)
 
@@ -291,7 +374,9 @@ def run(web_server_manager: WebServerManager, hid_data_socket: HidDataSocket, hi
 
         for event in keyboard_manager.get_key_events():
             new_keys_list = key_remapper.remap_key(event.code)
-            
+
+        #moodin takaisin vaihdossa pitää clearata kaikki vanhat nappulat
+
             if len(new_keys_list) == 1:
                 key_list = new_keys_list[0]
                 
@@ -313,7 +398,7 @@ def run(web_server_manager: WebServerManager, hid_data_socket: HidDataSocket, hi
                         send_and_reset_if_client_disconnected(hid_data_socket, hid_report, keyboard_manager)
                         for k in key_list:
                             hid_report.remove_key(k)
-                        send_and_reset_if_client_disconnected(hid_data_socket, hid_report, keyboard_manager)    
+                            
                             #break    
 
                 

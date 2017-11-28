@@ -15,7 +15,7 @@ export class Renderer {
         mat4.perspective(this.projectionMatrix, 45 * Math.PI / 180, gl.canvas.width/gl.canvas.height, 0.1, 100);
 
         this.viewMatrix = mat4.create();
-        mat4.lookAt(this.viewMatrix, [5,5,10], [0,0,0], [0,1,0]);
+        mat4.lookAt(this.viewMatrix, [0,5,5], [0,0,0], [0,1,0]);
 
         this.triangleRenderer = new TriangleRenderer(gl, triangleProgram);
         this.cubeRenderer = new CubeRenderer(gl, cubeProgram);
@@ -53,5 +53,9 @@ export class Renderer {
         this.triangleRenderer.render(gl, keyboard.triangle, this.viewMatrix, this.projectionMatrix);
 
         this.cubeRenderer.render(gl, keyboard.keyboardCase, this.viewMatrix, this.projectionMatrix);
+
+        for (let x of keyboard.keys) {
+            this.cubeRenderer.render(gl, x[1].cube, this.viewMatrix, this.projectionMatrix);
+        }
     }
 }

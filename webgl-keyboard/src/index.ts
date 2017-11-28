@@ -1,6 +1,7 @@
 
 
 import {Renderer} from "./renderer";
+import { Keyboard } from "./keyboard";
 
 main();
 
@@ -20,5 +21,7 @@ function main() {
         return;
     }
 
-    renderer.draw();
+    const keyboard = new Keyboard();
+
+    renderer.draw(keyboard);
 }

@@ -1,137 +1,57 @@
 
 import {glMatrix, mat4, vec3} from "gl-matrix";
-import {loadProgram, loadShader} from "./utils"
-
-const VERTEX_SHADER_SOURCE = `
-
-attribute vec3 coordinate;
-attribute vec3 color;
-
-varying vec3 fragmentColor;
-
-uniform mat4 modelMatrix;
-uniform mat4 viewMatrix;
-uniform mat4 projectionMatrix;
-
-void main() {
-    fragmentColor = color;
-
-    gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(coordinate, 1.0);
-}
-`;
-
-const FRAGMENT_SHADER_SOURCE = `
-precision mediump float;
-
-varying vec3 fragmentColor;
-
-void main() {
-    gl_FragColor = vec4(fragmentColor, 1.0);
-}
-
-`;
-
-const TRIANGLE_VERTICES = [
-    -1.0,  1.0,  0.0,
-     1.0, -1.0,  0.0,
-    -1.0, -1.0,  0.0,
-];
-
-const TRIANGLE_VERTEX_COLORS = [
-    1.0,  0.0,  0.0,
-    0.0,  1.0,  0.0,
-    0.0,  0.0,  1.0,
-];
-
-class Triangle {
-    public modelMatrix: mat4;
-    constructor() {
-        this.modelMatrix = mat4.create();
-    }
-}
-
-class TriangleProgram {
-    public vertexAttribute: number;
-    public colorAttribute: number;
-    public modelMatrixUniform: WebGLUniformLocation;
-    public viewMatrixUniform: WebGLUniformLocation;
-    public projectionMatrixUniform: WebGLUniformLocation;
-
-
-    constructor(gl: WebGLRenderingContext, public program: WebGLProgram) {
-        this.vertexAttribute = gl.getAttribLocation(program, "coordinate");
-        this.colorAttribute = gl.getAttribLocation(program, "color");
-
-        this.modelMatrixUniform = gl.getUniformLocation(program, "modelMatrix");
-        this.viewMatrixUniform = gl.getUniformLocation(program, "viewMatrix");
-        this.projectionMatrixUniform = gl.getUniformLocation(program, "projectionMatrix");
-    }
-}
+import {TriangleRenderer, TriangleProgram} from "./triangle"
+import {CubeProgram, CubeRenderer} from "./cube"
+import {Keyboard} from "./keyboard";
 
 export class Renderer {
     private projectionMatrix: mat4;
     private viewMatrix: mat4;
-    private triangle: Triangle;
-    private triangleVertexAttributeData: WebGLBuffer;
-    private triangleColorData: WebGLBuffer;
-    private triangleProgram: TriangleProgram;
+    private triangleRenderer: TriangleRenderer;
+    private cubeRenderer: CubeRenderer;
 
-    constructor(private gl: WebGLRenderingContext, program: WebGLProgram) {
+    constructor(private gl: WebGLRenderingContext, triangleProgram: TriangleProgram, cubeProgram: CubeProgram) {
         this.projectionMatrix = mat4.create();
         mat4.perspective(this.projectionMatrix, 45 * Math.PI / 180, gl.canvas.width/gl.canvas.height, 0.1, 100);
 
         this.viewMatrix = mat4.create();
-        mat4.lookAt(this.viewMatrix, [0,0,5], [0,0,0], [0,1,0]);
+        mat4.lookAt(this.viewMatrix, [5,5,10], [0,0,0], [0,1,0]);
 
-        this.triangle = new Triangle();
-
-        this.triangleVertexAttributeData = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.triangleVertexAttributeData);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(TRIANGLE_VERTICES), gl.STATIC_DRAW);
-
-        this.triangleColorData = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.triangleColorData);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(TRIANGLE_VERTEX_COLORS), gl.STATIC_DRAW);
-
+        this.triangleRenderer = new TriangleRenderer(gl, triangleProgram);
+        this.cubeRenderer = new CubeRenderer(gl, cubeProgram);
 
         gl.clearColor(0, 0, 0, 1);
         gl.enable(gl.DEPTH_TEST);
-
-        this.triangleProgram = new TriangleProgram(gl, program);
     }
 
+    /**
+     * Create WebGL renderer. Returns null if creation failed.
+     * @param gl
+     */
     static create(gl: WebGLRenderingContext): Renderer {
-        const program = loadProgram(gl, VERTEX_SHADER_SOURCE, FRAGMENT_SHADER_SOURCE);
+        const triangleProgram = TriangleProgram.create(gl);
 
-        if (program === null) {
+        if (triangleProgram === null) {
             return null;
         }
 
-        return new Renderer(gl, program);
+        const cubeProgram = CubeProgram.create(gl);
+
+        if (cubeProgram === null) {
+            return null;
+        }
+
+        return new Renderer(gl, triangleProgram, cubeProgram);
     }
 
-    draw() {
+    draw(keyboard: Keyboard) {
         const gl = this.gl;
 
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.triangleVertexAttributeData);
+        this.cubeRenderer.render(gl, keyboard.cube, this.viewMatrix, this.projectionMatrix);
+        this.triangleRenderer.render(gl, keyboard.triangle, this.viewMatrix, this.projectionMatrix);
 
-        gl.vertexAttribPointer(this.triangleProgram.vertexAttribute, 3, gl.FLOAT, false, 0, 0);
-        gl.enableVertexAttribArray(this.triangleProgram.vertexAttribute);
-
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.triangleColorData);
-
-        gl.vertexAttribPointer(this.triangleProgram.colorAttribute, 3, gl.FLOAT, false, 0, 0);
-        gl.enableVertexAttribArray(this.triangleProgram.colorAttribute);
-
-        gl.useProgram(this.triangleProgram.program);
-
-        gl.uniformMatrix4fv(this.triangleProgram.viewMatrixUniform, false, this.viewMatrix);
-        gl.uniformMatrix4fv(this.triangleProgram.modelMatrixUniform, false, this.triangle.modelMatrix);
-        gl.uniformMatrix4fv(this.triangleProgram.projectionMatrixUniform, false, this.projectionMatrix);
-
-
-        gl.drawArrays(gl.TRIANGLES, 0, 3);
+        this.cubeRenderer.render(gl, keyboard.keyboardCase, this.viewMatrix, this.projectionMatrix);
     }
 }

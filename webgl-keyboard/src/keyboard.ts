@@ -26,6 +26,8 @@ class Key {
     }
 }
 
+const END_COLOR = [1.0, 0.0, 0.0];
+const START_COLOR = [0.0, 0.0, 1.0];
 
 export class Keyboard {
     public cube: Cube;
@@ -87,5 +89,23 @@ export class Keyboard {
         }
     }
 
+    updateHeatmap(heatmap: any) {
+        for (const [keyId, key] of this.keys) {
+            const keypressCount = heatmap[keyId];
 
+            if (keypressCount >= 1) {
+                const value = Math.min(100, keypressCount - 1) / 100;
+
+                const color1 = vec3.create();
+                const color2 = vec3.create();
+
+                vec3.scale(color1, END_COLOR, value);
+                vec3.scale(color1, START_COLOR, 1.0 - value);
+
+                vec3.add(color1, color1, color2);
+
+                key.setColor(color1[0], color1[1], color1[2]);
+            }
+        }
+    }
 }

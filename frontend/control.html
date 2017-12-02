@@ -7,7 +7,7 @@
   <meta name="author" content="SitePoint">
   <link href="styles.css" media="screen" rel="stylesheet">
 </head>
-<div class="wrapper">
+<div class="wrapper" id="bigwrap">
 <div class="inputwrapper" id="inputwrap"><textarea readonly class="areainput" id="ainput"></textarea></div>
 <div class="profilewrapper" id="profwrap">
 <div class="innerwrapper" id="profcards"></div>
@@ -24,9 +24,9 @@
 </form>
 <button onclick="postKeys(parsePostdata(),'/')">Post</button>
 </div>
-</div>
 <div class="helpwrapper">
-<div class="innerwrapper" id="helpbox">In order to input key definitions, you must first choose a key from the visualized keyboard and then input the new keydefinition to the textbox at bottom.</br></br>Use the keynames shown on the visualized keyboard, or alternatively, EVDEV-names.</br></br>For simultaneous keystrokes, separate keys with ':'. For separate strokes, use '|'. You can chain these if you want - examples: k:i:s:s:a, k:i:s:s:a|k|i|s|s|a, a:b:c|c:b:a. For quickly defining a string with no special symbols to a key, use write("string"). To repeat something, use repeat("string/char/key",count).</br></br>To define a key that goes through profiles, use chProf("Profile-1, Profile-2 ...") or else chProf("1,2,3"). You may use either profile names or IDs. To define a mode change button, use chMod("Profile-1/1",booleanfortoggle).</br></br>In order to submit a change locally, click Submit. To post it to the server, click Post.</div>
+  <div class="innerwrapper" id="helpbox">In order to input key definitions, you must first choose a key from the visualized keyboard and then input the new keydefinition to the textbox at bottom.</br></br>Use the keynames shown on the visualized keyboard, or alternatively, EVDEV-names.</br></br>For simultaneous keystrokes, separate keys with ':'. For separate strokes, use '|'. You can chain these if you want - examples: k:i:s:s:a, k:i:s:s:a|k|i|s|s|a, a:b:c|c:b:a. For quickly defining a string with no special symbols to a key, use write("string"). To repeat something, use repeat("string/char/key",count).</br></br>To define a key that goes through profiles, use Profiles("Profile-1, Profile-2 ...") or else chProf("1,2,3"). You may use either profile names or IDs. To define a mode change button, use Mode("Profile-1/1",booleanfortoggle).</br></br>In order to submit a change locally, click Submit. To post it to the server, click Post.</div>
+  </div>
 </div>
 <body>
 <script src="script.js"></script>

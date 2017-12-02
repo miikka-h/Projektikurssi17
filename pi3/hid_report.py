@@ -105,6 +105,14 @@ EVDEV_TO_HID_MAP = {
     ecodes.KEY_COMPOSE: 0x65,
     ecodes.KEY_POWER: 0x66,
     ecodes.KEY_KPEQUAL: 0x67,
+    ecodes.KEY_LEFTCTRL: 0xE0,
+    ecodes.KEY_LEFTSHIFT: 0xE1,
+    ecodes.KEY_LEFTALT: 0xE2,
+    ecodes.KEY_LEFTMETA: 0xE3,
+    ecodes.KEY_RIGHTCTRL: 0xE4,
+    ecodes.KEY_RIGHTSHIFT: 0xE5,
+    ecodes.KEY_RIGHTALT: 0xE6,
+    ecodes.KEY_RIGHTMETA: 0xE7
 
 
 	#TODO find out how to refer to the rest of the keys

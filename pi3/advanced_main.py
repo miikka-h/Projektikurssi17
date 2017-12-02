@@ -320,6 +320,7 @@ def run(web_server_manager: WebServerManager, hid_data_socket: HidDataSocket, hi
                         if keyspressed == 10:
                             f = open('heatmap_data.txt', 'w')
                             f.write(keypresses)
+                            keypresses = ""
                             f.close()
                             heatmap()
                             keyspressed = 0

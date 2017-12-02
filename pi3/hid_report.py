@@ -127,10 +127,10 @@ for i in EVDEV_TO_HID_MAP:
 last_item = evdev_id_and_hid_hid_list.pop().strip(",\n")
 
 for item in evdev_id_and_hid_hid_list:
-    print(item)
+    # print(item)
     f.write(item)
 
-print(last_item)
+# print(last_item)
 f.write(last_item)
 
 

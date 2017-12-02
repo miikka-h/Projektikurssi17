@@ -125,10 +125,8 @@ class RequestHandler(BaseHTTPRequestHandler):
         single_hid = []  # type: List[int]
         print(self.server.settings)
         for profile in self.server.settings:
-            print("profile-----------" + str(profile))
             # try:
             for key in profile["keyData"]:
-                print("key--------------" + str(key))
                 if "mappedEvdevID" in profile["keyData"][key]:
                     key_reports_strings = profile["keyData"][key][
                         "mappedEvdevID"].split("|")

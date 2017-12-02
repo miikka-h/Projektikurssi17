@@ -534,8 +534,8 @@ function postKeys(data, urli) {
 
 //Prototype to load a profile
 function loadProfiles() {
-   //  var profilesJson = getProfile("/json.api");
-    var profilesJson = '[{}]'
+   var profilesJson = getProfile("/json.api");
+   // var profilesJson = '[{}]'
    // profilesJson[0] = new Profile("Profile-1", 1, []);
    try {
     profilesJson = JSON.parse(profilesJson);

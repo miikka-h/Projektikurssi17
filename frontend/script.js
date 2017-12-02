@@ -369,7 +369,7 @@ function submitMod() {
         var mapping = document.getElementById("inputmod").value;
         var chosenKeylocal = chosenProfile.getKeybyName(chosenKey);
         var button = document.getElementById("button-" + chosenKey);
-        if(mapping.includes("chProf(") || mapping.includes("chMod(")){
+        if(mapping.includes("Profiles(") || mapping.includes("Mode(")){
             chosenKeylocal.profiles = eval(mapping);
         } else {
             delete chosenKeylocal.profiles;
@@ -415,47 +415,7 @@ function getProfilebyName(profileName) {
     console.log("Profile with name of " + profileName + " not found!");
     return false;
 }
-/*
-//Parses the string sent from submit, splitting it at designated char and then searching for the 'real names' or 'evdev names' of the mapped keystrokes, returning the resulting string of all those names.
-function parseMapping(mapping, chosenKeylocal) {
-    var realnameString = [];
-    var realnameString2 = "";
-    if (mapping.includes("|")) {
-        var mappingArray1 = mapping.split("|")
-    } else {
-        var mappingArray1 = [];
-        mappingArray1[0] = mapping;
-    };
-    for (var i = 0; i < mappingArray1.length; i++) {
-        if (mappingArray1[i].includes(":")) {
-            var mappingArray2 = mappingArray1[i].split(":")
-        } else {
-            var mappingArray2 = [];
-            mappingArray2[0] = mappingArray1[i];
-        };
-        for (var j = 0; j < mappingArray2.length; j++) {
-            if (getRealname(mappingArray2[j]) === undefined || mappingArray2[j] === "") {
-                alert("Invalid input with " + mappingArray2[i] + "!");
-                return chosenKeylocal.mappedEvdevName;
-            } else {
-                if (realnameString[i] !== "" && realnameString[i] !== undefined) {
-                    realnameString[i] = realnameString[i] + ":" + getRealname(mappingArray2[j]);
-                } else {
-                    realnameString[i] = getRealname(mappingArray2[j]);
-                }
-            }
-        }
-    }
-    for (var i = 0; i < realnameString.length; i++) {
-        if (i !== realnameString.length - 1) {
-            realnameString2 = realnameString2 + realnameString[i] + "|"
-        } else {
-            realnameString2 = realnameString2 + realnameString[i]
-        }
-    }
-    return realnameString2;
-}
-*/
+
 //Parses the string sent from submit, splitting it at designated char and then searching for the 'real names' or 'evdev names' of the mapped keystrokes, returning the resulting string of all those names.
 function parseMapping(mapping, chosenKeylocal){
     var realnameString = "";
@@ -474,7 +434,7 @@ function parseMapping(mapping, chosenKeylocal){
     if(mapping.includes(":")){var mappingArray = mapping.split(":")} else {var mappingArray = []; mappingArray[0] = mapping;};
     for(var i = 0; i<mappingArray.length; i++){
     if(getRealname(mappingArray[i])===undefined || mappingArray[i]===""){
-        alert("Invalid input with " + mappingArray[i] + "!");
+        createNotification("Invalid input with " + mappingArray[i] + "!",true);
         return chosenKeylocal.mappedEvdevName;
     } else {
         if(realnameString!==""){
@@ -574,10 +534,12 @@ function postKeys(data, urli) {
 
 //Prototype to load a profile
 function loadProfiles() {
-     var profilesJson = getProfile("/json.api");
-   // var profilesJson = '[{"profileName":"Profile-1","profileID":1,"keyData":{"1":{"mappedEvdevID":"30","mappedEvdevName":"KEY_A","displayName":"Esc","evdevName":"KEY_ESC"},"2":{"mappedEvdevID":"30","mappedEvdevName":"KEY_A","displayName":"1","evdevName":"KEY_1"},"3":{"profiles":[1],"toggle":true,"displayName":"2","evdevName":"KEY_2"}}},{"profileName":"Profile-2","profileID":2,"keyData":{}},{"profileName":"Profile-3","profileID":3,"keyData":{"34":{"mappedEvdevID":"48","mappedEvdevName":"KEY_B","displayName":"g","evdevName":"KEY_G"}}}]'
+   //  var profilesJson = getProfile("/json.api");
+    var profilesJson = '[{}]'
    // profilesJson[0] = new Profile("Profile-1", 1, []);
+   try {
     profilesJson = JSON.parse(profilesJson);
+    console.log(profilesJson);
     for(var i = 0; i<profilesJson.length; i++){
         kbProfiles[i] = new Profile(profilesJson[i].profileName, profilesJson[i].profileID, []);
         for (var j = 0; j < Object.keys(profilesJson[i].keyData).length; j++) {
@@ -592,8 +554,32 @@ function loadProfiles() {
         }
     }
     chosenProfile = kbProfiles[0];
+} catch(err) {
+createNotification(err + "! Creating empty data.", true);
+kbProfiles[0] = new Profile("Profile-1", 1, []);
+chosenProfile = kbProfiles[0];
+}
 }
 
+function createNotification(string, error){
+    var newNotification = document.createElement("div");
+    newNotification.className = "notification";
+    newNotification.textContent = string;
+    if (error === true) newNotification.className = "error";
+    var time = 0;
+    var wrapper = document.getElementById("bigwrap");
+    wrapper.appendChild(newNotification);
+    var fade = setInterval(fadeNotification, 20);
+    function fadeNotification() {
+      if (time > 99) {
+        newNotification.style.opacity = 0;
+        setTimeout(function(){wrapper.removeChild(newNotification);},1000);
+        clearInterval(fade);
+      } else {
+        time++;
+      }
+    }
+}
 
 //Gets profile from the url
 function getProfile(url) {
@@ -636,7 +622,7 @@ function write(string){
     return string;
 }
 
-function chProf(profiles,toggle){
+function Profiles(profiles,toggle){
     var profilesArray = [];
     var profileIDArray = [];
     if(profiles.includes(",") && toggle !== true){
@@ -653,7 +639,7 @@ function chProf(profiles,toggle){
             profileIDArray[newIndex] = getProfilebyName(profilesArray[i]).profileID;
             newIndex++;
         } else {
-            alert("Profile " + profilesArray[i] + " not found!");
+            createNotification("Profile " + profilesArray[i] + " not found!",true);
             return undefined;
         }
     }
@@ -665,10 +651,10 @@ function chProf(profiles,toggle){
     return profileIDArray;
 }
 
-function chMod(profile,toggle){
+function Mode(profile,toggle){
     if(profile.includes(",")){
         profile = profile.split(',');
         profile = profile[0];
     }
-   return chProf(profile,toggle);
+   return Profiles(profile,toggle);
 }

@@ -22,22 +22,33 @@ button{
     overflow:hidden;
 }
 .keyboardwrapper {
+        display:inline-block;
+    width:950px;
     margin: 5px;
     padding:2px;
-    background-color: #009fb2;
-    
-    border-right: 1px solid #11a8b9;
-    border-left: 1px solid #118a9f;
-    border-top: 1px solid #099cb0;
-    border-bottom: 1px solid #099cb0;
-    -webkit-box-shadow: 1px 0 1px #065363;
-    -moz-box-shadow: 1px 0 1px #065363;
-    -ms-box-shadow: 1px 0 1px #065363;
-    -o-box-shadow: 1px 0 1px #065363;
-    box-shadow: 1px 0 1px #065363;
-    display:inline-block;
-    width:950px;
-    float:right;
+    background:#385E82;
+    background-image: -o-linear-gradient(left , #29527b 0%, #014e93 100%);
+    background-image: -moz-linear-gradient(left , #29527b 0%, #014e93 100%);
+    background-image: -webkit-linear-gradient(left , #29527b 0%, #014e93 100%);
+    background-image: -ms-linear-gradient(left , #29527b 0%, #014e93 100%);
+    background-image: linear-gradient(left , #29527b 0%, #014e93 100%);
+  
+    background-image: -webkit-gradient(
+                 linear,
+                  left top,
+                  right top,
+                  color-stop(0, #29527b),
+                  color-stop(1, #014e93)
+              );
+    border-right: 1px solid #004884;
+    border-left: 1px solid #004884;
+    border-top: 1px solid #014b8d;
+    border-bottom: 1px solid #014b8d;
+    -webkit-box-shadow: 1px 0 1px #004884;
+    -moz-box-shadow: 1px 0 1px #004884;
+    -ms-box-shadow: 1px 0 1px #004884;
+    -o-box-shadow: 1px 0 1px #004884;
+    box-shadow: 1px 0 1px #004884;
 }
 .helpwrapper {
     padding:5px;
@@ -75,7 +86,6 @@ button{
 .inputwrapper {
     padding:2px;
     margin: 5px;
-    height: 2px;
     background:#385E82;
     background-image: -o-linear-gradient(left , #29527b 0%, #014e93 100%);
     background-image: -moz-linear-gradient(left , #29527b 0%, #014e93 100%);
@@ -122,29 +132,24 @@ button{
     width: 205px;
     height: 255px;
     margin: 5px;
-    background: #8BBA30;
-    background-image: -o-linear-gradient(left , #84a12d 0%, #9eb33a 100%);
- background-image: -moz-linear-gradient(left , #84a12d 0%, #9eb33a 100%);
- background-image: -webkit-linear-gradient(left , #84a12d 0%, #9eb33a 100%);
- background-image: -ms-linear-gradient(left , #84a12d 0%, #9eb33a 100%);
- background-image: linear-gradient(left , #84a12d 0%, #9eb33a 100%);
-
- background-image: -webkit-gradient(
-              linear,
-               left top,
-               right top,
-               color-stop(0, #84a12d),
-               color-stop(1, #9eb33a)
-           );
- border-right: 1px solid #92ab34;
- border-left: 1px solid #92ab34;
- border-top: 1px solid #9cb638;
- border-bottom: 1px solid #9cb638;
- -webkit-box-shadow: 1px 0 1px #8ca731;
- -moz-box-shadow: 1px 0 1px #8ca731;
- -ms-box-shadow: 1px 0 1px #8ca731;
- -o-box-shadow: 1px 0 1px #8ca731;
- box-shadow: 1px 0 1px #8ca731;
+    background-color: #d5582c;
+    background-image: -o-linear-gradient(left , #c64a26 0%, #d5582c 100%);
+    background-image: -moz-linear-gradient(left , #c64a26 0%, #d5582c 100%);
+    background-image: -webkit-linear-gradient(left , #c64a26 0%, #d5582c 100%);
+    background-image: -ms-linear-gradient(left , #c64a26 0%, #d5582c 100%);
+    background-image: linear-gradient(left , #c64a26 0%, #d5582c 100%);
+  
+    background-image: -webkit-gradient(
+                 linear,
+                  left top,
+                  right top,
+                  color-stop(0, #c64a26),
+                  color-stop(1, #d5582c)
+              );
+    border-right: 1px solid #db5b2e;
+    border-left: 1px solid #db5b2e;
+    border-top: 1px solid #db5628;
+    border-bottom: 1px solid #db5628;
     display: inline-block;
     float:left;
     margin-bottom:5px;
@@ -176,6 +181,7 @@ button{
     float:left;
 }
 .wrapper {
+    margin: auto;
     width:1200px;
     display: flex;
     flex-direction: row;
@@ -229,6 +235,33 @@ button{
     width:10%;
     padding:0px;
 }
+
+    .notification, .error {
+        border-radius:.5em;
+        margin: auto;
+        padding:6px;
+        top: 30%;
+        position: absolute;
+        transition: opacity ease 0.5s;
+    }
+    .error {
+        color: #D8000C;
+        background-color: #FFD2D2;
+    }
+    .notification {
+        color: #4F8A10;
+        background-color: #DFF2BF;
+    }
+    .notification:before {
+        content:'\2714';
+        margin-right: 3px;
+    }
+    .error:before {
+        content:'\2716';
+        margin-right: 3px;
+    }
+
+
 .deletebutton {
     height:100%;
     max-width:20%;

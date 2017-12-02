@@ -3,7 +3,7 @@ import evdev
 
 # http://www.usb.org/developers/hidpage/Hut1_12v2.pdf
 # See chapter 10 for keycodes.
-f = open('apu.txt','w')
+f = open('heatmap_stats.txt', 'w')
 EVDEV_TO_HID_MAP = {
     ecodes.KEY_A: 0x04,
     ecodes.KEY_B: 0x05,
@@ -49,7 +49,7 @@ EVDEV_TO_HID_MAP = {
     ecodes.KEY_MINUS: 0x2D,
     ecodes.KEY_EQUAL: 0x2E,
     ecodes.KEY_LEFTBRACE: 0x2F,
-    ecodes.KEY_RIGHTBRACE:0x30,
+    ecodes.KEY_RIGHTBRACE: 0x30,
     ecodes.KEY_BACKSLASH: 0x31,
     # Some key here, internet said it would be "HASHTILDE", but didn't find it from ecodes.
     ecodes.KEY_SEMICOLON: 0x33,
@@ -115,16 +115,28 @@ EVDEV_TO_HID_MAP = {
     ecodes.KEY_RIGHTMETA: 0xE7
 
 
-	#TODO find out how to refer to the rest of the keys
+    # TODO find out how to refer to the rest of the keys
 
 }
 
+evdev_id_and_hid_hid_list = []
+
 for i in EVDEV_TO_HID_MAP:
-    f.write(str(i)+ ":" + str(0) + ",\n")
+    evdev_id_and_hid_hid_list.append(str(i) + ":" + str(0) + ",\n")
 
-f.close()    
+last_item = evdev_id_and_hid_hid_list.pop().strip(",\n")
 
-MODIFIER_KEY_BITMASKS =  {
+for item in evdev_id_and_hid_hid_list:
+    print(item)
+    f.write(item)
+
+print(last_item)
+f.write(last_item)
+
+
+f.close()
+
+MODIFIER_KEY_BITMASKS = {
     ecodes.KEY_LEFTCTRL:   0b00000001,
     ecodes.KEY_LEFTSHIFT:  0b00000010,
     ecodes.KEY_LEFTALT:    0b00000100,
@@ -135,6 +147,7 @@ MODIFIER_KEY_BITMASKS =  {
     ecodes.KEY_RIGHTMETA:  0b10000000,
 }
 
+
 class HidReport:
     """
     Convert evdev keyboard key ids to USB HID keyboard report.
@@ -143,6 +156,7 @@ class HidReport:
     Run method `update_report()` before accessing HID report data
     to make sure that HID report data is up to date.
     """
+
     def __init__(self) -> None:
         self.clear()
 

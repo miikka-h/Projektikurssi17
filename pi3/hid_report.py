@@ -122,15 +122,15 @@ EVDEV_TO_HID_MAP = {
 evdev_id_and_hid_hid_list = []
 
 for i in EVDEV_TO_HID_MAP:
-    evdev_id_and_hid_hid_list.append(str(i) + ":" + str(0) + ",\n")
+    evdev_id_and_hid_hid_list.append(   str(i) + ":" + str(0) + ",\n")
 
 last_item = evdev_id_and_hid_hid_list.pop().strip(",\n")
 
 for item in evdev_id_and_hid_hid_list:
-    print(item)
+    
     f.write(item)
 
-print(last_item)
+
 f.write(last_item)
 
 

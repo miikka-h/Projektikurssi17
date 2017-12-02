@@ -304,7 +304,7 @@ def run(web_server_manager: WebServerManager, hid_data_socket: HidDataSocket, hi
 
         for event in keyboard_manager.get_key_events():
             heatmap_key = str(event.code)            
-            print(event)
+            
             new_keys_list = key_remapper.remap_key(event.code)
 
             if len(new_keys_list) == 1:
@@ -315,7 +315,7 @@ def run(web_server_manager: WebServerManager, hid_data_socket: HidDataSocket, hi
                     for k in key_list:
                         hid_report.add_key(k)
                         keypresses += heatmap_key + "|"
-                        print(keypresses)
+                        
                         keyspressed += 1
                         if keyspressed == 10:
                             f = open('heatmap_data.txt', 'w')
@@ -332,7 +332,7 @@ def run(web_server_manager: WebServerManager, hid_data_socket: HidDataSocket, hi
                 if event.value == 1:
                     for report in new_keys_list:
                         key_list = report
-                        print(key_list)
+                        
                         for k in key_list:
                             hid_report.add_key(k)
                             keypresses += heatmap_key + "|"
@@ -372,7 +372,7 @@ def heatmap() -> None:
 
     with open("heatmap_stats.txt", 'r') as statfile:
         help_dict = statfile.read().strip('{}\n').split(',')
-        print(help_dict)
+        
         for entry in help_dict:
             (key, val) = entry.rstrip("\n").split(':')
             key = key.strip(" '\n")
@@ -382,21 +382,21 @@ def heatmap() -> None:
     statfile.close()
 
 
-    print(heatmap_stats)
+    
 
     hmdata = open("heatmap_data.txt", 'r')
     statfile = open("heatmap_stats.txt", 'w')
     key_presses = hmdata.read().split('|')
     hmdata.close()
-    print(key_presses)
+   
 
     for kpress in key_presses:
         if kpress is not "":
             #heatmap_stats[kpress] = heatmap_stats[kpress]
             heatmap_stats[kpress] += 1
-            print(heatmap_stats[kpress])
+        
 
-    print(heatmap_stats)
+    
 
     
     statfile.write(str(heatmap_stats))

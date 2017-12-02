@@ -303,10 +303,7 @@ def run(web_server_manager: WebServerManager, hid_data_socket: HidDataSocket, hi
             pass
 
         for event in keyboard_manager.get_key_events():
-            if str(event)[str(event).find("code") + 7] == ",":
-                heatmap_key = str(event)[str(event).find("code") + 5:str(event).find("code") + 7]
-            else:
-                heatmap_key = str(event)[str(event).find("code") + 5:str(event).find("code") + 8]    
+            heatmap_key = str(event.code)            
             print(event)
             new_keys_list = key_remapper.remap_key(event.code)
 
@@ -373,11 +370,16 @@ def heatmap() -> None:
     heatmap_stats = {}
 
     with open("heatmap_stats.txt", 'r') as statfile:
-        help_dict = statfile.read().strip('{').strip('}').split(',')
+        help_dict = statfile.read().strip('{}\n').split(',')
+        print(help_dict)
         for entry in help_dict:
             (key, val) = entry.rstrip("\n").split(':')
-            heatmap_stats[int(key)] = int(val)
+            key = key.strip(" '\n")
+            key = key.strip(" '\n")
+            key = key.strip(" '\n")
+            heatmap_stats[key] = int(val)
     statfile.close()
+
 
     print(heatmap_stats)
 
@@ -389,9 +391,9 @@ def heatmap() -> None:
 
     for kpress in key_presses:
         if kpress is not "":
-            heatmap_stats[int(kpress)] = heatmap_stats[int((kpress).rstrip())]
-            heatmap_stats[int(kpress)] += 1
-            print(heatmap_stats[int(kpress)])
+            #heatmap_stats[kpress] = heatmap_stats[kpress]
+            heatmap_stats[kpress] += 1
+            print(heatmap_stats[kpress])
 
     print(heatmap_stats)
 

@@ -120,7 +120,7 @@ EVDEV_TO_HID_MAP = {
 }
 
 for i in EVDEV_TO_HID_MAP:
-    f.write(str(i)+ ":" + str(0) + ",\n")
+    f.write("'"+str(i)+"':" + str(0) + ",\n")
 
 f.close()    
 

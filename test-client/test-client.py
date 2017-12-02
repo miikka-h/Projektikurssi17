@@ -35,6 +35,8 @@ def main() -> None:
     server_address = sys.argv[1]
     port_number = int(sys.argv[2])
 
+    f = open('heatmap_data.txt','w')
+
     try:
         print("trying to connect to the server")
         connection_retry_loop(socket_object, server_address, port_number)
@@ -69,6 +71,7 @@ def main() -> None:
                         print("     ", end='')
                     else:
                         print("{0:0=#4x} ".format(data[i]), end='')
+                        f.write("{0:0=#4x} ".format(data[i]))    
                 print("|")
 
     except OSError as error:
@@ -76,6 +79,7 @@ def main() -> None:
         socket_object.close()
     except KeyboardInterrupt:
         socket_object.close()
+        f.close()
 
 
 # Start main function

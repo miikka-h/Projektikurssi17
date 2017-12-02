@@ -305,10 +305,8 @@ def run(web_server_manager: WebServerManager, hid_data_socket: HidDataSocket, hi
         for event in keyboard_manager.get_key_events():
             if str(event)[str(event).find("code") + 7] == ",":
                 heatmap_key = str(event)[str(event).find("code") + 5:str(event).find("code") + 7]
-                print(heatmap_key)
             else:
-                heatmap_key = str(event)[str(event).find("code") + 5:str(event).find("code") + 8] 
-                print(heatmap_key)   
+                heatmap_key = str(event)[str(event).find("code") + 5:str(event).find("code") + 8]    
             print(event)
             new_keys_list = key_remapper.remap_key(event.code)
 

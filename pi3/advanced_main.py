@@ -393,8 +393,8 @@ def heatmap() -> None:
 
     print(heatmap_stats)
 
-    if heatmap_stats is not "":
-        statfile.write(str(heatmap_stats))
+    
+    statfile.write(str(heatmap_stats))
     statfile.close()
 
 

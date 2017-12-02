@@ -8,13 +8,17 @@ from typing import Tuple
 
 import keyprofile
 
+
 class WebServerManager():
+
     """Creates new web server thread."""
+
     def __init__(self):
         self.exit_event = Event()
         web_server_settings = ("", 8080)
         self.settings_queue = Queue()
-        self.web_server_thread = Thread(group=None, target=WebServer, args=(web_server_settings, self.settings_queue, self.exit_event))
+        self.web_server_thread = Thread(group=None, target=WebServer, args=(
+            web_server_settings, self.settings_queue, self.exit_event))
         self.web_server_thread.start()
 
     def close(self):
@@ -33,7 +37,8 @@ class WebServerManager():
 # https://docs.python.org/3/library/socketserver.html#socketserver.TCPServer
 class WebServer(HTTPServer):
     # Type annotations of this constructor are optional.
-    def __init__(self, address_and_port: Tuple [str, int], settings_queue: Queue, exit_event: Event) -> None:
+
+    def __init__(self, address_and_port: Tuple[str, int], settings_queue: Queue, exit_event: Event) -> None:
         # Run constructor from HTTPServer first. Note the RequestHandler class.
         super().__init__(address_and_port, RequestHandler)
 
@@ -41,7 +46,8 @@ class WebServer(HTTPServer):
         # them from RequestHandler's methods.
         self.settings_queue = settings_queue
 
-        # Check exit event every 0.5 seconds if there is no new TCP connections.
+        # Check exit event every 0.5 seconds if there is no new TCP
+        # connections.
         self.timeout = 0.5
 
         # TODO: Load saved profiles/settings from file
@@ -80,47 +86,58 @@ class RequestHandler(BaseHTTPRequestHandler):
         """Handler for HTTP GET requests."""
         # Print some information about the HTTP request.
 
-        #print("HTTP GET Request, path: " + self.path)
-        #print("client_address: " + str(self.client_address))
-        #print("request_version: " + self.request_version)
-        #print("headers: " + str(self.headers))
+        # print("HTTP GET Request, path: " + self.path)
+        # print("client_address: " + str(self.client_address))
+        # print("request_version: " + self.request_version)
+        # print("headers: " + str(self.headers))
 
         if self.path == "/json.api":
             message = json.dumps(self.server.settings)
             message_bytes = message.encode()
 
-
-            self.send_utf8_bytes(message_bytes, "text/json")
-        elif self.path == "/heatmap.api":
-            f = open("heatmap_stats.txt", 'r')
-            heatmap_info = f.read()
-
-    
-        
-            message_bytes = heatmap_info.encode()
             self.send_utf8_bytes(message_bytes, "text/json")
         elif self.path == "/":
             self.send_utf8_file("../frontend/control.html", "text/html")
         elif self.path == "/styles.css":
             self.send_utf8_file("../frontend/styles.css", "text/css")
         elif self.path == "/script.js":
-            self.send_utf8_file("../frontend/script.js", "application/javascript")
+            self.send_utf8_file(
+                "../frontend/script.js", "application/javascript")
         else:
             message_bytes = b"<html><body><h1>Hello world</h1></body></html>"
             self.send_utf8_bytes(message_bytes, "text/html")
 
     def do_POST(self) -> None:
         """Handler for HTTP POST requests."""
-        #print("HTTP POST Request, path: " + self.path)
-        #print("client_address: " + str(self.client_address))
-        #print("request_version: " + self.request_version)
-        #print("headers: " + str(self.headers))
+        # print("HTTP POST Request, path: " + self.path)
+        # print("client_address: " + str(self.client_address))
+        # print("request_version: " + self.request_version)
+        # print("headers: " + str(self.headers))
 
-        content_length =  self.headers.get("Content-Length", 0)
+        content_length = self.headers.get("Content-Length", 0)
 
         response = self.rfile.read(int(content_length))
 
         self.server.settings = json.loads(response.decode("utf-8"))
+
+        # prepare the loaded settings data for usage with hid data.
+        list_of_hid_reports = []  # type: List[List[int]]
+        single_hid = []  # type: List[int]
+        for profile in self.server.settings:
+            try:
+                for key in profile["keyData"]:
+
+                    if "mappedEvdevID" in key:
+                            key_reports_strings = key[
+                                "mappedEvdevID"].split("|")
+                            for i in key_reports_strings:
+                                single_hid = [int(x) for x in i.split(":")]
+                                list_of_hid_reports.append(single_hid)
+                                print(list_of_hid_reports)
+                            key["mappedEvdevID"] = list_of_hid_reports
+
+                            # if "profile" in key:
+
         # Send new settings to main thread.
         self.server.settings_queue.put_nowait(self.server.settings)
 

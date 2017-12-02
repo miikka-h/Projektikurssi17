@@ -3,7 +3,7 @@ import evdev
 
 # http://www.usb.org/developers/hidpage/Hut1_12v2.pdf
 # See chapter 10 for keycodes.
-f = open('heatmap_stats.txt', 'w')
+
 EVDEV_TO_HID_MAP = {
     ecodes.KEY_A: 0x04,
     ecodes.KEY_B: 0x05,
@@ -114,26 +114,19 @@ EVDEV_TO_HID_MAP = {
     ecodes.KEY_RIGHTALT: 0xE6,
     ecodes.KEY_RIGHTMETA: 0xE7
 
-
     # TODO find out how to refer to the rest of the keys
 
 }
 
+#probably/hopefully a placeholder solution to generate a file for heatmap statistics
 evdev_id_and_hid_hid_list = []
-
 for i in EVDEV_TO_HID_MAP:
-    evdev_id_and_hid_hid_list.append(   str(i) + ":" + str(0) + ",\n")
-
+    evdev_id_and_hid_hid_list.append(str(i) + ":" + str(0) + ",\n")
 last_item = evdev_id_and_hid_hid_list.pop().strip(",\n")
-
+f = open('heatmap_stats.txt', 'w')
 for item in evdev_id_and_hid_hid_list:
-    
     f.write(item)
-
-
 f.write(last_item)
-
-
 f.close()
 
 MODIFIER_KEY_BITMASKS = {

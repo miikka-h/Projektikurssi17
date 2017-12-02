@@ -282,14 +282,16 @@ def main():
 
 def run(web_server_manager: WebServerManager, hid_data_socket: HidDataSocket, hid_report: HidReport, keyboard_manager: KeyboardManager) -> None:
 
-    keypresses = ""
-    keyspressed = 0
+    
     print("waiting for settings from web server thread")
     key_remapper = KeyRemapper(web_server_manager.get_settings_queue().get())
     print("received settings from web server thread")
 
     keyboard_manager.request_clear_key_events()
 
+    
+    keypresses = "" #String that is used to insert pressed keys' evdev id:s
+    keyspressed = 0 #Variable that tracks how many keys are pressed while client is connected
     while True:
         time.sleep(0.001)
 
@@ -301,6 +303,7 @@ def run(web_server_manager: WebServerManager, hid_data_socket: HidDataSocket, hi
             key_remapper.set_new_settings(new_settings)
         except Empty:
             pass
+
 
         for event in keyboard_manager.get_key_events():
             heatmap_key = str(event.code)            
@@ -314,16 +317,18 @@ def run(web_server_manager: WebServerManager, hid_data_socket: HidDataSocket, hi
                 if event.value == 1:
                     for k in key_list:
                         hid_report.add_key(k)
+                        #Append pressed key's evdev id to "keypresses" string and add "|" for later parsing
                         keypresses += heatmap_key + "|"
                         
+                        #Data about pressed keys is saved when any keys have been pressed certain amount of times
                         keyspressed += 1
                         if keyspressed == 10:
                             f = open('heatmap_data.txt', 'w')
                             f.write(keypresses)
-                            keypresses = ""
                             f.close()
+                            keypresses = ""
                             heatmap()
-                            keyspressed = 0
+                            keyspressed = 0 
                 # key_up = 0
                 elif event.value == 0:
                     for k in key_list:
@@ -335,7 +340,9 @@ def run(web_server_manager: WebServerManager, hid_data_socket: HidDataSocket, hi
                         
                         for k in key_list:
                             hid_report.add_key(k)
+                            #Append pressed key's evdev id to "keypresses" string and add "|" for later parsing
                             keypresses += heatmap_key + "|"
+                            #Data about pressed keys is saved when any keys have been pressed certain amount of times
                             keyspressed += 1
                             if keyspressed == 10:
                                 f = open('heatmap_data.txt', 'w')
@@ -365,40 +372,35 @@ def send_and_reset_if_client_disconnected(hid_data_socket: HidDataSocket, hid_re
         keyboard_manager.request_clear_key_events()
         hid_report.clear()
 
-
+#Function that parses keypress data and generates heatmap statistics
 def heatmap() -> None:
 
     heatmap_stats = {}
-
+    #open a file where heatmap statistics are stored and insert its contents to an array
     with open("heatmap_stats.txt", 'r') as statfile:
         help_dict = statfile.read().strip('{}\n').split(',')
-        
-        for entry in help_dict:
-            (key, val) = entry.rstrip("\n").split(':')
-            key = key.strip(" '\n")
-            key = key.strip(" '\n")
-            key = key.strip(" '\n")
-            heatmap_stats[key] = int(val)
-    statfile.close()
+    statfile.close()    
 
-
+    #Refactor and parse the data to a dict where the key is the evdev id and value tells how many times that key is pressed.    
+    for entry in help_dict:
+        (key, val) = entry.rstrip("\n").split(':')
+        key = key.strip(" '\n")
+        key = key.strip(" '\n")
+        key = key.strip(" '\n")
+        heatmap_stats[key] = int(val)
     
-
-    hmdata = open("heatmap_data.txt", 'r')
-    statfile = open("heatmap_stats.txt", 'w')
+    #Open a file where keypresses are stored and parse its contents to an array, then close the file.
+    hmdata = open("heatmap_data.txt", 'r') 
     key_presses = hmdata.read().split('|')
     hmdata.close()
-   
-
+    
+    #Loop trough keypress array and for every entry raise the corresponding keys value in heatmap_stats by one
     for kpress in key_presses:
         if kpress is not "":
-            #heatmap_stats[kpress] = heatmap_stats[kpress]
             heatmap_stats[kpress] += 1
-        
 
-    
-
-    
+    #Open a file where heatmap statistic are stored and overwrite its contents by updated stats    
+    statfile = open("heatmap_stats.txt", 'w')
     statfile.write(str(heatmap_stats))
     statfile.close()
 

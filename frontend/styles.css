@@ -11,6 +11,25 @@ button{
     border-style:solid;
 }
 
+.buttonHeatmapMostUsed{
+    background-color: red;
+}
+
+.buttonHeatmapKindofUsed{
+    background-color: yellow;
+}
+
+.buttonHeatmapSomewhatUsed{
+    background-color: green;
+}
+
+.buttonHeatmapNotReallyUsed{
+    background-color: blue;
+}
+
+
+
+
 .rowwrapper {
     display:inline-flex;
     height:30px;

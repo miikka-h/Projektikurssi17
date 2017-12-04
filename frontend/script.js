@@ -268,6 +268,41 @@ function toggleDisplaymode(notify) {
     }
 }
 
+function toggleHeatmap() {
+    var heatmapStats = getHeatmapStats();
+    for (var i = 0; i < chosenLayout.layoutArray.length; i++) {
+        for (var j = 0; j < chosenLayout.layoutArray[i].length; j++) {
+                var button = document.getElementById("button-" + chosenLayout.layoutArray[i][j][0]);
+                if (chosenLayout.realNames === false && chosenProfile.getKeybyName(chosenLayout.layoutArray[i][j][0]) !== undefined) {
+                    var getLayoutnameinput = chosenProfile.getKeybyName(chosenLayout.layoutArray[i][j][0]).mappedEvdevName;
+                    getLayoutnameinput = getLayoutnameinput.replace(/KEY_/g, "");
+                    button.textContent = getLayoutnameinput;
+                } else if (chosenLayout.realNames === true) {
+                    button.textContent = chosenLayout.layoutArray[i][j][0].replace("kp","");
+                }
+        }
+    }
+
+
+}
+
+function getHeatmapStats() {
+    var heatmapStats = '[{}]'
+    // Create items array
+var items = Object.keys(heatmapStats).map(function(key) {
+    return [key, dict[key]];
+});
+
+// Sort the array based on the second element
+items.sort(function(first, second) {
+    return second[1] - first[1];
+});
+
+
+}
+
+
+
 // Adds new profile cards, deleting any that had been there before.
 function addProfilecards() {
     var profWrap = document.getElementById("profcards");

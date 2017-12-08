@@ -54,6 +54,8 @@ class Heatmap:
 
 
 HEATMAP_FILE_NAME = 'heatmap_stats.txt'
+PROFILE_DATA_FILE_NAME = 'data.txt'
+
 
 # Class WebServer inherits HTTPServer class which is from Python standard library.
 # https://docs.python.org/3/library/http.server.html
@@ -73,9 +75,16 @@ class WebServer(HTTPServer):
         # Check exit event every 0.5 seconds if there is no new TCP connections.
         self.timeout = 0.5
 
-        # TODO: Load saved profiles/settings from file
-        #       if file is not found default to keyprofile.settings
+        # Initialize profiles
+
         self.settings = [{}]
+
+        if os.path.exists(PROFILE_DATA_FILE_NAME):
+            with open(PROFILE_DATA_FILE_NAME, 'r') as profiles_file:
+                file_contents = profiles_file.read()
+                self.settings = json.loads(file_contents)
+
+        # Initialize heatmap
 
         self.heatmap = Heatmap()
 
@@ -108,7 +117,7 @@ class WebServer(HTTPServer):
         self.server_close()
 
         # Save profiles/settings.
-        with open('data.txt', 'w') as outfile:
+        with open(PROFILE_DATA_FILE_NAME, 'w') as outfile:
             json.dump(self.settings, outfile)
 
         # Save heatmap.

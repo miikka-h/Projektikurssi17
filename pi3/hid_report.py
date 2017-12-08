@@ -118,17 +118,6 @@ EVDEV_TO_HID_MAP = {
 
 }
 
-#probably/hopefully a placeholder solution to generate a file for heatmap statistics
-evdev_id_and_hid_hid_list = []
-for i in EVDEV_TO_HID_MAP:
-    evdev_id_and_hid_hid_list.append(str(i) + ":" + str(0) + ",\n")
-last_item = evdev_id_and_hid_hid_list.pop().strip(",\n")
-f = open('heatmap_stats.txt', 'w')
-for item in evdev_id_and_hid_hid_list:
-    f.write(item)
-f.write(last_item)
-f.close()
-
 MODIFIER_KEY_BITMASKS = {
     ecodes.KEY_LEFTCTRL:   0b00000001,
     ecodes.KEY_LEFTSHIFT:  0b00000010,

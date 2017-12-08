@@ -1,7 +1,8 @@
 from http.server import HTTPServer, BaseHTTPRequestHandler
-from queue import Queue
+from queue import Queue, Empty
 from threading import Thread, Event
 import json
+import os
 
 # Import Tuple type which is used in optional function type annotations.
 from typing import Tuple
@@ -14,7 +15,8 @@ class WebServerManager():
         self.exit_event = Event()
         web_server_settings = ("", 8080)
         self.settings_queue = Queue()
-        self.web_server_thread = Thread(group=None, target=WebServer, args=(web_server_settings, self.settings_queue, self.exit_event))
+        self.heatmap_queue = Queue()
+        self.web_server_thread = Thread(group=None, target=WebServer, args=(web_server_settings, self.settings_queue, self.heatmap_queue, self.exit_event))
         self.web_server_thread.start()
 
     def close(self):
@@ -25,6 +27,33 @@ class WebServerManager():
     def get_settings_queue(self) -> Queue:
         return self.settings_queue
 
+    def get_heatmap_queue(self) -> Queue:
+        return self.heatmap_queue
+
+
+class Heatmap:
+    def __init__(self):
+        self.heatmap_data = {}
+
+    def add_keypress(self, evdev_id: int) -> None:
+        key = str(evdev_id)
+
+        try:
+            self.heatmap_data[key] = self.heatmap_data[key] + 1
+        except KeyError:
+            self.heatmap_data[key] = 1
+
+    def get_heatmap_data(self):
+        return self.heatmap_data
+
+    def json_string(self) -> str:
+        return json.dumps(self.heatmap_data)
+
+    def set_heatmap_data(self, heatmap_data) -> None:
+        self.heatmap_data = heatmap_data
+
+
+HEATMAP_FILE_NAME = 'heatmap_stats.txt'
 
 # Class WebServer inherits HTTPServer class which is from Python standard library.
 # https://docs.python.org/3/library/http.server.html
@@ -33,7 +62,7 @@ class WebServerManager():
 # https://docs.python.org/3/library/socketserver.html#socketserver.TCPServer
 class WebServer(HTTPServer):
     # Type annotations of this constructor are optional.
-    def __init__(self, address_and_port: Tuple [str, int], settings_queue: Queue, exit_event: Event) -> None:
+    def __init__(self, address_and_port: Tuple [str, int], settings_queue: Queue, heatmap_queue: Queue, exit_event: Event) -> None:
         # Run constructor from HTTPServer first. Note the RequestHandler class.
         super().__init__(address_and_port, RequestHandler)
 
@@ -47,7 +76,14 @@ class WebServer(HTTPServer):
         # TODO: Load saved profiles/settings from file
         #       if file is not found default to keyprofile.settings
         self.settings = [{}]
-        # keyprofile.setting
+
+        self.heatmap = Heatmap()
+
+        if os.path.exists(HEATMAP_FILE_NAME):
+            with open(HEATMAP_FILE_NAME, 'r') as heatmap_file:
+                file_contents = heatmap_file.read()
+                heatmap_data = json.loads(file_contents)
+                self.heatmap.set_heatmap_data(heatmap_data)
 
         # Main thread is waiting for profiles/settings so lets send them.
         self.settings_queue.put_nowait(self.settings)
@@ -62,11 +98,23 @@ class WebServer(HTTPServer):
                 # There was exit event, lets close the web server.
                 break
 
+            try:
+                while True:
+                    evdev_id = heatmap_queue.get(block=False)
+                    self.heatmap.add_keypress(evdev_id)
+            except Empty:
+                pass
+
         self.server_close()
 
         # Save profiles/settings.
         with open('data.txt', 'w') as outfile:
             json.dump(self.settings, outfile)
+
+        # Save heatmap.
+        with open(HEATMAP_FILE_NAME, 'w') as outfile:
+            outfile.write(self.heatmap.json_string())
+
 
         print("web server exited")
 
@@ -92,9 +140,8 @@ class RequestHandler(BaseHTTPRequestHandler):
             self.send_utf8_bytes(message_bytes, "text/json")
         #get heatmap statistics in json form
         elif self.path == "/heatmap.api":
-            f = open("heatmap_stats.txt", 'r')
-            heatmap_info = f.read()
-            message_bytes = heatmap_info.encode()
+            text = self.server.heatmap.json_string()
+            message_bytes = text.encode()
             self.send_utf8_bytes(message_bytes, "text/json")
         elif self.path == "/":
             self.send_utf8_file("../frontend/control.html", "text/html")

@@ -15,10 +15,12 @@ Building tested with Node.js 8.
 LTS version easily on Linux
 install Node.js with [nvm (Node Version Manager)](https://github.com/creationix/nvm).
 
-2. Build project with `npm run build`. npm will download required
+2. Install project dependencies with `npm install`.
+
+3. Build project with `npm run build`. npm will download required
 dependencies automatically.
 
-3. Open `dist/index.html` in your web browser.
+4. Open `dist/index.html` in your web browser.
 
 # Development
 

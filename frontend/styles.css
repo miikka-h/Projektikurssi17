@@ -11,6 +11,25 @@ button{
     border-style:solid;
 }
 
+.buttonHeatmapMostUsed{
+    background-color: red;
+}
+
+.buttonHeatmapKindofUsed{
+    background-color: yellow;
+}
+
+.buttonHeatmapSomewhatUsed{
+    background-color: green;
+}
+
+.buttonHeatmapNotReallyUsed{
+    background-color: blue;
+}
+
+
+
+
 .rowwrapper {
     display:inline-flex;
     height:30px;
@@ -49,6 +68,35 @@ button{
     -ms-box-shadow: 1px 0 1px #004884;
     -o-box-shadow: 1px 0 1px #004884;
     box-shadow: 1px 0 1px #004884;
+}
+.optionswrapper {
+    display:inline-block;
+width:auto;
+margin: 5px;
+padding:2px;
+background:#385E82;
+background-image: -o-linear-gradient(left , #29527b 0%, #014e93 100%);
+background-image: -moz-linear-gradient(left , #29527b 0%, #014e93 100%);
+background-image: -webkit-linear-gradient(left , #29527b 0%, #014e93 100%);
+background-image: -ms-linear-gradient(left , #29527b 0%, #014e93 100%);
+background-image: linear-gradient(left , #29527b 0%, #014e93 100%);
+
+background-image: -webkit-gradient(
+             linear,
+              left top,
+              right top,
+              color-stop(0, #29527b),
+              color-stop(1, #014e93)
+          );
+border-right: 1px solid #004884;
+border-left: 1px solid #004884;
+border-top: 1px solid #014b8d;
+border-bottom: 1px solid #014b8d;
+-webkit-box-shadow: 1px 0 1px #004884;
+-moz-box-shadow: 1px 0 1px #004884;
+-ms-box-shadow: 1px 0 1px #004884;
+-o-box-shadow: 1px 0 1px #004884;
+box-shadow: 1px 0 1px #004884;
 }
 .helpwrapper {
     padding:5px;
@@ -236,23 +284,23 @@ button{
     padding:0px;
 }
 
-    .notification, .error {
+    .notification {
         border-radius:.5em;
         margin: auto;
         padding:6px;
         top: 30%;
         position: absolute;
-        transition: opacity ease 0.5s;
+        transition: opacity ease 0.5s, top ease 0.25s;
     }
     .error {
         color: #D8000C;
         background-color: #FFD2D2;
     }
-    .notification {
+    .success {
         color: #4F8A10;
         background-color: #DFF2BF;
     }
-    .notification:before {
+    .success:before {
         content:'\2714';
         margin-right: 3px;
     }

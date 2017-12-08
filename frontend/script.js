@@ -13,7 +13,7 @@ class Profile {
                 return this.keyData[i];
             } 
         }
-        console.log("No key found with ID of " + keyID);
+        createNotification("No key found with ID of " + keyID,true);
         return "";
     }
 
@@ -94,7 +94,6 @@ class Layout {
 }
 
 // Some test values, as well as calls for initiating the keyboard and keycards.
-var evdevIDs = [["KEY_RESERVED",0],["KEY_ESC",1],["KEY_1",2],["KEY_2",3],["KEY_3",4],["KEY_4",5],["KEY_5",6],["KEY_6",7],["KEY_7",8],["KEY_8",9],["KEY_9",10],["KEY_0",11],["KEY_MINUS",12],["KEY_EQUAL",13],["KEY_BACKSPACE",14],["KEY_TAB",15],["KEY_Q",16],["KEY_W",17],["KEY_E",18],["KEY_R",19],["KEY_T",20],["KEY_Y",21],["KEY_U",22],["KEY_I",23],["KEY_O",24],["KEY_P",25],["KEY_LEFTBRACE",26],["KEY_RIGHTBRACE",27],["KEY_ENTER",28],["KEY_LEFTCTRL",29],["KEY_A",30],["KEY_S",31],["KEY_D",32],["KEY_F",33],["KEY_G",34],["KEY_H",35],["KEY_J",36],["KEY_K",37],["KEY_L",38],["KEY_SEMICOLON",39],["KEY_APOSTROPHE",40],["KEY_GRAVE",41],["KEY_LEFTSHIFT",42],["KEY_BACKSLASH",43],["KEY_Z",44],["KEY_X",45],["KEY_C",46],["KEY_V",47],["KEY_B",48],["KEY_N",49],["KEY_M",50],["KEY_COMMA",51],["KEY_DOT",52],["KEY_SLASH",53],["KEY_RIGHTSHIFT",54],["KEY_KPASTERISK",55],["KEY_LEFTALT",56],["KEY_SPACE",57],["KEY_CAPSLOCK",58],["KEY_F1",59],["KEY_F2",60],["KEY_F3",61],["KEY_F4",62],["KEY_F5",63],["KEY_F6",64],["KEY_F7",65],["KEY_F8",66],["KEY_F9",67],["KEY_F10",68],["KEY_NUMLOCK",69],["KEY_SCROLLLOCK",70],["KEY_KP7",71],["KEY_KP8",72],["KEY_KP9",73],["KEY_KPMINUS",74],["KEY_KP4",75],["KEY_KP5",76],["KEY_KP6",77],["KEY_KPPLUS",78],["KEY_KP1",79],["KEY_KP2",80],["KEY_KP3",81],["KEY_KP0",82],["KEY_KPDOT",83],["KEY_ZENKAKUHANKAKU",85],["KEY_102ND",86],["KEY_F11",87],["KEY_F12",88],["KEY_RO",89],["KEY_KATAKANA",90],["KEY_HIRAGANA",91],["KEY_HENKAN",92],["KEY_KATAKANAHIRAGANA",93],["KEY_MUHENKAN",94],["KEY_KPJPCOMMA",95],["KEY_KPENTER",96],["KEY_RIGHTCTRL",97],["KEY_KPSLASH",98],["KEY_SYSRQ",99],["KEY_RIGHTALT",100],["KEY_LINEFEED",101],["KEY_HOME",102],["KEY_UP",103],["KEY_PAGEUP",104],["KEY_LEFT",105],["KEY_RIGHT",106],["KEY_END",107],["KEY_DOWN",108],["KEY_PAGEDOWN",109],["KEY_INSERT",110],["KEY_DELETE",111],["KEY_MACRO",112],["KEY_MUTE",113],["KEY_VOLUMEDOWN",114],["KEY_VOLUMEUP",115],["KEY_POWER",116],["KEY_KPEQUAL",117],["KEY_KPPLUSMINUS",118],["KEY_PAUSE",119],["KEY_SCALE",120],["KEY_KPCOMMA",121],["KEY_HANGEUL",122],["KEY_HANGUEL",122],["KEY_HANJA",123],["KEY_YEN",124],["KEY_LEFTMETA",125],["KEY_RIGHTMETA",126],["KEY_COMPOSE",127],["KEY_STOP",128],["KEY_AGAIN",129],["KEY_PROPS",130],["KEY_UNDO",131],["KEY_FRONT",132],["KEY_COPY",133],["KEY_OPEN",134],["KEY_PASTE",135],["KEY_FIND",136],["KEY_CUT",137],["KEY_HELP",138],["KEY_MENU",139],["KEY_CALC",140],["KEY_SETUP",141],["KEY_SLEEP",142],["KEY_WAKEUP",143],["KEY_FILE",144],["KEY_SENDFILE",145],["KEY_DELETEFILE",146],["KEY_XFER",147],["KEY_PROG1",148],["KEY_PROG2",149],["KEY_WWW",150],["KEY_MSDOS",151],["KEY_COFFEE",152],["KEY_SCREENLOCK",152],["KEY_ROTATE_DISPLAY",153],["KEY_DIRECTION",153],["KEY_CYCLEWINDOWS",154],["KEY_MAIL",155],["KEY_BOOKMARKS",156],["KEY_COMPUTER",157],["KEY_BACK",158],["KEY_FORWARD",159],["KEY_CLOSECD",160],["KEY_EJECTCD",161],["KEY_EJECTCLOSECD",162],["KEY_NEXTSONG",163],["KEY_PLAYPAUSE",164],["KEY_PREVIOUSSONG",165],["KEY_STOPCD",166],["KEY_RECORD",167],["KEY_REWIND",168],["KEY_PHONE",169],["KEY_ISO",170],["KEY_CONFIG",171],["KEY_HOMEPAGE",172],["KEY_REFRESH",173],["KEY_EXIT",174],["KEY_MOVE",175],["KEY_EDIT",176],["KEY_SCROLLUP",177],["KEY_SCROLLDOWN",178],["KEY_KPLEFTPAREN",179],["KEY_KPRIGHTPAREN",180],["KEY_NEW",181],["KEY_REDO",182],["KEY_F13",183],["KEY_F14",184],["KEY_F15",185],["KEY_F16",186],["KEY_F17",187],["KEY_F18",188],["KEY_F19",189],["KEY_F20",190],["KEY_F21",191],["KEY_F22",192],["KEY_F23",193],["KEY_F24",194],["KEY_PLAYCD",200],["KEY_PAUSECD",201],["KEY_PROG3",202],["KEY_PROG4",203],["KEY_DASHBOARD",204],["KEY_SUSPEND",205],["KEY_CLOSE",206],["KEY_PLAY",207],["KEY_FASTFORWARD",208],["KEY_BASSBOOST",209],["KEY_PRINT",210],["KEY_HP",211],["KEY_CAMERA",212],["KEY_SOUND",213],["KEY_QUESTION",214],["KEY_EMAIL",215],["KEY_CHAT",216],["KEY_SEARCH",217],["KEY_CONNECT",218],["KEY_FINANCE",219],["KEY_SPORT",220],["KEY_SHOP",221],["KEY_ALTERASE",222],["KEY_CANCEL",223],["KEY_BRIGHTNESSDOWN",224],["KEY_BRIGHTNESSUP",225],["KEY_MEDIA",226],["KEY_SWITCHVIDEOMODE",227],["KEY_KBDILLUMTOGGLE",228],["KEY_KBDILLUMDOWN",229],["KEY_KBDILLUMUP",230],["KEY_SEND",231],["KEY_REPLY",232],["KEY_FORWARDMAIL",233],["KEY_SAVE",234],["KEY_DOCUMENTS",235],["KEY_BATTERY",236],["KEY_BLUETOOTH",237],["KEY_WLAN",238],["KEY_UWB",239],["KEY_UNKNOWN",240],["KEY_VIDEO_NEXT",241],["KEY_VIDEO_PREV",242],["KEY_BRIGHTNESS_CYCLE",243],["KEY_BRIGHTNESS_AUTO",244],["KEY_BRIGHTNESS_ZERO",244],["KEY_DISPLAY_OFF",245],["KEY_WWAN",246],["KEY_WIMAX",246],["KEY_RFKILL",247],["KEY_MICMUTE",248]];
 var layoutList = [];
 layoutList[0] = new Layout([[["Esc",1],["",1],["F1",1],["F2",1],["F3",1],["F4",1],["",0.25],["F5",1],["F6",1],["F7",1],["F8",1],["",0.25],["F9",1],["F10",1],["F11",1],["F12",1],["",1],["Print",1],["ScrollLock",1],["Pause",1],["",1.5],["",1],["",1],["",1],["",1]],
     [["",1],["",1],["",1],["",1],["",1],["",1],["",1],["",1],["",1],["",1],["",1],["",1],["",1],["",1],["",1],["",1],["",1],["",1],["",1],["",1],["",1],["",1],["",1],["",1],[""]],
@@ -107,12 +106,16 @@ layoutList[0] = new Layout([[["Esc",1],["",1],["F1",1],["F2",1],["F3",1],["F4",1
 var chosenLayout = layoutList[0];
 var kbProfiles = [];
 var chosenProfile;
-loadProfiles();
 kbProfiles[0] = chosenProfile;
 var chosenKey = "";
-initiateKeyboard();
-addProfilecards();
-changeProfile(kbProfiles[0].profileID,document.getElementById("profile-" + kbProfiles[0].profileID));
+
+//Executes function calls when the page is loaded.
+window.onload = function() {
+    loadProfiles();
+    initiateKeyboard();
+    addProfilecards();
+    changeProfile(kbProfiles[0].profileID,document.getElementById("profile-" + kbProfiles[0].profileID));
+  };
 
 // Builds the visualized keyboard based on an array. Array has rows of keys, with each key containing two values - the displayed characters and the width in relation to a "normal" key.
 function initiateKeyboard() {
@@ -185,6 +188,12 @@ function initiateKeyboard() {
     form.addEventListener('submit', handleForm);
 }
 
+//Function to get a list of all the evdev ids and names paired together.
+function getAllEvdevIDs() {
+    var evdevIDs = [["KEY_RESERVED",0],["KEY_ESC",1],["KEY_1",2],["KEY_2",3],["KEY_3",4],["KEY_4",5],["KEY_5",6],["KEY_6",7],["KEY_7",8],["KEY_8",9],["KEY_9",10],["KEY_0",11],["KEY_MINUS",12],["KEY_EQUAL",13],["KEY_BACKSPACE",14],["KEY_TAB",15],["KEY_Q",16],["KEY_W",17],["KEY_E",18],["KEY_R",19],["KEY_T",20],["KEY_Y",21],["KEY_U",22],["KEY_I",23],["KEY_O",24],["KEY_P",25],["KEY_LEFTBRACE",26],["KEY_RIGHTBRACE",27],["KEY_ENTER",28],["KEY_LEFTCTRL",29],["KEY_A",30],["KEY_S",31],["KEY_D",32],["KEY_F",33],["KEY_G",34],["KEY_H",35],["KEY_J",36],["KEY_K",37],["KEY_L",38],["KEY_SEMICOLON",39],["KEY_APOSTROPHE",40],["KEY_GRAVE",41],["KEY_LEFTSHIFT",42],["KEY_BACKSLASH",43],["KEY_Z",44],["KEY_X",45],["KEY_C",46],["KEY_V",47],["KEY_B",48],["KEY_N",49],["KEY_M",50],["KEY_COMMA",51],["KEY_DOT",52],["KEY_SLASH",53],["KEY_RIGHTSHIFT",54],["KEY_KPASTERISK",55],["KEY_LEFTALT",56],["KEY_SPACE",57],["KEY_CAPSLOCK",58],["KEY_F1",59],["KEY_F2",60],["KEY_F3",61],["KEY_F4",62],["KEY_F5",63],["KEY_F6",64],["KEY_F7",65],["KEY_F8",66],["KEY_F9",67],["KEY_F10",68],["KEY_NUMLOCK",69],["KEY_SCROLLLOCK",70],["KEY_KP7",71],["KEY_KP8",72],["KEY_KP9",73],["KEY_KPMINUS",74],["KEY_KP4",75],["KEY_KP5",76],["KEY_KP6",77],["KEY_KPPLUS",78],["KEY_KP1",79],["KEY_KP2",80],["KEY_KP3",81],["KEY_KP0",82],["KEY_KPDOT",83],["KEY_ZENKAKUHANKAKU",85],["KEY_102ND",86],["KEY_F11",87],["KEY_F12",88],["KEY_RO",89],["KEY_KATAKANA",90],["KEY_HIRAGANA",91],["KEY_HENKAN",92],["KEY_KATAKANAHIRAGANA",93],["KEY_MUHENKAN",94],["KEY_KPJPCOMMA",95],["KEY_KPENTER",96],["KEY_RIGHTCTRL",97],["KEY_KPSLASH",98],["KEY_SYSRQ",99],["KEY_RIGHTALT",100],["KEY_LINEFEED",101],["KEY_HOME",102],["KEY_UP",103],["KEY_PAGEUP",104],["KEY_LEFT",105],["KEY_RIGHT",106],["KEY_END",107],["KEY_DOWN",108],["KEY_PAGEDOWN",109],["KEY_INSERT",110],["KEY_DELETE",111],["KEY_MACRO",112],["KEY_MUTE",113],["KEY_VOLUMEDOWN",114],["KEY_VOLUMEUP",115],["KEY_POWER",116],["KEY_KPEQUAL",117],["KEY_KPPLUSMINUS",118],["KEY_PAUSE",119],["KEY_SCALE",120],["KEY_KPCOMMA",121],["KEY_HANGEUL",122],["KEY_HANGUEL",122],["KEY_HANJA",123],["KEY_YEN",124],["KEY_LEFTMETA",125],["KEY_RIGHTMETA",126],["KEY_COMPOSE",127],["KEY_STOP",128],["KEY_AGAIN",129],["KEY_PROPS",130],["KEY_UNDO",131],["KEY_FRONT",132],["KEY_COPY",133],["KEY_OPEN",134],["KEY_PASTE",135],["KEY_FIND",136],["KEY_CUT",137],["KEY_HELP",138],["KEY_MENU",139],["KEY_CALC",140],["KEY_SETUP",141],["KEY_SLEEP",142],["KEY_WAKEUP",143],["KEY_FILE",144],["KEY_SENDFILE",145],["KEY_DELETEFILE",146],["KEY_XFER",147],["KEY_PROG1",148],["KEY_PROG2",149],["KEY_WWW",150],["KEY_MSDOS",151],["KEY_COFFEE",152],["KEY_SCREENLOCK",152],["KEY_ROTATE_DISPLAY",153],["KEY_DIRECTION",153],["KEY_CYCLEWINDOWS",154],["KEY_MAIL",155],["KEY_BOOKMARKS",156],["KEY_COMPUTER",157],["KEY_BACK",158],["KEY_FORWARD",159],["KEY_CLOSECD",160],["KEY_EJECTCD",161],["KEY_EJECTCLOSECD",162],["KEY_NEXTSONG",163],["KEY_PLAYPAUSE",164],["KEY_PREVIOUSSONG",165],["KEY_STOPCD",166],["KEY_RECORD",167],["KEY_REWIND",168],["KEY_PHONE",169],["KEY_ISO",170],["KEY_CONFIG",171],["KEY_HOMEPAGE",172],["KEY_REFRESH",173],["KEY_EXIT",174],["KEY_MOVE",175],["KEY_EDIT",176],["KEY_SCROLLUP",177],["KEY_SCROLLDOWN",178],["KEY_KPLEFTPAREN",179],["KEY_KPRIGHTPAREN",180],["KEY_NEW",181],["KEY_REDO",182],["KEY_F13",183],["KEY_F14",184],["KEY_F15",185],["KEY_F16",186],["KEY_F17",187],["KEY_F18",188],["KEY_F19",189],["KEY_F20",190],["KEY_F21",191],["KEY_F22",192],["KEY_F23",193],["KEY_F24",194],["KEY_PLAYCD",200],["KEY_PAUSECD",201],["KEY_PROG3",202],["KEY_PROG4",203],["KEY_DASHBOARD",204],["KEY_SUSPEND",205],["KEY_CLOSE",206],["KEY_PLAY",207],["KEY_FASTFORWARD",208],["KEY_BASSBOOST",209],["KEY_PRINT",210],["KEY_HP",211],["KEY_CAMERA",212],["KEY_SOUND",213],["KEY_QUESTION",214],["KEY_EMAIL",215],["KEY_CHAT",216],["KEY_SEARCH",217],["KEY_CONNECT",218],["KEY_FINANCE",219],["KEY_SPORT",220],["KEY_SHOP",221],["KEY_ALTERASE",222],["KEY_CANCEL",223],["KEY_BRIGHTNESSDOWN",224],["KEY_BRIGHTNESSUP",225],["KEY_MEDIA",226],["KEY_SWITCHVIDEOMODE",227],["KEY_KBDILLUMTOGGLE",228],["KEY_KBDILLUMDOWN",229],["KEY_KBDILLUMUP",230],["KEY_SEND",231],["KEY_REPLY",232],["KEY_FORWARDMAIL",233],["KEY_SAVE",234],["KEY_DOCUMENTS",235],["KEY_BATTERY",236],["KEY_BLUETOOTH",237],["KEY_WLAN",238],["KEY_UWB",239],["KEY_UNKNOWN",240],["KEY_VIDEO_NEXT",241],["KEY_VIDEO_PREV",242],["KEY_BRIGHTNESS_CYCLE",243],["KEY_BRIGHTNESS_AUTO",244],["KEY_BRIGHTNESS_ZERO",244],["KEY_DISPLAY_OFF",245],["KEY_WWAN",246],["KEY_WIMAX",246],["KEY_RFKILL",247],["KEY_MICMUTE",248]];
+    return evdevIDs;    
+}
+
 function handleForm(event) { event.preventDefault(); }
 
 // Deletes the old key definition cards, and then rebuilds new ones. Used when changing profiles.
@@ -198,12 +207,13 @@ function addKeycards() {
 
 //Gets the evdev id of a key by name.
 function getEvdevID(keyName) {
+    var evdevIDs = getAllEvdevIDs();
     for (var i = 0; i < evdevIDs.length; i++) {
         if (keyName == evdevIDs[i][0]) {
             return evdevIDs[i][1];
         }
     }
-    console.log(keyName + " not found!");
+    createNotification(keyName + " not found!",true);
     return "";
 }
 
@@ -217,7 +227,9 @@ function addKeycard(keyName, mappedEvdevName, keyID) {
     keyCard.className = "card";
     keyCard.id = "keycard-" + keyName;
     keyCard.addEventListener("click", function() {
+        document.getElementById("button-" + chosenKey).style.backgroundColor = "";
         modifyKey(this.getAttribute("keyName"));
+        document.getElementById("button-" + chosenKey).style.backgroundColor = "limegreen";
     }, false);
     keyCard.setAttribute("keyName", keyName);
     textCard.textContent = keyName + " - " + mappedEvdevName;
@@ -231,28 +243,65 @@ function addKeycard(keyName, mappedEvdevName, keyID) {
     }, false);
     keyCard.appendChild(textCard);
     keyCard.appendChild(deleteButton);
-    console.log(deleteButton);
-    console.log(keyCard);
     defWrap.appendChild(keyCard);
 }
 
-function toggleDisplaymode() {
+//Toggles the display mode for buttons.
+function toggleDisplaymode(notify) {
     chosenLayout.realNames = !chosenLayout.realNames;
+    if(chosenLayout.realNames == true && notify!==false) {
+        createNotification("Using original names!");
+    } else if(notify!==false) {
+        createNotification("Using mapped names!");
+    }
     for (var i = 0; i < chosenLayout.layoutArray.length; i++) {
         for (var j = 0; j < chosenLayout.layoutArray[i].length; j++) {
-            if (chosenProfile.getKeybyName(chosenLayout.layoutArray[i][j][0]) !== undefined) {
                 var button = document.getElementById("button-" + chosenLayout.layoutArray[i][j][0]);
-                if (getRealname(button.textContent) !== chosenProfile.getKeybyName(chosenLayout.layoutArray[i][j][0]).mappedEvdevName && chosenLayout.realNames === false) {
+                if (chosenLayout.realNames === false && chosenProfile.getKeybyName(chosenLayout.layoutArray[i][j][0]) !== undefined) {
                     var getLayoutnameinput = chosenProfile.getKeybyName(chosenLayout.layoutArray[i][j][0]).mappedEvdevName;
                     getLayoutnameinput = getLayoutnameinput.replace(/KEY_/g, "");
                     button.textContent = getLayoutnameinput;
                 } else if (chosenLayout.realNames === true) {
-                    button.textContent = chosenLayout.layoutArray[i][j][0];
+                    button.textContent = chosenLayout.layoutArray[i][j][0].replace("kp","");
                 }
-            }
         }
     }
 }
+
+function toggleHeatmap() {
+    var heatmapStats = getHeatmapStats();
+    for (var i = 0; i < chosenLayout.layoutArray.length; i++) {
+        for (var j = 0; j < chosenLayout.layoutArray[i].length; j++) {
+                var button = document.getElementById("button-" + chosenLayout.layoutArray[i][j][0]);
+                if (chosenLayout.realNames === false && chosenProfile.getKeybyName(chosenLayout.layoutArray[i][j][0]) !== undefined) {
+                    var getLayoutnameinput = chosenProfile.getKeybyName(chosenLayout.layoutArray[i][j][0]).mappedEvdevName;
+                    getLayoutnameinput = getLayoutnameinput.replace(/KEY_/g, "");
+                    button.textContent = getLayoutnameinput;
+                } else if (chosenLayout.realNames === true) {
+                    button.textContent = chosenLayout.layoutArray[i][j][0].replace("kp","");
+                }
+        }
+    }
+
+
+}
+
+function getHeatmapStats() {
+    var heatmapStats = '[{}]'
+    // Create items array
+var items = Object.keys(heatmapStats).map(function(key) {
+    return [key, dict[key]];
+});
+
+// Sort the array based on the second element
+items.sort(function(first, second) {
+    return second[1] - first[1];
+});
+
+
+}
+
+
 
 // Adds new profile cards, deleting any that had been there before.
 function addProfilecards() {
@@ -283,6 +332,7 @@ function addProfile(name, keydata) {
     var newID = parseInt(kbProfiles[kbProfiles.length - 1].profileID) + 1;
     kbProfiles[newIndex] = new Profile(name, newID, keydata);
     addProfilecard(kbProfiles[newIndex]);
+    document.getElementById("ainput").textContent = JSON.stringify(parsePostdata(), null, 4);
 }
 
 //Deletes a profile and calls the function to delete it's card.
@@ -326,11 +376,14 @@ function addProfilecard(profile) {
 function changeProfile(newID, profileCard) {
     var oldProfilecard = document.getElementById("profile-" + chosenProfile.profileID);
     oldProfilecard.style.backgroundColor = "";
+    document.getElementById("button-" + chosenKey).style.backgroundColor = "";
     chosenProfile = getProfilebyID(newID);
     profileCard.style.backgroundColor = "rgba(40,40,40,0.5)";
     addKeycards();
     modifyKey("");
     document.getElementById("ainput").textContent = JSON.stringify(parsePostdata(), null, 4);
+    toggleDisplaymode(false);
+    toggleDisplaymode(false);
 }
 
 // When a key is chosen on the visualized keyboard, this is fired. It updates the chosen key and highlights the keycard, as well as removes any older highlights.
@@ -401,7 +454,7 @@ function getProfilebyID(profileID) {
             return kbProfiles[i];
         }
     }
-    console.log("Profile with ID of " + profileID + " not found!");
+    createNotification("Profile with ID of " + profileID + " not found!",true);
     return false;
 }
 
@@ -412,7 +465,7 @@ function getProfilebyName(profileName) {
             return kbProfiles[i];
         }
     }
-    console.log("Profile with name of " + profileName + " not found!");
+    createNotification("Profile with name of " + profileName + " not found!",true);
     return false;
 }
 
@@ -450,6 +503,7 @@ function parseMapping(mapping, chosenKeylocal){
 
 //Searches the layout profile for the keys, in case of layout issues.
 function getRealname(input) {
+    var evdevIDs = getAllEvdevIDs();
     for (var i = 0; i < chosenLayout.layoutArray.length; i++) {
         for (var j = 0; j < chosenLayout.layoutArray[i].length; j++) {
             if (input.toUpperCase() == chosenLayout.layoutArray[i][j][0].toUpperCase() && typeof chosenLayout.layoutArray[i][j][2] !== 'undefined') {
@@ -519,13 +573,21 @@ function parsePostdata(){
     postableProfiles[i].keyData[kbProfiles[i].keyData[j].EvdevID].evdevName = kbProfiles[i].keyData[j].evdevName;
     }
     }
-    console.log(JSON.stringify(postableProfiles, null, 4));
     return postableProfiles;
 }
 
 //Posts the JSON to server. PARAMS: Profile, url to post
 function postKeys(data, urli) {
     var postRequest = new XMLHttpRequest();
+    postRequest.onreadystatechange = function () {
+        if(postRequest.readyState === XMLHttpRequest.DONE && postRequest.status === 200) {
+          createNotification("Success!");
+        }
+      };
+
+      postRequest.onerror = function onError(e) {
+        createNotification("Error " + e.target.status + " occurred while receiving the document.",true);
+    }
     postRequest.open("POST", urli, true);
     postRequest.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
     postRequest.send(JSON.stringify(data));
@@ -534,16 +596,14 @@ function postKeys(data, urli) {
 
 //Prototype to load a profile
 function loadProfiles() {
-   var profilesJson = getProfile("/json.api");
-   // var profilesJson = '[{}]'
+   //  var profilesJson = getProfile("/json.api");
+    var profilesJson = '[{}]'
    // profilesJson[0] = new Profile("Profile-1", 1, []);
    try {
     profilesJson = JSON.parse(profilesJson);
-    console.log(profilesJson);
     for(var i = 0; i<profilesJson.length; i++){
         kbProfiles[i] = new Profile(profilesJson[i].profileName, profilesJson[i].profileID, []);
         for (var j = 0; j < Object.keys(profilesJson[i].keyData).length; j++) {
-            console.log(profilesJson[i].keyData[Object.keys(profilesJson[i].keyData)[j]].displayName)
             kbProfiles[i].keyData[j] = new Key(profilesJson[i].keyData[Object.keys(profilesJson[i].keyData)[j]].displayName, profilesJson[i].keyData[Object.keys(profilesJson[i].keyData)[j]].mappedEvdevName, profilesJson[i].keyData[Object.keys(profilesJson[i].keyData)[j]].evdevName);
             if(profilesJson[i].keyData[Object.keys(profilesJson[i].keyData)[j]].toggle !== undefined){
             delete kbProfiles[i].keyData[j].mappedEvdevID;
@@ -560,15 +620,25 @@ kbProfiles[0] = new Profile("Profile-1", 1, []);
 chosenProfile = kbProfiles[0];
 }
 }
-
+//A function to create both error and success messages. Takes a string and boolean, if boolean is true, message is for an error.
 function createNotification(string, error){
     var newNotification = document.createElement("div");
-    newNotification.className = "notification";
+    newNotification.className = "success notification";
     newNotification.textContent = string;
-    if (error === true) newNotification.className = "error";
-    var time = 0;
+    newNotification.setAttribute("top", 0.3*window.innerHeight);
+    newNotification.style.top = newNotification.getAttribute("top") + "px";
+    if (error === true) newNotification.className = "error notification";
     var wrapper = document.getElementById("bigwrap");
     wrapper.appendChild(newNotification);
+    var notifications = document.getElementsByClassName("notification");
+    for(var i = 0; i<notifications.length; i++){
+        if(notifications[i] !== newNotification){
+        var difference = parseInt(newNotification.clientHeight) + 5;
+        notifications[i].setAttribute("top",parseInt(notifications[i].getAttribute("top"))+difference);
+        notifications[i].style.top = notifications[i].getAttribute("top")+"px";
+        }
+    }
+    var time = 0;
     var fade = setInterval(fadeNotification, 20);
     function fadeNotification() {
       if (time > 99) {
@@ -592,7 +662,6 @@ function getProfile(url) {
 
     xmlhttp.onreadystatechange = function() {
         if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-            console.log(xmlhttp.responseText);
             return xmlhttp.responseText;
         } else {
             var emptyProfile = new Profile("Profile-1", 1, []);
@@ -605,13 +674,18 @@ function getProfile(url) {
     return xmlhttp.onreadystatechange();
 }
 
+//Function to ease input for user. Takes a string and returns a list of keystrokes.
 function write(string){
+    try {
     var newString = "";
     for(var i = 0; i<string.length; i++){
     newString = newString + string.charAt(i);
     if(i<string.length-1) newString = newString + "|";
     }
     return newString;
+} catch(err) {
+    createNotification(err,true);
+}
     }
     
     function repeat(string,count){
@@ -622,6 +696,11 @@ function write(string){
     return string;
 }
 
+window.onerror = function (errorMsg, url, lineNumber) {
+    createNotification('Error: ' + errorMsg,true);
+}
+
+//Used for defining a function that either browses profiles or toggles them.
 function Profiles(profiles,toggle){
     var profilesArray = [];
     var profileIDArray = [];
@@ -651,6 +730,7 @@ function Profiles(profiles,toggle){
     return profileIDArray;
 }
 
+//Can be used to make a button to work as shift or capslock.
 function Mode(profile,toggle){
     if(profile.includes(",")){
         profile = profile.split(',');

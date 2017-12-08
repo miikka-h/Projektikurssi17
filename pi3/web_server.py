@@ -93,14 +93,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         #get heatmap statistics in json form
         elif self.path == "/heatmap.api":
             f = open("heatmap_stats.txt", 'r')
-<<<<<<< HEAD
             heatmap_info = f.read()
-
-
-
-=======
-            heatmap_info = f.read()      
->>>>>>> c62979f7b01e086c8bfe7d1c80b2f00af0fa1432
             message_bytes = heatmap_info.encode()
             self.send_utf8_bytes(message_bytes, "text/json")
         elif self.path == "/":

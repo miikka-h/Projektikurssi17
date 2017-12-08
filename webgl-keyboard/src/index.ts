@@ -47,7 +47,8 @@ function loadHeatmap(event: MouseEvent): any {
 function parseHeatmapJSON(this: XMLHttpRequest, e: Event) {
     if (this.readyState === XMLHttpRequest.DONE) {
         if (this.status === 200) {
-            const heatmap = JSON.parse(this.responseText);
+            const text = this.responseText.replace(/'/g, "\"");
+            const heatmap = JSON.parse(text);
 
             keyboard.updateHeatmap(heatmap);
             renderer.draw(keyboard);

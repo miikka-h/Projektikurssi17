@@ -95,16 +95,20 @@ class RequestHandler(BaseHTTPRequestHandler):
             f = open("heatmap_stats.txt", 'r')
             heatmap_info = f.read()
 
-    
-        
+
+
             message_bytes = heatmap_info.encode()
             self.send_utf8_bytes(message_bytes, "text/json")
         elif self.path == "/":
             self.send_utf8_file("../frontend/control.html", "text/html")
+        elif self.path == "/webgl-keyboard":
+            self.send_utf8_file("../webgl-keyboard/dist/index.html", "text/html")
         elif self.path == "/styles.css":
             self.send_utf8_file("../frontend/styles.css", "text/css")
         elif self.path == "/script.js":
             self.send_utf8_file("../frontend/script.js", "application/javascript")
+        elif self.path == "/bundle.js":
+            self.send_utf8_file("../webgl-keyboard/dist/bundle.js", "application/javascript")
         else:
             message_bytes = b"<html><body><h1>Hello world</h1></body></html>"
             self.send_utf8_bytes(message_bytes, "text/html")

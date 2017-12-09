@@ -163,6 +163,19 @@ class KeyRemapper:
         return [[evdev_id]]
 
 
+    def remap_key_delays_list(self, evdev_id: int) -> List[int]:
+
+        if self.current_profile == None:
+            return []
+
+        try:
+            return self.current_profile["keyData"][str(evdev_id)]["delay_list"]
+        except KeyError as error:
+            pass
+
+        return []
+
+
 class KeyboardManager:
 
     """Read input from all availlable keyboards.
@@ -377,8 +390,10 @@ def run(web_server_manager: WebServerManager, hid_data_socket: HidDataSocket, hi
                     send_and_reset_if_client_disconnected(hid_data_socket, hid_report, keyboard_manager)
             else:
                 if event.value == 1:
-                    for report in new_keys_list:
-                        key_list = report
+                    delays_list = key_remapper.remap_key_delays_list(event.code)
+
+                    for i in range(0, len(new_keys_list)):
+                        key_list = new_keys_list[i]
 
                         for k in key_list:
                             hid_report.add_key(k)
@@ -392,7 +407,9 @@ def run(web_server_manager: WebServerManager, hid_data_socket: HidDataSocket, hi
                         send_and_reset_if_client_disconnected(
                             hid_data_socket, hid_report, keyboard_manager)
 
-                        time.sleep(0.1)
+                        if i < len(delays_list):
+                            time.sleep(delays_list[i])
+
 
 def send_and_reset_if_client_disconnected(hid_data_socket: HidDataSocket, hid_report: HidReport, keyboard_manager: KeyboardManager) -> None:
     if not hid_data_socket.send_hid_report_if_there_is_new_changes(hid_report):

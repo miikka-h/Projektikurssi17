@@ -596,7 +596,7 @@ function postKeys(data, urli) {
 
 //Prototype to load a profile
 function loadProfiles() {
-     var profilesJson = getProfile("/json.api");
+     var profilesJson = getJson("/json.api");
    // var profilesJson = '[{}]'
    // profilesJson[0] = new Profile("Profile-1", 1, []);
    try {
@@ -652,7 +652,7 @@ function createNotification(string, error){
 }
 
 //Gets profile from the url
-function getProfile(url) {
+function getJson(url) {
     var xmlhttp;
     if (window.XMLHttpRequest) {
         xmlhttp = new XMLHttpRequest();
@@ -662,10 +662,10 @@ function getProfile(url) {
 
     xmlhttp.onreadystatechange = function() {
         if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+            createNotification("Success!");
             return xmlhttp.responseText;
         } else {
-            var emptyProfile = new Profile("Profile-1", 1, []);
-            return emptyProfile;
+            createNotification("Failed to load json: check server status.",true);
         }
     }
 

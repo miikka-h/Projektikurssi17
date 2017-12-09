@@ -108,6 +108,7 @@ var kbProfiles = [];
 var chosenProfile;
 kbProfiles[0] = chosenProfile;
 var chosenKey = "";
+var heatmapModeOn = false;
 
 //Executes function calls when the page is loaded.
 window.onload = function() {
@@ -115,6 +116,7 @@ window.onload = function() {
     initiateKeyboard();
     addProfilecards();
     changeProfile(kbProfiles[0].profileID,document.getElementById("profile-" + kbProfiles[0].profileID));
+    document.getElementById("helpbox").innerHTML = 'In order to map keys, you must first choose a key from the visualized keyboard and then input the new key def to the textbox at bottom.</br></br>Use the keynames shown on the visualized keyboard, or alternatively, EVDEV-names.</br></br>For simultaneous keystrokes, separate keys with :. For separate strokes, use |. You can chain these if you want - examples: k:i:s:s:a, k:i:s:s:a|k|i|s|s|a, a:b:c|c:b:a. For quickly defining a string with no special symbols to a key, use write("string"). To repeat something, use repeat("",count). To insert delays, use delay(seconds).</br></br>To define a key that changes a profile, use Profiles("Profile-2") or with profile-IDs Profiles("2"). You may use either profile names or IDs. To define a mode change button, use Mode("Profile-1/1",booleanfortoggle).</br></br>In order to submit a change locally, click Submit. To post it to the server, click Post.';
   };
 
 // Builds the visualized keyboard based on an array. Array has rows of keys, with each key containing two values - the displayed characters and the width in relation to a "normal" key.
@@ -140,8 +142,8 @@ function initiateKeyboard() {
             }
             // Adding listeners to the buttons as they are created.
             keybutton.addEventListener("click", function() {
-                document.getElementById("button-" + chosenKey).style.backgroundColor = "";
-                this.style.backgroundColor = "limegreen";
+                document.getElementById("button-" + chosenKey).classList.remove("chosen");
+                this.classList.add("chosen");
                 modifyKey(this.getAttribute("keyName"));
             }, false);
 
@@ -231,12 +233,13 @@ function addKeycard(keyName, mappedEvdevName, keyID) {
     keyCard.className = "card";
     keyCard.id = "keycard-" + keyName;
     keyCard.addEventListener("click", function() {
-        document.getElementById("button-" + chosenKey).style.backgroundColor = "";
+        document.getElementById("button-" + chosenKey).classList.remove("chosen");
         modifyKey(this.getAttribute("keyName"));
-        document.getElementById("button-" + chosenKey).style.backgroundColor = "limegreen";
+        document.getElementById("button-" + chosenKey).classList.add("chosen");
     }, false);
     keyCard.setAttribute("keyName", keyName);
     textCard.textContent = keyName + " - " + mappedEvdevName;
+    if(chosenProfile.getKeybyName(keyName).profiles !== undefined) textCard.textContent = keyName + " - " + "Profiles: " + chosenProfile.getKeybyName(keyName).profiles;
     var deleteButton = document.createElement("button");
     deleteButton.className = "deletebutton";
     deleteButton.id = "delete-" + keyName;
@@ -244,6 +247,7 @@ function addKeycard(keyName, mappedEvdevName, keyID) {
     deleteButton.textContent = "x";
     deleteButton.addEventListener("click", function() { //Adding a listener to the button that deletes the profile.
         deleteKey(chosenProfile.getKeybyName((this.getAttribute("keyName"))));
+        document.getElementById("button-" + chosenKey).classList.remove("chosen");
     }, false);
     keyCard.appendChild(textCard);
     keyCard.appendChild(deleteButton);
@@ -262,9 +266,14 @@ function toggleDisplaymode(notify) {
         for (var j = 0; j < chosenLayout.layoutArray[i].length; j++) {
                 var button = document.getElementById("button-" + chosenLayout.layoutArray[i][j][0]);
                 if (chosenLayout.realNames === false && chosenProfile.getKeybyName(chosenLayout.layoutArray[i][j][0]) !== undefined) {
+                    if(chosenProfile.getKeybyName(chosenLayout.layoutArray[i][j][0]).mappedEvdevName !== undefined){
                     var getLayoutnameinput = chosenProfile.getKeybyName(chosenLayout.layoutArray[i][j][0]).mappedEvdevName;
                     getLayoutnameinput = getLayoutnameinput.replace(/KEY_/g, "");
                     button.textContent = getLayoutnameinput;
+                    } else {
+                    var getLayoutnameinput = "Profile: " + chosenProfile.getKeybyName(chosenLayout.layoutArray[i][j][0]).profiles;
+                    button.textContent = getLayoutnameinput;
+                    }
                 } else if (chosenLayout.realNames === true) {
                     button.textContent = chosenLayout.layoutArray[i][j][0].replace("kp","");
                 }
@@ -274,6 +283,7 @@ function toggleDisplaymode(notify) {
 
 function toggleHeatmap() {
     var heatmapStats = getJson("/heatmap.api");
+    //var heatmapStats = '{"56": 8, "15": 24, "29": 57, "30": 48, "35": 9, "18": 10, "20": 17, "108": 11, "28": 16, "42": 45, "19": 35, "45": 2, "51": 7, "47": 11, "31": 37, "72": 2, "71": 2, "77": 2, "76": 1, "2": 3, "3": 19, "4": 1, "5": 1, "57": 58, "58": 14, "33": 13, "34": 11, "9": 11, "10": 8, "7": 5, "8": 6, "105": 41, "46": 16, "14": 65, "6": 10, "12": 8, "106": 26, "36": 1, "23": 5, "25": 13, "50": 5, "24": 8, "22": 18, "49": 7, "32": 5, "52": 7, "38": 13, "43": 3, "11": 11, "53": 4, "100": 4, "48": 3, "21": 2, "37": 4, "17": 4, "63": 1, "41": 31, "86": 1, "44": 5}';
     try{    
     heatmapStats = JSON.parse(heatmapStats);
     var heatmapArray = [], heatmapStats;
@@ -285,7 +295,6 @@ function toggleHeatmap() {
 
     var mostpressed = heatmapArray[0];
     var leastpressed = heatmapArray[heatmapArray.length-1];
-    console.log(mostpressed, leastpressed);
 
 
     var heatmapIDs = [], heatmapArray;
@@ -293,15 +302,12 @@ function toggleHeatmap() {
     for (a in heatmapArray){
         heatmapIDs.push(heatmapArray[a][0]);
         heatmapTimesPressed.push(heatmapArray[a][1]);
-    }
-    
+    }  
 
     }
     catch(err) {
         createNotification(err + "! Creating empty data.", true); 
     }
-
-
    
     for (var i = 0; i < chosenLayout.layoutArray.length; i++) {
         for (var j = 0; j < chosenLayout.layoutArray[i].length; j++) {
@@ -309,22 +315,29 @@ function toggleHeatmap() {
                           
                 if (chosenLayout.layoutArray[i][j][0]!== ""){
                 if(heatmapArray)
+                if(!heatmapModeOn){
                 var comparenumber = heatmapIDs.indexOf(parseEvdevName(getRealname(chosenLayout.layoutArray[i][j][0])).toString());
-                console.log(comparenumber);
+                var scalar = 0;
                 if (comparenumber >= 0)
                 {
-                var scalar = heatmapTimesPressed[comparenumber] / mostpressed[1];
+                scalar = heatmapTimesPressed[comparenumber] / mostpressed[1];
                 var apu = 1-scalar;
                 button.style.backgroundColor = "rgba(" + Math.round(scalar*255) + ",0," + Math.round(apu*255) + ",1)";
                 } else {
                 button.style.backgroundColor = "rgba(0,0,255,1)";
                 }
                 button.style.color = "white";
-                console.log(scalar);
+                button.style.boxShadow = "0px 0px " + parseInt(25 + Math.round(scalar*25)) + "px " + button.style.backgroundColor + ",0px 0px " + parseInt(25 + Math.round(scalar*25)) + "px " + button.style.backgroundColor;
+            }
+            else {
+                button.style.backgroundColor = "";
+                button.style.color = "";
+                button.style.boxShadow = "";
+            }
             }
         }
     }
-
+    heatmapModeOn = !heatmapModeOn;
 
 }
 
@@ -369,6 +382,7 @@ function deleteProfile(profile) {
             kbProfiles.splice(profileIndex, 1);
         }
     }
+    document.getElementById("ainput").textContent = JSON.stringify(parsePostdata(), null, 4);
 }
 
 //Adds a profile card, which will contain a hitbox for selecting it and a button for deleting it.
@@ -406,9 +420,9 @@ function addProfilecard(profile) {
     profWrap.insertBefore(profileCard, document.getElementById("profileadder"));
 }
 
+//Changes the name of the profile.
 function editProfile(profile){
     var newName = prompt("Enter a new profile name!", "Profile name here.");
-    console.log(newName);
     if(newName!==null){
     profile.profileName = newName;
     var profileCard = document.getElementById("profile-" + profile.profileID);
@@ -501,7 +515,6 @@ function getProfilebyID(profileID) {
             return kbProfiles[i];
         }
     }
-    createNotification("Profile with ID of " + profileID + " not found!",true);
     return false;
 }
 
@@ -512,7 +525,6 @@ function getProfilebyName(profileName) {
             return kbProfiles[i];
         }
     }
-    createNotification("Profile with name of " + profileName + " not found!",true);
     return false;
 }
 
@@ -533,8 +545,6 @@ function parseMapping(mapping, chosenKeylocal){
     } else {
     if(mapping.includes(":")){var mappingArray = mapping.split(":")} else {var mappingArray = []; mappingArray[0] = mapping;};
     for(var i = 0; i<mappingArray.length; i++){
-    console.log(mappingArray[i].includes("delay("));
-    console.log(mappingArray[i]);
     if(getRealname(mappingArray[i])===undefined && mappingArray[i].includes("delay(") == false || mappingArray[i]==="" && mappingArray[i].includes("delay(") == false){
         createNotification("Invalid input with " + mappingArray[i] + "!",true);
         return chosenKeylocal.mappedEvdevName;
@@ -548,7 +558,6 @@ function parseMapping(mapping, chosenKeylocal){
         }
         } else {
         if(mappingArray[i].includes("delay(") == false){
-            console.log(mappingArray[i]);
             realnameString = getRealname(mappingArray[i]);
         } else {
             realnameString = eval(mappingArray[i]);
@@ -557,7 +566,6 @@ function parseMapping(mapping, chosenKeylocal){
     }
     }
 }
-    console.log(realnameString);
     return realnameString;
 }
 
@@ -649,12 +657,12 @@ function postKeys(data, urli) {
     var postRequest = new XMLHttpRequest();
     postRequest.onreadystatechange = function () {
         if(postRequest.readyState === XMLHttpRequest.DONE && postRequest.status === 200) {
-          createNotification("Success!");
+          createNotification("Successfully posted the keys!");
         }
       };
 
       postRequest.onerror = function onError(e) {
-        createNotification("Error " + e.target.status + " occurred while receiving the document.",true);
+        createNotification("Error " + e.target.status + " occurred.",true);
     }
     postRequest.open("POST", urli, true);
     postRequest.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
@@ -664,11 +672,11 @@ function postKeys(data, urli) {
 
 //Prototype to load a profile
 function loadProfiles() {
-     var profilesJson = getJson("/json.api");
-   // var profilesJson = '[{}]'
+    var profilesJsonInitial = getJson("/json.api");
+   // var profilesJsonInitial = '[{}]'
    // profilesJson[0] = new Profile("Profile-1", 1, []);
    try {
-    profilesJson = JSON.parse(profilesJson);
+    profilesJson = JSON.parse(profilesJsonInitial);
     for(var i = 0; i<profilesJson.length; i++){
         kbProfiles[i] = new Profile(profilesJson[i].profileName, profilesJson[i].profileID, []);
         for (var j = 0; j < Object.keys(profilesJson[i].keyData).length; j++) {
@@ -683,7 +691,7 @@ function loadProfiles() {
     }
     chosenProfile = kbProfiles[0];
 } catch(err) {
-createNotification(err + "! Creating empty data.", true);
+if(profilesJsonInitial !== '[{}]') createNotification(err + "! Creating empty data.", true);
 kbProfiles[0] = new Profile("Profile-1", 1, []);
 chosenProfile = kbProfiles[0];
 }
@@ -736,7 +744,9 @@ function getJson(url) {
         //    createNotification("Failed to load json: check server status.",true);
         }
     }
-
+    xmlhttp.onerror = function onError(e) {
+        createNotification("Error " + e.target.status + " occurred.",true);
+    }
     xmlhttp.open("GET", url, false);
     xmlhttp.send();
     return xmlhttp.onreadystatechange();
@@ -755,8 +765,9 @@ function write(string){
     createNotification(err,true);
 }
     }
-    
-    function repeat(string,count){
+
+//Function to repeat a string or key.
+function repeat(string,count){
     var oneCount = string;
     for(var i = 1; i<count; i++){
     string  = string + "|" + oneCount;
@@ -764,6 +775,7 @@ function write(string){
     return string;
 }
 
+//Creates error messages on the UI.
 window.onerror = function (errorMsg, url, lineNumber) {
     createNotification('Error: ' + errorMsg,true);
 }
@@ -807,7 +819,7 @@ function Mode(profile,toggle){
    return Profiles(profile,toggle);
 }
 
+//Returns a formatted delay.
 function delay(amount){
-    console.log("val");
     return "$" + amount;
 }

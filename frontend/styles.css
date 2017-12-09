@@ -11,25 +11,6 @@ button{
     border-style:solid;
 }
 
-.buttonHeatmapMostUsed{
-    background-color: red;
-}
-
-.buttonHeatmapKindofUsed{
-    background-color: yellow;
-}
-
-.buttonHeatmapSomewhatUsed{
-    background-color: green;
-}
-
-.buttonHeatmapNotReallyUsed{
-    background-color: blue;
-}
-
-
-
-
 .rowwrapper {
     display:inline-flex;
     height:30px;
@@ -308,7 +289,9 @@ box-shadow: 1px 0 1px #004884;
         content:'\2716';
         margin-right: 3px;
     }
-
+.chosen{
+    background-color: limegreen;
+}
 
 .deletebutton {
     height:100%;

@@ -282,6 +282,7 @@ function toggleDisplaymode(notify) {
 
 function toggleHeatmap() {
     var heatmapStats = getJson("/heatmap.api");
+   // var heatmapStats = '{"56": 8, "15": 24, "29": 57, "30": 48, "35": 9, "18": 10, "20": 17, "108": 11, "28": 16, "42": 45, "19": 35, "45": 2, "51": 7, "47": 11, "31": 37, "72": 2, "71": 2, "77": 2, "76": 1, "2": 3, "3": 19, "4": 1, "5": 1, "57": 58, "58": 14, "33": 13, "34": 11, "9": 11, "10": 8, "7": 5, "8": 6, "105": 41, "46": 16, "14": 65, "6": 10, "12": 8, "106": 26, "36": 1, "23": 5, "25": 13, "50": 5, "24": 8, "22": 18, "49": 7, "32": 5, "52": 7, "38": 13, "43": 3, "11": 11, "53": 4, "100": 4, "48": 3, "21": 2, "37": 4, "17": 4, "63": 1, "41": 31, "86": 1, "44": 5}';
     try{    
     heatmapStats = JSON.parse(heatmapStats);
     var heatmapArray = [], heatmapStats;
@@ -325,12 +326,12 @@ function toggleHeatmap() {
                 button.style.backgroundColor = "rgba(0,0,255,1)";
                 }
                 button.style.color = "white";
-                console.log(scalar);
+                button.style.boxShadow = "0px 0px " + parseInt(25 + Math.round(scalar*25)) + "px " + button.style.backgroundColor + ",0px 0px " + parseInt(25 + Math.round(scalar*25)) + "px " + button.style.backgroundColor;
             }
             else {
                 button.style.backgroundColor = "";
                 button.style.color = "";
-                
+                button.style.boxShadow = "";
             }
             }
         }
@@ -673,8 +674,8 @@ function postKeys(data, urli) {
 
 //Prototype to load a profile
 function loadProfiles() {
-    var profilesJsonInitial = getJson("/json.api");
-   // var profilesJsonInitial = '[{}]'
+   // var profilesJsonInitial = getJson("/json.api");
+    var profilesJsonInitial = '[{}]'
    // profilesJson[0] = new Profile("Profile-1", 1, []);
    try {
     profilesJson = JSON.parse(profilesJsonInitial);

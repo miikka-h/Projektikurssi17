@@ -316,6 +316,15 @@ box-shadow: 1px 0 1px #004884;
     float:right;
     display:inline-block;
 }
+.editbutton {
+    white-space: nowrap;
+    height:100%;
+    margin-right: 3px;
+    margin-left: 3px;
+    max-width:20%;
+    float:right;
+    display:inline-block;
+}
 .addbutton {
     width:100%;
     height:30px;
@@ -341,9 +350,10 @@ box-shadow: 1px 0 1px #004884;
     transition: background-color 0.25s;
     word-break: break-all;
 }
-.cardclicker {
+.cardtext {
 display: inline-block;
-min-width: 80%;
+user-select:none;
+max-width: 50%;
 height: 100%;
 }
 .areainput {
@@ -358,4 +368,5 @@ form{
 }
 .textWrap{
     display: inline-block;
+    user-select: none;
 }

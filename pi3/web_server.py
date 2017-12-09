@@ -216,6 +216,9 @@ def parse_mappedEvdevID_and_send_settings(profile_list, settings_queue):
     new_settings = copy.deepcopy(profile_list)
 
     for profile in new_settings:
+        if "keyData" not in profile:
+            continue
+
         for evdev_id_key in profile["keyData"]:
             key_object = profile["keyData"][evdev_id_key]
 

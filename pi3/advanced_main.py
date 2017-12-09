@@ -79,10 +79,32 @@ class KeyRemapper:
     def __init__(self, settings) -> None:
         """Argument `settings` is profile JSON dictionary."""
         self.settings = settings
+        self.current_profile_index = 0
 
     def set_new_settings(self, settings) -> None:
         """Argument `settings` is profile JSON dictionary."""
         self.settings = settings
+
+    def change_profile(self, evdev_id: int) -> bool:
+        try:
+            profile_list = self.settings[self.current_profile_index]["keyData"][str(evdev_id)]["profiles"]
+
+            # find current profile index from the list
+
+            for i in range(0, len(profile_list)):
+                if profile_list[i] == self.current_profile_index:
+                    # change to next profile in the list
+                    if i != len(profile_list) - 1:
+                        self.current_profile_index = profile_list[i+1]
+                    else:
+                        self.current_profile_index = profile_list[0]
+                    print("changed profile index to " + str(self.current_profile_index))
+
+                    return True
+        except KeyError:
+            pass
+
+        return False
 
     def remap_key(self, evdev_id: int) -> List[List[int]]:
         """
@@ -99,7 +121,7 @@ class KeyRemapper:
         """
 
         try:
-            return self.settings[0]["keyData"][str(evdev_id)]["mappedEvdevID"]
+            return self.settings[self.current_profile_index]["keyData"][str(evdev_id)]["mappedEvdevID"]
         except KeyError as error:
             pass
 
@@ -285,6 +307,9 @@ def run(web_server_manager: WebServerManager, hid_data_socket: HidDataSocket, hi
         for event in keyboard_manager.get_key_events():
             if event.value == 1:
                 web_server_manager.get_heatmap_queue().put_nowait(event.code)
+
+                if key_remapper.change_profile(event.code):
+                    continue
 
             new_keys_list = key_remapper.remap_key(event.code)
 

@@ -86,8 +86,13 @@ class KeyRemapper:
         self.settings = settings
 
     def change_profile(self, evdev_id: int) -> bool:
+        """"Returns True if profile changed"""
+
         try:
             profile_list = self.settings[self.current_profile_index]["keyData"][str(evdev_id)]["profiles"]
+
+            if len(profile_list) == 0:
+                return False
 
             # find current profile index from the list
 

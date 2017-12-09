@@ -96,7 +96,7 @@ class WebServer(HTTPServer):
                 self.heatmap.set_heatmap_data(heatmap_data)
 
         # Main thread is waiting for profiles/settings so lets send them.
-        self.settings_queue.put_nowait(self.settings)
+        parse_mappedEvdevID_and_send_settings(self.settings, self.settings_queue)
 
         print("web server running")
         while True:
@@ -180,30 +180,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         self.server.settings = json.loads(response.decode("utf-8"))
 
-        # Parse key "mappedEvdevID" value "1:2:3|4:5:6" to
-        # [[1,2,3], [4,5,6]]
-
-        # Server must have original settings because it saves
-        # the settings to a file, so lets make a copy
-        new_settings = copy.deepcopy(self.server.settings)
-
-        for profile in new_settings:
-            for evdev_id_key in profile["keyData"]:
-                key_object = profile["keyData"][evdev_id_key]
-
-                hid_report_list = []
-
-                hid_report_list_string = key_object["mappedEvdevID"]
-
-                for key_string in hid_report_list_string.split("|"):
-                    evdev_id_list = [int(x) for x in key_string.split(":")]
-                    hid_report_list.append(evdev_id_list)
-
-                key_object["mappedEvdevID"] = hid_report_list
-
-
-        # Send new settings to main thread.
-        self.server.settings_queue.put_nowait(new_settings)
+        parse_mappedEvdevID_and_send_settings(self.server.settings, self.server.settings_queue)
 
         self.send_response(200)
         self.end_headers()
@@ -226,3 +203,39 @@ class RequestHandler(BaseHTTPRequestHandler):
         # Write HTTP message body which is the HTML web page.
         self.wfile.write(message_bytes)
         self.wfile.flush()
+
+
+def parse_mappedEvdevID_and_send_settings(profile_list, settings_queue):
+    """
+    Parse key "mappedEvdevID" value "1:2:3|4:5:6" to
+    [[1,2,3], [4,5,6]]
+    """
+
+    # Server must have original settings because it saves
+    # the settings to a file, so lets make a copy
+    new_settings = copy.deepcopy(profile_list)
+
+    for profile in new_settings:
+        for evdev_id_key in profile["keyData"]:
+            key_object = profile["keyData"][evdev_id_key]
+
+            if "mappedEvdevID" not in key_object:
+                continue
+
+            hid_report_list = []
+
+            hid_report_list_string = key_object["mappedEvdevID"]
+
+            if hid_report_list_string == "undefined":
+                key_object["mappedEvdevID"] = hid_report_list
+                continue
+
+            for key_string in hid_report_list_string.split("|"):
+                evdev_id_list = [int(x) for x in key_string.split(":")]
+                hid_report_list.append(evdev_id_list)
+
+            key_object["mappedEvdevID"] = hid_report_list
+
+
+    # Send new settings to main thread.
+    settings_queue.put_nowait(new_settings)

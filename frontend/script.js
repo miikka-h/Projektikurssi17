@@ -307,17 +307,13 @@ function toggleHeatmap() {
         for (var j = 0; j < chosenLayout.layoutArray[i].length; j++) {
                 var button = document.getElementById("button-" + chosenLayout.layoutArray[i][j][0]);
                           
-                if (chosenLayout.layoutArray[i][j][0]!== "")
-                {
-                    //console.log(parseEvdevName(getRealname(chosenLayout.layoutArray[i][j][0])).toString());
-                    //console.log(heatmapArray[j]);
+                if (chosenLayout.layoutArray[i][j][0]!== ""){
                 if(heatmapArray)
                 var comparenumber = heatmapIDs.indexOf(parseEvdevName(getRealname(chosenLayout.layoutArray[i][j][0])).toString());
                 console.log(comparenumber);
                 if (comparenumber >= 0)
                 {
                 var scalar = heatmapTimesPressed[comparenumber] / mostpressed[1];
-        //        button.style.backgroundColor = "rgba(255,0,0," + scalar +")";
                 var apu = 1-scalar;
                 button.style.backgroundColor = "rgba(" + Math.round(scalar*255) + ",0," + Math.round(apu*255) + ",1)";
                 } else {
@@ -331,20 +327,6 @@ function toggleHeatmap() {
 
 
 }
-
-/*function getHeatmapStats() {
-    var heatmapStats = getJson("/json.api");
-    // Create items array
-var items = Object.keys(heatmapStats).map(function(key) {
-    return [key, dict[key]];
-});
-// Sort the array based on the second element
-items.sort(function(first, second) {
-    return second[1] - first[1];
-});
-}*/
-
-
 
 // Adds new profile cards, deleting any that had been there before.
 function addProfilecards() {

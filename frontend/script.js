@@ -282,13 +282,18 @@ function toggleHeatmap() {
        }
     heatmapArray.sort(function(a,b){return a[1] - b[1]});
     heatmapArray.reverse();
-    var keys = Object.keys(heatmapArray); 
-    for(var i=0;i<keys.length;i++){
-        var key = keys[i];
-        var val = heatmapArray[key]
-        //console.log(key, val);
+
+    var mostpressed = heatmapArray[0];
+    var leastpressed = heatmapArray[heatmapArray.length-1];
+    console.log(mostpressed, leastpressed);
+
+
+    var heatmapIDs = [], heatmapArray;
+    var heatmapTimesPressed = [], heatmapArray;
+    for (a in heatmapArray){
+        heatmapIDs.push(heatmapArray[a][0]);
+        heatmapTimesPressed.push(heatmapArray[a][1]);
     }
-    //console.log(heatmapArray);
     
 
     }
@@ -301,30 +306,27 @@ function toggleHeatmap() {
     for (var i = 0; i < chosenLayout.layoutArray.length; i++) {
         for (var j = 0; j < chosenLayout.layoutArray[i].length; j++) {
                 var button = document.getElementById("button-" + chosenLayout.layoutArray[i][j][0]);
-                console.log(heatmapArray[j]);
-                if (heatmapArray[i].indexOf(parseEvdevName(getRealname(chosenLayout.layoutArray[i][j][0])).toString()) < heatmapArray.length/4 ) {
-                    
-                    button.classList.add("buttonHeatmapMostUsed");
+                          
+                if (chosenLayout.layoutArray[i][j][0]!== ""){
+                if(heatmapArray)
+                var comparenumber = heatmapIDs.indexOf(parseEvdevName(getRealname(chosenLayout.layoutArray[i][j][0])).toString());
+                console.log(comparenumber);
+                if (comparenumber >= 0)
+                {
+                var scalar = heatmapTimesPressed[comparenumber] / mostpressed[1];
+                var apu = 1-scalar;
+                button.style.backgroundColor = "rgba(" + Math.round(scalar*255) + ",0," + Math.round(apu*255) + ",1)";
+                } else {
+                button.style.backgroundColor = "rgba(0,0,255,1)";
                 }
+                button.style.color = "white";
+                console.log(scalar);
+            }
         }
     }
 
 
 }
-
-/*function getHeatmapStats() {
-    var heatmapStats = getJson("/json.api");
-    // Create items array
-var items = Object.keys(heatmapStats).map(function(key) {
-    return [key, dict[key]];
-});
-// Sort the array based on the second element
-items.sort(function(first, second) {
-    return second[1] - first[1];
-});
-}*/
-
-
 
 // Adds new profile cards, deleting any that had been there before.
 function addProfilecards() {

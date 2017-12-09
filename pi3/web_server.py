@@ -233,11 +233,25 @@ def parse_mappedEvdevID_and_send_settings(profile_list, settings_queue):
                 key_object["mappedEvdevID"] = hid_report_list
                 continue
 
+
+            delay_list = []
             for key_string in hid_report_list_string.split("|"):
+
+                if key_string[:1] == "$":
+                    if len(key_string) > 1:
+                        delay_number_string = key_string[1:]
+                        delay_number = int(delay_number_string)
+                        delay_list.pop()
+                        delay_list.append(delay_number)
+                    continue
+
                 evdev_id_list = [int(x) for x in key_string.split(":")]
                 hid_report_list.append(evdev_id_list)
 
+                delay_list.append(0.1)
+
             key_object["mappedEvdevID"] = hid_report_list
+            key_object["delay_list"] = delay_list
 
 
     # Send new settings to main thread.

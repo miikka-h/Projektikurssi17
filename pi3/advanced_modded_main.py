@@ -477,6 +477,10 @@ def run(web_server_manager: WebServerManager, hid_data_socket: HidDataSocket, hi
             pass
 
         for event in keyboard_manager.get_key_events():
+
+            if event.value == 1:
+                web_server_manager.get_heatmap_queue().put_nowait(event.code)
+
             heatmap_key = str(event)[
                 str(event).find("code") + 5:str(event).find("code") + 7]
             # print(event)

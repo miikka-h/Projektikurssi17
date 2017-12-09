@@ -280,11 +280,15 @@ function toggleDisplaymode(notify) {
     }
 }
 
+//Function that shows heatmap visualization on keyboard layout
 function toggleHeatmap() {
+    //get heatmap statistics from json file
     var heatmapStats = getJson("/heatmap.api");
    // var heatmapStats = '{"56": 8, "15": 24, "29": 57, "30": 48, "35": 9, "18": 10, "20": 17, "108": 11, "28": 16, "42": 45, "19": 35, "45": 2, "51": 7, "47": 11, "31": 37, "72": 2, "71": 2, "77": 2, "76": 1, "2": 3, "3": 19, "4": 1, "5": 1, "57": 58, "58": 14, "33": 13, "34": 11, "9": 11, "10": 8, "7": 5, "8": 6, "105": 41, "46": 16, "14": 65, "6": 10, "12": 8, "106": 26, "36": 1, "23": 5, "25": 13, "50": 5, "24": 8, "22": 18, "49": 7, "32": 5, "52": 7, "38": 13, "43": 3, "11": 11, "53": 4, "100": 4, "48": 3, "21": 2, "37": 4, "17": 4, "63": 1, "41": 31, "86": 1, "44": 5}';
-    try{    
+    try{
+    //Parse heatmap stats in to a dict
     heatmapStats = JSON.parse(heatmapStats);
+    //put heatmap
     var heatmapArray = [], heatmapStats;
     for(a in heatmapStats){
         heatmapArray.push([a,heatmapStats[a]])
@@ -294,8 +298,6 @@ function toggleHeatmap() {
 
     var mostpressed = heatmapArray[0];
     var leastpressed = heatmapArray[heatmapArray.length-1];
-    console.log(mostpressed, leastpressed);
-
 
     var heatmapIDs = [], heatmapArray;
     var heatmapTimesPressed = [], heatmapArray;
@@ -306,7 +308,7 @@ function toggleHeatmap() {
 
     }
     catch(err) {
-        createNotification(err + "! Creating empty data.", true); 
+        createNotification(err + "! Creating heatmap failed.", true); 
     }
    
     for (var i = 0; i < chosenLayout.layoutArray.length; i++) {
@@ -314,7 +316,7 @@ function toggleHeatmap() {
                 var button = document.getElementById("button-" + chosenLayout.layoutArray[i][j][0]);
                           
                 if (chosenLayout.layoutArray[i][j][0]!== ""){
-                if(heatmapArray)
+                
                 if(!heatmapModeOn){
                 var comparenumber = heatmapIDs.indexOf(parseEvdevName(getRealname(chosenLayout.layoutArray[i][j][0])).toString());
                 if (comparenumber >= 0)

@@ -389,6 +389,7 @@ def run(web_server_manager: WebServerManager, hid_data_socket: HidDataSocket, hi
                         send_and_reset_if_client_disconnected(
                             hid_data_socket, hid_report, keyboard_manager)
 
+                        time.sleep(0.1)
 
 def send_and_reset_if_client_disconnected(hid_data_socket: HidDataSocket, hid_report: HidReport, keyboard_manager: KeyboardManager) -> None:
     if not hid_data_socket.send_hid_report_if_there_is_new_changes(hid_report):

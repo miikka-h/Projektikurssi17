@@ -269,16 +269,38 @@ function toggleDisplaymode(notify) {
 }
 
 function toggleHeatmap() {
-    var heatmapStats = getHeatmapStats();
+    var heatmapStats = getJson("/heatmap.api");
+    try{    
+    heatmapStats = JSON.parse(heatmapStats);
+    var heatmapArray = [], heatmapStats;
+    for(a in heatmapStats){
+        heatmapArray.push([a,heatmapStats[a]])
+       }
+    heatmapArray.sort(function(a,b){return a[1] - b[1]});
+    heatmapArray.reverse();
+    var keys = Object.keys(heatmapArray); 
+    for(var i=0;i<keys.length;i++){
+        var key = keys[i];
+        var val = heatmapArray[key]
+        //console.log(key, val);
+    }
+    //console.log(heatmapArray);
+    
+
+    }
+    catch(err) {
+        createNotification(err + "! Creating empty data.", true); 
+    }
+
+
+   
     for (var i = 0; i < chosenLayout.layoutArray.length; i++) {
         for (var j = 0; j < chosenLayout.layoutArray[i].length; j++) {
                 var button = document.getElementById("button-" + chosenLayout.layoutArray[i][j][0]);
-                if (chosenLayout.realNames === false && chosenProfile.getKeybyName(chosenLayout.layoutArray[i][j][0]) !== undefined) {
-                    var getLayoutnameinput = chosenProfile.getKeybyName(chosenLayout.layoutArray[i][j][0]).mappedEvdevName;
-                    getLayoutnameinput = getLayoutnameinput.replace(/KEY_/g, "");
-                    button.textContent = getLayoutnameinput;
-                } else if (chosenLayout.realNames === true) {
-                    button.textContent = chosenLayout.layoutArray[i][j][0].replace("kp","");
+                console.log(heatmapArray[j]);
+                if (heatmapArray[i].indexOf(parseEvdevName(getRealname(chosenLayout.layoutArray[i][j][0])).toString()) < heatmapArray.length/4 ) {
+                    
+                    button.classList.add("buttonHeatmapMostUsed");
                 }
         }
     }
@@ -286,8 +308,8 @@ function toggleHeatmap() {
 
 }
 
-function getHeatmapStats() {
-    var heatmapStats = '[{}]'
+/*function getHeatmapStats() {
+    var heatmapStats = getJson("/json.api");
     // Create items array
 var items = Object.keys(heatmapStats).map(function(key) {
     return [key, dict[key]];
@@ -299,7 +321,7 @@ items.sort(function(first, second) {
 });
 
 
-}
+}*/
 
 
 
@@ -664,6 +686,7 @@ function getJson(url) {
         if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
             createNotification("Success!");
             return xmlhttp.responseText;
+
         } else {
             createNotification("Failed to load json: check server status.",true);
         }

@@ -108,6 +108,7 @@ var kbProfiles = [];
 var chosenProfile;
 kbProfiles[0] = chosenProfile;
 var chosenKey = "";
+var heatmapModeOn = false;
 
 //Executes function calls when the page is loaded.
 window.onload = function() {
@@ -293,15 +294,12 @@ function toggleHeatmap() {
     for (a in heatmapArray){
         heatmapIDs.push(heatmapArray[a][0]);
         heatmapTimesPressed.push(heatmapArray[a][1]);
-    }
-    
+    }  
 
     }
     catch(err) {
         createNotification(err + "! Creating empty data.", true); 
     }
-
-
    
     for (var i = 0; i < chosenLayout.layoutArray.length; i++) {
         for (var j = 0; j < chosenLayout.layoutArray[i].length; j++) {
@@ -309,8 +307,8 @@ function toggleHeatmap() {
                           
                 if (chosenLayout.layoutArray[i][j][0]!== ""){
                 if(heatmapArray)
+                if(!heatmapModeOn){
                 var comparenumber = heatmapIDs.indexOf(parseEvdevName(getRealname(chosenLayout.layoutArray[i][j][0])).toString());
-                console.log(comparenumber);
                 if (comparenumber >= 0)
                 {
                 var scalar = heatmapTimesPressed[comparenumber] / mostpressed[1];
@@ -322,9 +320,15 @@ function toggleHeatmap() {
                 button.style.color = "white";
                 console.log(scalar);
             }
+            else {
+                button.style.backgroundColor = "";
+                button.style.color = "";
+                
+            }
+            }
         }
     }
-
+    heatmapModeOn = !heatmapModeOn;
 
 }
 

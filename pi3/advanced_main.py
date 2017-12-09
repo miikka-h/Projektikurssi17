@@ -92,38 +92,18 @@ class KeyRemapper:
 
         Returns list containing lists of keys. List of keys
         represents keys that are included in one USB hid report.
+
+        Key "mappedEvdevID" value is a list like
+        [[1,2,3], [4,5,6]]
+
         """
-        list_of_hid_reports = []  # type: List[List[int]]
-
-        single_hid = []  # type: List[int]
-
-        # TODO: Remove for loop. That requires changes in JSON structure.
 
         try:
-            key = self.settings[0]["keyData"][
-                str(evdev_id)]  # TODO no parsing here. ["mappedEvdevID"]
-            if isinstance(key["mappedEvdevID"], str):
-                if key["mappedEvdevID"].find("|") != -1:
-                        key_reports_strings = key["mappedEvdevID"].split("|")
-                        for i in key_reports_strings:
-                            single_hid = [int(x) for x in i.split(":")]
-                            list_of_hid_reports.append(single_hid)
-                            print(list_of_hid_reports)
-                else:
-                        single_hid = [int(x)
-                                      for x in key["mappedEvdevID"].split(":")]
-                        list_of_hid_reports.append(single_hid)
-                        print("list_of_hid_reports" + " kissa 1")
-            else:
-                single_hid.append(key["mappedEvdevID"])
-                list_of_hid_reports.append(single_hid)
-                print("list_of_hid_reports" + "kissa 2")
+            return self.settings[0]["keyData"][str(evdev_id)]["mappedEvdevID"]
         except KeyError as error:
-            single_hid.append(evdev_id)
-            list_of_hid_reports.append(single_hid)
-            print("list_of_hid_reports" + "kissa 3")
+            pass
 
-        return list_of_hid_reports
+        return [[evdev_id]]
 
 
 class KeyboardManager:

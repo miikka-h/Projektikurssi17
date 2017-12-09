@@ -3,6 +3,7 @@ from queue import Queue, Empty
 from threading import Thread, Event
 import json
 import os
+import copy
 
 # Import Tuple type which is used in optional function type annotations.
 from typing import Tuple
@@ -178,8 +179,31 @@ class RequestHandler(BaseHTTPRequestHandler):
         response = self.rfile.read(int(content_length))
 
         self.server.settings = json.loads(response.decode("utf-8"))
+
+        # Parse key "mappedEvdevID" value "1:2:3|4:5:6" to
+        # [[1,2,3], [4,5,6]]
+
+        # Server must have original settings because it saves
+        # the settings to a file, so lets make a copy
+        new_settings = copy.deepcopy(self.server.settings)
+
+        for profile in new_settings:
+            for evdev_id_key in profile["keyData"]:
+                key_object = profile["keyData"][evdev_id_key]
+
+                hid_report_list = []
+
+                hid_report_list_string = key_object["mappedEvdevID"]
+
+                for key_string in hid_report_list_string.split("|"):
+                    evdev_id_list = [int(x) for x in key_string.split(":")]
+                    hid_report_list.append(evdev_id_list)
+
+                key_object["mappedEvdevID"] = hid_report_list
+
+
         # Send new settings to main thread.
-        self.server.settings_queue.put_nowait(self.server.settings)
+        self.server.settings_queue.put_nowait(new_settings)
 
         self.send_response(200)
         self.end_headers()

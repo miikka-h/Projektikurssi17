@@ -140,8 +140,8 @@ function initiateKeyboard() {
             }
             // Adding listeners to the buttons as they are created.
             keybutton.addEventListener("click", function() {
-                document.getElementById("button-" + chosenKey).style.backgroundColor = "";
-                this.style.backgroundColor = "limegreen";
+                document.getElementById("button-" + chosenKey).classList.remove("chosen");
+                this.classList.add("chosen");
                 modifyKey(this.getAttribute("keyName"));
             }, false);
 
@@ -231,12 +231,13 @@ function addKeycard(keyName, mappedEvdevName, keyID) {
     keyCard.className = "card";
     keyCard.id = "keycard-" + keyName;
     keyCard.addEventListener("click", function() {
-        document.getElementById("button-" + chosenKey).style.backgroundColor = "";
+        document.getElementById("button-" + chosenKey).classList.remove("chosen");
         modifyKey(this.getAttribute("keyName"));
-        document.getElementById("button-" + chosenKey).style.backgroundColor = "limegreen";
+        document.getElementById("button-" + chosenKey).classList.add("chosen");
     }, false);
     keyCard.setAttribute("keyName", keyName);
     textCard.textContent = keyName + " - " + mappedEvdevName;
+    if(chosenProfile.getKeybyName(keyName).profiles !== undefined) textCard.textContent = keyName + " - " + "Profiles: " + chosenProfile.getKeybyName(keyName).profiles;
     var deleteButton = document.createElement("button");
     deleteButton.className = "deletebutton";
     deleteButton.id = "delete-" + keyName;
@@ -244,6 +245,7 @@ function addKeycard(keyName, mappedEvdevName, keyID) {
     deleteButton.textContent = "x";
     deleteButton.addEventListener("click", function() { //Adding a listener to the button that deletes the profile.
         deleteKey(chosenProfile.getKeybyName((this.getAttribute("keyName"))));
+        document.getElementById("button-" + chosenKey).classList.remove("chosen");
     }, false);
     keyCard.appendChild(textCard);
     keyCard.appendChild(deleteButton);
@@ -262,9 +264,14 @@ function toggleDisplaymode(notify) {
         for (var j = 0; j < chosenLayout.layoutArray[i].length; j++) {
                 var button = document.getElementById("button-" + chosenLayout.layoutArray[i][j][0]);
                 if (chosenLayout.realNames === false && chosenProfile.getKeybyName(chosenLayout.layoutArray[i][j][0]) !== undefined) {
+                    if(chosenProfile.getKeybyName(chosenLayout.layoutArray[i][j][0]).mappedEvdevName !== undefined){
                     var getLayoutnameinput = chosenProfile.getKeybyName(chosenLayout.layoutArray[i][j][0]).mappedEvdevName;
                     getLayoutnameinput = getLayoutnameinput.replace(/KEY_/g, "");
                     button.textContent = getLayoutnameinput;
+                    } else {
+                    var getLayoutnameinput = "Profile: " + chosenProfile.getKeybyName(chosenLayout.layoutArray[i][j][0]).profiles;
+                    button.textContent = getLayoutnameinput;
+                    }
                 } else if (chosenLayout.realNames === true) {
                     button.textContent = chosenLayout.layoutArray[i][j][0].replace("kp","");
                 }
@@ -501,7 +508,6 @@ function getProfilebyID(profileID) {
             return kbProfiles[i];
         }
     }
-    createNotification("Profile with ID of " + profileID + " not found!",true);
     return false;
 }
 
@@ -512,7 +518,6 @@ function getProfilebyName(profileName) {
             return kbProfiles[i];
         }
     }
-    createNotification("Profile with name of " + profileName + " not found!",true);
     return false;
 }
 
@@ -649,12 +654,12 @@ function postKeys(data, urli) {
     var postRequest = new XMLHttpRequest();
     postRequest.onreadystatechange = function () {
         if(postRequest.readyState === XMLHttpRequest.DONE && postRequest.status === 200) {
-          createNotification("Success!");
+          createNotification("Successfully posted the keys!");
         }
       };
 
       postRequest.onerror = function onError(e) {
-        createNotification("Error " + e.target.status + " occurred while receiving the document.",true);
+        createNotification("Error " + e.target.status + " occurred.",true);
     }
     postRequest.open("POST", urli, true);
     postRequest.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
@@ -664,11 +669,11 @@ function postKeys(data, urli) {
 
 //Prototype to load a profile
 function loadProfiles() {
-     var profilesJson = getJson("/json.api");
-   // var profilesJson = '[{}]'
+   //  var profilesJsonInitial = getJson("/json.api");
+    var profilesJsonInitial = '[{}]'
    // profilesJson[0] = new Profile("Profile-1", 1, []);
    try {
-    profilesJson = JSON.parse(profilesJson);
+    profilesJson = JSON.parse(profilesJsonInitial);
     for(var i = 0; i<profilesJson.length; i++){
         kbProfiles[i] = new Profile(profilesJson[i].profileName, profilesJson[i].profileID, []);
         for (var j = 0; j < Object.keys(profilesJson[i].keyData).length; j++) {
@@ -683,7 +688,7 @@ function loadProfiles() {
     }
     chosenProfile = kbProfiles[0];
 } catch(err) {
-createNotification(err + "! Creating empty data.", true);
+if(profilesJsonInitial !== '[{}]') createNotification(err + "! Creating empty data.", true);
 kbProfiles[0] = new Profile("Profile-1", 1, []);
 chosenProfile = kbProfiles[0];
 }
@@ -736,7 +741,9 @@ function getJson(url) {
         //    createNotification("Failed to load json: check server status.",true);
         }
     }
-
+    xmlhttp.onerror = function onError(e) {
+        createNotification("Error " + e.target.status + " occurred.",true);
+    }
     xmlhttp.open("GET", url, false);
     xmlhttp.send();
     return xmlhttp.onreadystatechange();

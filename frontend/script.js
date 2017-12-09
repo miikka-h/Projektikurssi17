@@ -116,6 +116,7 @@ window.onload = function() {
     initiateKeyboard();
     addProfilecards();
     changeProfile(kbProfiles[0].profileID,document.getElementById("profile-" + kbProfiles[0].profileID));
+    document.getElementById("helpbox").innerHTML = 'In order to map keys, you must first choose a key from the visualized keyboard and then input the new key def to the textbox at bottom.</br></br>Use the keynames shown on the visualized keyboard, or alternatively, EVDEV-names.</br></br>For simultaneous keystrokes, separate keys with :. For separate strokes, use |. You can chain these if you want - examples: k:i:s:s:a, k:i:s:s:a|k|i|s|s|a, a:b:c|c:b:a. For quickly defining a string with no special symbols to a key, use write("string"). To repeat something, use repeat("",count). To insert delays, use delay(seconds).</br></br>To define a key that changes a profile, use Profiles("Profile-2") or with profile-IDs Profiles("2"). You may use either profile names or IDs. To define a mode change button, use Mode("Profile-1/1",booleanfortoggle).</br></br>In order to submit a change locally, click Submit. To post it to the server, click Post.';
   };
 
 // Builds the visualized keyboard based on an array. Array has rows of keys, with each key containing two values - the displayed characters and the width in relation to a "normal" key.
@@ -282,7 +283,7 @@ function toggleDisplaymode(notify) {
 
 function toggleHeatmap() {
     var heatmapStats = getJson("/heatmap.api");
-   // var heatmapStats = '{"56": 8, "15": 24, "29": 57, "30": 48, "35": 9, "18": 10, "20": 17, "108": 11, "28": 16, "42": 45, "19": 35, "45": 2, "51": 7, "47": 11, "31": 37, "72": 2, "71": 2, "77": 2, "76": 1, "2": 3, "3": 19, "4": 1, "5": 1, "57": 58, "58": 14, "33": 13, "34": 11, "9": 11, "10": 8, "7": 5, "8": 6, "105": 41, "46": 16, "14": 65, "6": 10, "12": 8, "106": 26, "36": 1, "23": 5, "25": 13, "50": 5, "24": 8, "22": 18, "49": 7, "32": 5, "52": 7, "38": 13, "43": 3, "11": 11, "53": 4, "100": 4, "48": 3, "21": 2, "37": 4, "17": 4, "63": 1, "41": 31, "86": 1, "44": 5}';
+    //var heatmapStats = '{"56": 8, "15": 24, "29": 57, "30": 48, "35": 9, "18": 10, "20": 17, "108": 11, "28": 16, "42": 45, "19": 35, "45": 2, "51": 7, "47": 11, "31": 37, "72": 2, "71": 2, "77": 2, "76": 1, "2": 3, "3": 19, "4": 1, "5": 1, "57": 58, "58": 14, "33": 13, "34": 11, "9": 11, "10": 8, "7": 5, "8": 6, "105": 41, "46": 16, "14": 65, "6": 10, "12": 8, "106": 26, "36": 1, "23": 5, "25": 13, "50": 5, "24": 8, "22": 18, "49": 7, "32": 5, "52": 7, "38": 13, "43": 3, "11": 11, "53": 4, "100": 4, "48": 3, "21": 2, "37": 4, "17": 4, "63": 1, "41": 31, "86": 1, "44": 5}';
     try{    
     heatmapStats = JSON.parse(heatmapStats);
     var heatmapArray = [], heatmapStats;
@@ -294,7 +295,6 @@ function toggleHeatmap() {
 
     var mostpressed = heatmapArray[0];
     var leastpressed = heatmapArray[heatmapArray.length-1];
-    console.log(mostpressed, leastpressed);
 
 
     var heatmapIDs = [], heatmapArray;
@@ -317,9 +317,10 @@ function toggleHeatmap() {
                 if(heatmapArray)
                 if(!heatmapModeOn){
                 var comparenumber = heatmapIDs.indexOf(parseEvdevName(getRealname(chosenLayout.layoutArray[i][j][0])).toString());
+                var scalar = 0;
                 if (comparenumber >= 0)
                 {
-                var scalar = heatmapTimesPressed[comparenumber] / mostpressed[1];
+                scalar = heatmapTimesPressed[comparenumber] / mostpressed[1];
                 var apu = 1-scalar;
                 button.style.backgroundColor = "rgba(" + Math.round(scalar*255) + ",0," + Math.round(apu*255) + ",1)";
                 } else {
@@ -381,6 +382,7 @@ function deleteProfile(profile) {
             kbProfiles.splice(profileIndex, 1);
         }
     }
+    document.getElementById("ainput").textContent = JSON.stringify(parsePostdata(), null, 4);
 }
 
 //Adds a profile card, which will contain a hitbox for selecting it and a button for deleting it.
@@ -418,9 +420,9 @@ function addProfilecard(profile) {
     profWrap.insertBefore(profileCard, document.getElementById("profileadder"));
 }
 
+//Changes the name of the profile.
 function editProfile(profile){
     var newName = prompt("Enter a new profile name!", "Profile name here.");
-    console.log(newName);
     if(newName!==null){
     profile.profileName = newName;
     var profileCard = document.getElementById("profile-" + profile.profileID);
@@ -543,8 +545,6 @@ function parseMapping(mapping, chosenKeylocal){
     } else {
     if(mapping.includes(":")){var mappingArray = mapping.split(":")} else {var mappingArray = []; mappingArray[0] = mapping;};
     for(var i = 0; i<mappingArray.length; i++){
-    console.log(mappingArray[i].includes("delay("));
-    console.log(mappingArray[i]);
     if(getRealname(mappingArray[i])===undefined && mappingArray[i].includes("delay(") == false || mappingArray[i]==="" && mappingArray[i].includes("delay(") == false){
         createNotification("Invalid input with " + mappingArray[i] + "!",true);
         return chosenKeylocal.mappedEvdevName;
@@ -558,7 +558,6 @@ function parseMapping(mapping, chosenKeylocal){
         }
         } else {
         if(mappingArray[i].includes("delay(") == false){
-            console.log(mappingArray[i]);
             realnameString = getRealname(mappingArray[i]);
         } else {
             realnameString = eval(mappingArray[i]);
@@ -567,7 +566,6 @@ function parseMapping(mapping, chosenKeylocal){
     }
     }
 }
-    console.log(realnameString);
     return realnameString;
 }
 
@@ -767,8 +765,9 @@ function write(string){
     createNotification(err,true);
 }
     }
-    
-    function repeat(string,count){
+
+//Function to repeat a string or key.
+function repeat(string,count){
     var oneCount = string;
     for(var i = 1; i<count; i++){
     string  = string + "|" + oneCount;
@@ -776,6 +775,7 @@ function write(string){
     return string;
 }
 
+//Creates error messages on the UI.
 window.onerror = function (errorMsg, url, lineNumber) {
     createNotification('Error: ' + errorMsg,true);
 }
@@ -819,7 +819,7 @@ function Mode(profile,toggle){
    return Profiles(profile,toggle);
 }
 
+//Returns a formatted delay.
 function delay(amount){
-    console.log("val");
     return "$" + amount;
 }

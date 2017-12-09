@@ -85,8 +85,6 @@ def mapProfiles(settings):
 
     return profileMap
 
-# TODO tuple structure
-
 
 def cutfrom(key: int, elements: OrderedDict):
     """Expects that the key is in the elements list and
@@ -102,28 +100,24 @@ class KeyRemapper:
 
     def __init__(self, settings) -> None:
         """Argument `settings` is profile JSON dictionary."""
-        if not ("keydata" in settings[0]):
-            settings[0] = [{"keydata": {}}]
+        if not ("keyData" in settings[0]):
+            settings = [{"keyData": {}}]
         self.settings = settings
         self.profileMap = mapProfiles(
             self.settings)  # Profile ID mapped to index in the list
         self.current_profile = (-1, 0)
         self.old_profiles = OrderedDict([self.current_profile])
-        print(self.old_profiles[-1])
-        print(self.profileMap)
 
     # New settings retunrs the first mod
     def set_new_settings(self, settings) -> None:
         """Argument `settings` is profile JSON dictionary."""
-        if not ("keydata" in settings[0]):
-            settings[0] = [{'keyData': {}}]
+        if not ("keyData" in settings[0]):
+            settings = [{'keyData': {}}]
         self.settings = settings
         self.profileMap = mapProfiles(
             self.settings)  # Profile ID mapped to index in the list
         self.current_profile = (-1, 0)
         self.old_profiles = OrderedDict([self.current_profile])
-        print(self.old_profiles[-1])
-        print(self.profileMap)
 
     def remap_key(self, key_event) -> List[List[int]]:
         """
@@ -140,37 +134,21 @@ class KeyRemapper:
         empty_nothing = []
         empty_key = []
         empty_key.append(empty_nothing)  # type: List[List[int]]
-        mapped_key = []
 
-        if key_event.value == 1:  # key up
+        if key_event.value == 0:  # key up
 
             if evdevId in self.old_profiles:
+                print("returned from a mode")
                 cutfrom(evdevId, self.old_profiles)
                 self.current_profile = self.old_profiles.popitem(last=True)
                 self.old_profiles[
                     self.current_profile[0]] = self.current_profile[1]
                 return (empty_key, True)
 
-            key = []
-            key.append(evdevId)
-            mapped_key = []
-            mapped_key.append(key)  # type: List[List[int]]
-            return (mapped_key, False)
-
-        else:
-
-            if evdevId in self.old_profiles:
-                return (empty_key, False)
-
-            print("kissa" + str(evdevId))
-            print(self.settings[self.current_profile[1]])
-            fst = (self.settings[self.current_profile[1]])
-            print(fst['keyData'])  # What the duck aids jessus
-            if evdevId in self.settings[self.current_profile[1]]["keyData"]:
-
+            if str(evdevId) in self.settings[self.current_profile[1]]["keyData"]:
                 try:
                     keyMapping = self.settings[
-                        self.current_profile[1]]["keyData"][evdevId]
+                        self.current_profile[1]]["keyData"][str(evdevId)]
                 except KeyError:
                     print("Key has no special effect")
                     key = []
@@ -179,15 +157,66 @@ class KeyRemapper:
                     mapped_key.append(key)  # type: List[List[int]]
                     return (mapped_key, False)
 
+                if "mappedEvdevID" in keyMapping:
+                    return (keyMapping["mappedEvdevID"], False)
+
+            key = [evdevId]
+            mapped_key = []
+            mapped_key.append(key)  # type: List[List[int]]
+            return (mapped_key, False)
+
+        elif key_event.value == 1:  # key down
+
+            if evdevId in self.old_profiles:
+                return (empty_key, False)
+
+            # print("kissa" + str(evdevId))
+            # print(self.settings)
+            # print(self.current_profile)
+            # print(self.settings[self.current_profile[1]])
+            # fst = (self.settings[self.current_profile[1]])
+            # print(fst['keyData'])
+            if str(evdevId) in self.settings[self.current_profile[1]]["keyData"]:
+
+                # try:
+                keyMapping = self.settings[
+                    self.current_profile[1]]["keyData"][str(evdevId)]
+                # except KeyError:
+                #    print("Key has no special effect")
+                #    key = []
+                #    key.append(evdevId)
+                #    mapped_key = []
+                #    mapped_key.append(key)  # type: List[List[int]]
+                #    return (mapped_key, False)
+
                 if "profiles" in keyMapping:
-                    self.current_profile[evdevId] = mapProfiles[
-                        keyMapping["profiles"][0]]
-                    self.old_profiles[
-                        self.current_profile[0]] = self.current_profile[1]
-                    return (empty_key, True)
+                    if evdevId not in self.old_profiles:
+                        self.current_profile = (evdevId, self.profileMap[
+                            keyMapping["profiles"][0]])
+                        self.old_profiles[
+                            self.current_profile[0]] = self.current_profile[1]
+                        print(self.old_profiles)
+                        return (empty_key, True)
 
                 if "mappedEvdevID" in keyMapping:
                     return (keyMapping["mappedEvdevID"], False)
+            else:
+                pass
+               # print("kissa")
+               # print(self.settings[self.current_profile[1]]["keyData"])
+               # print("1")
+               # print(self.settings)
+               # print("2")
+               # print(self.settings[self.current_profile[1]])
+               # print("3")
+               # print(evdevId)
+
+        print(key_event.value)
+        key = []
+        key.append(evdevId)
+        mapped_key = []
+        mapped_key.append(key)  # type: List[List[int]]
+        return(mapped_key, False)
 
         # If full_profile_history goes trough any staying changes the currently
         # pressed buttons have to be all risen except for the profile change
@@ -262,14 +291,12 @@ class KeyRemapper:
         #    empty_hid.append(key_event.code)
         #    list_of_hid_reports.append(empty_hid)
 
-            # TODO debug and make this all work
-            # TODO we need the ability to send button up command for all
-            # buttons that have to be risen in mode change.
+        # TODO debug and make this all work
+        # TODO we need the ability to send button up command for all
+        # buttons that have to be risen in mode change.
 
         # the key press to add, and a value whether every previous key press
         # should be cleaned
-
-        return (list_of_hid_reports, clean)
 
 
 class KeyboardManager:
@@ -456,6 +483,7 @@ def run(web_server_manager: WebServerManager, hid_data_socket: HidDataSocket, hi
 
             # profile handling
             tuple_data = key_remapper.remap_key(event)
+            print(tuple_data)
             new_keys_list = tuple_data[0]
             clean = tuple_data[1]
             # profile handling

@@ -121,30 +121,26 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.server.settings = json.loads(response.decode("utf-8"))
 
         # prepare the loaded settings data for usage with hid data.
-        list_of_hid_reports = []  # type: List[List[int]]
-        single_hid = []  # type: List[int]
+
         print(self.server.settings)
         for profile in self.server.settings:
-            print("profile-----------" + str(profile))
             # try:
             for key in profile["keyData"]:
-                print("key--------------" + str(key))
+                list_of_hid_reports = []  # type: List[List[int]]
+                single_hid = []  # type: List[int]
                 if "mappedEvdevID" in profile["keyData"][key]:
                     key_reports_strings = profile["keyData"][key][
                         "mappedEvdevID"].split("|")
                     for i in key_reports_strings:
                         single_hid = [int(x) for x in i.split(":")]
                         list_of_hid_reports.append(single_hid)
-                        print(list_of_hid_reports)
                     profile["keyData"][key]["mappedEvdevID"] = list_of_hid_reports
-
             # if "profile" in key:
             # except KeyError as error:
+        print(self.server.settings)
 
         # Send new settings to main thread.
-        print(self.server.settings)
         self.server.settings_queue.put_nowait(self.server.settings)
-
         self.send_response(200)
         self.end_headers()
 
@@ -153,7 +149,6 @@ class RequestHandler(BaseHTTPRequestHandler):
         file = open(file_name, mode='rb')
         file_as_bytes = file.read()
         file.close()
-
         self.send_utf8_bytes(file_as_bytes, mime_type)
 
     def send_utf8_bytes(self, message_bytes: bytes, mime_type: str) -> None:

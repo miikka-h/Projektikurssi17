@@ -79,37 +79,63 @@ class KeyRemapper:
     def __init__(self, settings) -> None:
         """Argument `settings` is profile JSON dictionary."""
         self.settings = settings
-        self.current_profile_index = 0
+
+        if len(self.settings) == 0:
+            self.current_profile = None
+        else:
+            self.current_profile = self.settings[0]
 
     def set_new_settings(self, settings) -> None:
         """Argument `settings` is profile JSON dictionary."""
         self.settings = settings
 
+        if len(self.settings) == 0:
+            self.current_profile = None
+        else:
+            self.current_profile = self.settings[0]
+
     def change_profile(self, evdev_id: int) -> bool:
         """"Returns True if profile changed"""
 
+        if self.current_profile == None:
+            return False
+
         try:
-            profile_list = self.settings[self.current_profile_index]["keyData"][str(evdev_id)]["profiles"]
+            profile_list = self.current_profile["keyData"][str(evdev_id)]["profiles"]
 
             if len(profile_list) == 0:
                 return False
 
-            # find current profile index from the list
+            # change to first profile in the list
+            next_id = profile_list[0]
 
-            for i in range(0, len(profile_list)):
-                if profile_list[i] == self.current_profile_index:
-                    # change to next profile in the list
-                    if i != len(profile_list) - 1:
-                        self.current_profile_index = profile_list[i+1]
-                    else:
-                        self.current_profile_index = profile_list[0]
-                    print("changed profile index to " + str(self.current_profile_index))
+            (result, profile_index) = self.profile_id_to_index(next_id)
+            if not result:
+                print("profile id " + str(next_id) + " does not exists")
+                return False
 
-                    return True
+            self.current_profile = self.settings[profile_index]
+            print("changed profile index to " + str(profile_index) + ", id: " + str(next_id))
+
+            return True
         except KeyError:
             pass
 
         return False
+
+    def profile_id_to_index(self, profile_id: int) -> (bool, int):
+        """Returns (True, index) if profile id exists"""
+
+        for i in range(0, len(self.settings)):
+            profile = self.settings[i]
+            if "profileID" not in profile:
+                continue
+
+            if profile["profileID"] == profile_id:
+                return (True, i)
+
+        return (False, 0)
+
 
     def remap_key(self, evdev_id: int) -> List[List[int]]:
         """
@@ -125,8 +151,11 @@ class KeyRemapper:
 
         """
 
+        if self.current_profile == None:
+            return [[evdev_id]]
+
         try:
-            return self.settings[self.current_profile_index]["keyData"][str(evdev_id)]["mappedEvdevID"]
+            return self.current_profile["keyData"][str(evdev_id)]["mappedEvdevID"]
         except KeyError as error:
             pass
 

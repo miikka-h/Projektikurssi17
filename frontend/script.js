@@ -148,10 +148,14 @@ function initiateKeyboard() {
             keybutton.addEventListener("mouseenter", function( event ) {   
                 event.target.style.borderWidth = "3px";
                 if(chosenProfile.getKeybyName(this.getAttribute("keyName")) === undefined){
-                document.getElementById("buttonhelp-" + this.getAttribute("keyName")).textContent = "Mapped as: " +    this.getAttribute("keyName");
+                document.getElementById("buttonhelp-" + this.getAttribute("keyName")).textContent = "Mapped as: " + this.getAttribute("keyName");
                 } else {
+                if(chosenProfile.getKeybyName(this.getAttribute("keyName")).mappedEvdevName !== undefined){
                 document.getElementById("buttonhelp-" + this.getAttribute("keyName")).textContent = "Mapped as: " + chosenProfile.getKeybyName(this.getAttribute("keyName")).mappedEvdevName;
+                } else {
+                document.getElementById("buttonhelp-" + this.getAttribute("keyName")).textContent = "Mapped as: Profiles, " + chosenProfile.getKeybyName(this.getAttribute("keyName")).profiles;                    
                 }
+            }
                 document.getElementById("buttonhelp-" + this.getAttribute("keyName")).style.display = "block";                
                 document.getElementById("buttonhelp-" + this.getAttribute("keyName")).style.opacity = 1;
                 setTimeout(function() {
@@ -314,13 +318,10 @@ function toggleHeatmap() {
 var items = Object.keys(heatmapStats).map(function(key) {
     return [key, dict[key]];
 });
-
 // Sort the array based on the second element
 items.sort(function(first, second) {
     return second[1] - first[1];
 });
-
-
 }*/
 
 
@@ -372,30 +373,50 @@ function deleteProfile(profile) {
 function addProfilecard(profile) {
     var profWrap = document.getElementById("profcards");
     var profileCard = document.createElement("div");
-    var profileCardclicker = document.createElement("div");
-    profileCardclicker.textContent = profile.profileName;
-    profileCardclicker.className = "cardclicker";
+    var profileCardtext = document.createElement("div");
+    profileCardtext.textContent = profile.profileName + " - ID: " + profile.profileID;
+    profileCardtext.className = "cardtext";
     profileCard.className = "card";
     profileCard.id = "profile-" + profile.profileID;
     profileCard.setAttribute("profileID", profile.profileID);
-    profileCardclicker.addEventListener("click", function() { //Adding a listener to the profile card.
-        changeProfile(this.parentNode.getAttribute("profileID"), this.parentNode);
+    profileCard.addEventListener("click", function() { //Adding a listener to the profile card.
+        changeProfile(this.getAttribute("profileID"), this);
     }, false);
     var deleteButton = document.createElement("button");
+    var editButton = document.createElement("button");
+    editButton.className = "editbutton";
     deleteButton.className = "deletebutton";
+    editButton.id = "edit-" + profile.profileID;
     deleteButton.id = "delete-" + profile.profileID;
+    editButton.setAttribute("profileID", profile.profileID);
+    editButton.textContent = "Edit";
     deleteButton.setAttribute("profileID", profile.profileID);
     deleteButton.textContent = "x";
     deleteButton.addEventListener("click", function() { //Adding a listener to the button that deletes the profile.
         deleteProfile(getProfilebyID(this.getAttribute("profileID")));
     }, false);
-    profileCard.appendChild(profileCardclicker);
+    editButton.addEventListener("click", function() { //Adding a listener to the button that deletes the profile.
+        editProfile(getProfilebyID(this.getAttribute("profileID")));
+    }, false);
+    profileCard.appendChild(profileCardtext);
     profileCard.appendChild(deleteButton);
+    profileCard.appendChild(editButton);
     profWrap.insertBefore(profileCard, document.getElementById("profileadder"));
+}
+
+function editProfile(profile){
+    var newName = prompt("Enter a new profile name!", "Profile name here.");
+    console.log(newName);
+    if(newName!==null){
+    profile.profileName = newName;
+    var profileCard = document.getElementById("profile-" + profile.profileID);
+    profileCard.firstChild.textContent = profile.profileName + " - ID: " + profile.profileID;
+    }
 }
 
 // Changes the chosen profile, resetting the background color of the old chosen profile.
 function changeProfile(newID, profileCard) {
+    if(getProfilebyID(newID)!==false){
     var oldProfilecard = document.getElementById("profile-" + chosenProfile.profileID);
     oldProfilecard.style.backgroundColor = "";
     document.getElementById("button-" + chosenKey).style.backgroundColor = "";
@@ -406,6 +427,7 @@ function changeProfile(newID, profileCard) {
     document.getElementById("ainput").textContent = JSON.stringify(parsePostdata(), null, 4);
     toggleDisplaymode(false);
     toggleDisplaymode(false);
+    }
 }
 
 // When a key is chosen on the visualized keyboard, this is fired. It updates the chosen key and highlights the keycard, as well as removes any older highlights.
@@ -451,12 +473,13 @@ function submitMod() {
             delete chosenKeylocal.toggle;
             chosenKeylocal.mappedEvdevName = parseMapping(mapping, chosenKeylocal);
             chosenKeylocal.mappedEvdevID = parseEvdevName(chosenKeylocal.mappedEvdevName);
+            document.getElementById("keycard-" + chosenKey + "-text").textContent = chosenKeylocal.displayName + " - " + chosenKeylocal.mappedEvdevName;
         }
         if(chosenKeylocal.profiles !== undefined){
             delete chosenKeylocal.mappedEvdevName;
             delete chosenKeylocal.mappedEvdevID;
+            document.getElementById("keycard-" + chosenKey + "-text").textContent = chosenKeylocal.displayName + " - " + "Profiles: " + chosenKeylocal.profiles;
         }
-        document.getElementById("keycard-" + chosenKey + "-text").textContent = chosenKeylocal.displayName + " - " + chosenKeylocal.mappedEvdevName;
         if (chosenKeylocal.EvdevID == chosenKeylocal.mappedEvdevID) {
             deleteKey(chosenKeylocal);
             button.textContent = chosenKeylocal.displayName;
@@ -508,18 +531,31 @@ function parseMapping(mapping, chosenKeylocal){
     } else {
     if(mapping.includes(":")){var mappingArray = mapping.split(":")} else {var mappingArray = []; mappingArray[0] = mapping;};
     for(var i = 0; i<mappingArray.length; i++){
-    if(getRealname(mappingArray[i])===undefined || mappingArray[i]===""){
+    console.log(mappingArray[i].includes("delay("));
+    console.log(mappingArray[i]);
+    if(getRealname(mappingArray[i])===undefined && mappingArray[i].includes("delay(") == false || mappingArray[i]==="" && mappingArray[i].includes("delay(") == false){
         createNotification("Invalid input with " + mappingArray[i] + "!",true);
         return chosenKeylocal.mappedEvdevName;
     } else {
         if(realnameString!==""){
+        if(mappingArray[i].includes("delay(") == false){
         realnameString = realnameString + ":" + getRealname(mappingArray[i]);
         } else {
+        realnameString = realnameString;
+        createNotification("Don't use delay with ':'!",true);
+        }
+        } else {
+        if(mappingArray[i].includes("delay(") == false){
+            console.log(mappingArray[i]);
             realnameString = getRealname(mappingArray[i]);
+        } else {
+            realnameString = eval(mappingArray[i]);
+        }
         }
     }
     }
 }
+    console.log(realnameString);
     return realnameString;
 }
 
@@ -565,9 +601,17 @@ function parseEvdevName(input) {
         };
         for (var i = 0; i < mappingArray.length; i++) {
             if (realidString !== "") {
+                if(mappingArray[i].includes("$") == false){
                 realidString = realidString + ":" + getEvdevID(mappingArray[i]);
+                } else {
+                realidString = realidString + ":" + mappingArray[i];
+                }
             } else {
-                realidString = getEvdevID(mappingArray[i]);
+                if(mappingArray[i].includes("$") == false){
+                    realidString = getEvdevID(mappingArray[i]);
+                    } else {
+                    realidString = mappingArray[i];
+                    }
             }
         }
     }
@@ -684,11 +728,10 @@ function getJson(url) {
 
     xmlhttp.onreadystatechange = function() {
         if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-            createNotification("Success!");
+        //    createNotification("Success!");
             return xmlhttp.responseText;
-
         } else {
-            createNotification("Failed to load json: check server status.",true);
+        //    createNotification("Failed to load json: check server status.",true);
         }
     }
 
@@ -760,4 +803,9 @@ function Mode(profile,toggle){
         profile = profile[0];
     }
    return Profiles(profile,toggle);
+}
+
+function delay(amount){
+    console.log("val");
+    return "$" + amount;
 }

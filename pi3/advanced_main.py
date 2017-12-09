@@ -181,6 +181,10 @@ class KeyboardManager:
             if keyboard.device_node != None:
                 keyboard = evdev.InputDevice(keyboard.device_node)
                 print("Keyboard '" + keyboard.name + "' added")
+                try:
+                    keyboard.grab()
+                except IOError:
+                    print("cant't grab keyboard " + keyboard.name)
                 self.device_list.append(keyboard)
 
         monitor = pyudev.Monitor.from_netlink(self.context)
@@ -197,6 +201,13 @@ class KeyboardManager:
 
     def close(self) -> None:
         """Send exit event to device monitoring thread. Waits until thread is closed."""
+
+        for keyboard in self.device_list:
+            try:
+                keyboard.ungrab()
+            except IOError:
+                pass
+
         self.exit_event.set()
         self.device_monitor_thread.join()
 

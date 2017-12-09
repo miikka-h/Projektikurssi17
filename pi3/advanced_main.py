@@ -5,6 +5,7 @@ from threading import Thread, Event
 import socket
 import time
 from typing import List
+import sys
 
 import pyudev
 import evdev
@@ -181,10 +182,12 @@ class KeyboardManager:
             if keyboard.device_node != None:
                 keyboard = evdev.InputDevice(keyboard.device_node)
                 print("Keyboard '" + keyboard.name + "' added")
-                try:
-                    keyboard.grab()
-                except IOError:
-                    print("cant't grab keyboard " + keyboard.name)
+
+                if len(sys.argv) > 1 and sys.argv[1] == "--grab-keyboards":
+                    try:
+                        keyboard.grab()
+                    except IOError:
+                        print("cant't grab keyboard " + keyboard.name)
                 self.device_list.append(keyboard)
 
         monitor = pyudev.Monitor.from_netlink(self.context)

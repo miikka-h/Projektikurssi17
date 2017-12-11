@@ -203,6 +203,7 @@ def cutfrom(key: int, elements: OrderedDict):
     remove all elements after and including that position."""
 
     while (key in elements):
+        print(key)
         elements.popitem(last=True)
 
 
@@ -217,8 +218,10 @@ class KeyRemapper:
         self.settings = settings
         self.profileMap = mapProfiles(
             self.settings)  # Profile ID mapped to index in the list
-        self.current_profile = (-1, 0)
+        self.current_profile = (
+            -1, 0)  # TODO send current mode for the front end.
         self.old_profiles = OrderedDict([self.current_profile])
+        self.forget = []
 
     # New settings retunrs the first mod
     def set_new_settings(self, settings) -> None:
@@ -228,46 +231,58 @@ class KeyRemapper:
         self.settings = settings
         self.profileMap = mapProfiles(
             self.settings)  # Profile ID mapped to index in the list
-        self.current_profile = (-1, 0)
+        self.current_profile = (
+            -1, 0)  # TODO send current mode for the front end.
         self.old_profiles = OrderedDict([self.current_profile])
+        self.forget = []
 
     def remap_key(self, key_event) -> List[List[int]]:
         """
-        Currently is specialized in handling the profile changes.
-
         REMAPS one key to multiple keys.
+
+        also specialized in handling the profile changes.
 
         Key id values are evdev id numbers.
 
-        Returns list containing lists of keys. List of keys
-        represents keys that are included in one USB hid report.
+        Returns a Tuple(List[List[int]], Bool)
+        containing the output evdevID inside a list structure(List[List[int]]) and
+        Bool wether to tell to remove all keys marked as pressed effectively rising them.
         """
         evdevId = key_event.code
         empty_nothing = []
         empty_key = []
         empty_key.append(empty_nothing)  # type: List[List[int]]
 
-        if key_event.value == 0:  # key up
+        # FUTURE TODO Own memory about currently pressed general buttos so that
+        # they can be converted to the new mode or old mode.
 
+        # TODO NOTIFY no difference between toggle profile and normal profile. in the front end
+        #
+
+        # ----------------------------key up
+        if key_event.value == 0:
+
+            # key is lifted up so it nolonger needs to be inored
+            if evdevId in self.forget:
+                self.forget.remove(evdevId)
+                return (empty_key, False)
+
+            # return from swapped profiles
             if evdevId in self.old_profiles:
                 print("returned from a mode")
                 cutfrom(evdevId, self.old_profiles)
-                self.current_profile = self.old_profiles.popitem(last=True)
+                self.current_profile = self.old_profiles.popitem(
+                    last=True)  # TODO send current mode for the front end.
                 self.old_profiles[
                     self.current_profile[0]] = self.current_profile[1]
                 return (empty_key, True)
 
+            # Do we actually have settings for this button
             if str(evdevId) in self.settings[self.current_profile[1]]["keyData"]:
-                try:
-                    keyMapping = self.settings[
-                        self.current_profile[1]]["keyData"][str(evdevId)]
-                except KeyError:
-                    print("Key has no special effect")
-                    key = []
-                    key.append(evdevId)
-                    mapped_key = []
-                    mapped_key.append(key)  # type: List[List[int]]
-                    return (mapped_key, False)
+
+                # the current "action" or "setting"
+                keyMapping = self.settings[
+                    self.current_profile[1]]["keyData"][str(evdevId)]
 
                 if "mappedEvdevID" in keyMapping:
                     return (keyMapping["mappedEvdevID"], False)
@@ -277,24 +292,50 @@ class KeyRemapper:
             mapped_key.append(key)  # type: List[List[int]]
             return (mapped_key, False)
 
-        elif key_event.value == 1:  # key down
+        # -----------------------key down
+        elif key_event.value == 1:
 
+            # Ignore old down pressed profile switch buttons
             if evdevId in self.old_profiles:
                 return (empty_key, False)
 
+            # Ignore keys set to forget. Necessary in context of toggle switch
+            # hotkey combinations.
+            if evdevId in self.forget:
+                return (empty_key, False)
+
+            # Do we actually have settings for this button
             if str(evdevId) in self.settings[self.current_profile[1]]["keyData"]:
 
+                # the current "action" or "setting"
                 keyMapping = self.settings[
                     self.current_profile[1]]["keyData"][str(evdevId)]
 
                 if "profiles" in keyMapping:
-                    if evdevId not in self.old_profiles:
-                        self.current_profile = (evdevId, self.profileMap[
-                            keyMapping["profiles"][0]])
-                        self.old_profiles[
-                            self.current_profile[0]] = self.current_profile[1]
-                        print(self.old_profiles)
+                    # if evdevId not in self.old_profiles:
+
+                    # Toggle to different profile
+                    if keyMapping["toggle"]:
+
+                        for button in self.old_profiles:
+                            if not button == -1:
+                                self.forget.append(button)
+                        self.current_profile = (
+                            -1, self.profileMap[keyMapping["profiles"][0]])
+                        # TODO send current mode for the front end.
+                        print(self.current_profile)
+                        self.old_profiles = OrderedDict([self.current_profile])
                         return (empty_key, True)
+
+                    # Temporary switch while button pressed
+                    self.current_profile = (
+                        evdevId, self.profileMap[keyMapping["profiles"][0]])
+                    # TODO send current mode for the front end.
+
+                    self.old_profiles[
+                        self.current_profile[0]] = self.current_profile[1]
+                    print(self.old_profiles)
+                    return (empty_key, True)
 
                 if "mappedEvdevID" in keyMapping:
                     return (keyMapping["mappedEvdevID"], False)

@@ -253,12 +253,6 @@ class KeyRemapper:
         empty_key = []
         empty_key.append(empty_nothing)  # type: List[List[int]]
 
-        # FUTURE TODO Own memory about currently pressed general buttos so that
-        # they can be converted to the new mode or old mode.
-
-        # TODO NOTIFY no difference between toggle profile and normal profile. in the front end
-        #
-
         # ----------------------------key up
         if key_event.value == 0:
 

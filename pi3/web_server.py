@@ -10,14 +10,18 @@ from typing import Tuple
 
 import keyprofile
 
+
 class WebServerManager():
+
     """Creates new web server thread."""
+
     def __init__(self):
         self.exit_event = Event()
         web_server_settings = ("", 8080)
         self.settings_queue = Queue()
         self.heatmap_queue = Queue()
-        self.web_server_thread = Thread(group=None, target=WebServer, args=(web_server_settings, self.settings_queue, self.heatmap_queue, self.exit_event))
+        self.web_server_thread = Thread(group=None, target=WebServer, args=(
+            web_server_settings, self.settings_queue, self.heatmap_queue, self.exit_event))
         self.web_server_thread.start()
 
     def close(self):
@@ -64,8 +68,11 @@ PROFILE_DATA_FILE_NAME = 'data.txt'
 # Also, note that HTTPServer inherits TCPServer.
 # https://docs.python.org/3/library/socketserver.html#socketserver.TCPServer
 class WebServer(HTTPServer):
+
     # Type annotations of this constructor are optional.
-    def __init__(self, address_and_port: Tuple [str, int], settings_queue: Queue, heatmap_queue: Queue, exit_event: Event) -> None:
+
+    def __init__(self, address_and_port: Tuple[str, int], settings_queue: Queue, heatmap_queue: Queue, exit_event: Event) -> None:
+
         # Run constructor from HTTPServer first. Note the RequestHandler class.
         super().__init__(address_and_port, RequestHandler)
 
@@ -73,7 +80,8 @@ class WebServer(HTTPServer):
         # them from RequestHandler's methods.
         self.settings_queue = settings_queue
 
-        # Check exit event every 0.5 seconds if there is no new TCP connections.
+        # Check exit event every 0.5 seconds if there is no new TCP
+        # connections.
         self.timeout = 0.5
 
         # Initialize profiles
@@ -96,7 +104,8 @@ class WebServer(HTTPServer):
                 self.heatmap.set_heatmap_data(heatmap_data)
 
         # Main thread is waiting for profiles/settings so lets send them.
-        parse_mappedEvdevID_and_send_settings(self.settings, self.settings_queue)
+        parse_mappedEvdevID_and_send_settings(
+            self.settings, self.settings_queue)
 
         print("web server running")
         while True:
@@ -125,7 +134,6 @@ class WebServer(HTTPServer):
         with open(HEATMAP_FILE_NAME, 'w') as outfile:
             outfile.write(self.heatmap.json_string())
 
-
         print("web server exited")
 
 
@@ -138,17 +146,18 @@ class RequestHandler(BaseHTTPRequestHandler):
         """Handler for HTTP GET requests."""
         # Print some information about the HTTP request.
 
-        #print("HTTP GET Request, path: " + self.path)
-        #print("client_address: " + str(self.client_address))
-        #print("request_version: " + self.request_version)
-        #print("headers: " + str(self.headers))
+        # print("HTTP GET Request, path: " + self.path)
+        # print("client_address: " + str(self.client_address))
+        # print("request_version: " + self.request_version)
+        # print("headers: " + str(self.headers))
 
-        #get key-binding settings in json form
+        # get key-binding settings in json form
         if self.path == "/json.api":
             message = json.dumps(self.server.settings)
             message_bytes = message.encode()
+
             self.send_utf8_bytes(message_bytes, "text/json")
-        #get heatmap statistics in json form
+        # get heatmap statistics in json form
         elif self.path == "/heatmap.api":
             text = self.server.heatmap.json_string()
             message_bytes = text.encode()
@@ -156,31 +165,57 @@ class RequestHandler(BaseHTTPRequestHandler):
         elif self.path == "/":
             self.send_utf8_file("../frontend/control.html", "text/html")
         elif self.path == "/webgl-keyboard":
-            self.send_utf8_file("../webgl-keyboard/dist/index.html", "text/html")
+            self.send_utf8_file(
+                "../webgl-keyboard/dist/index.html", "text/html")
         elif self.path == "/styles.css":
             self.send_utf8_file("../frontend/styles.css", "text/css")
         elif self.path == "/script.js":
-            self.send_utf8_file("../frontend/script.js", "application/javascript")
+            self.send_utf8_file("../frontend/script.js",
+                                "application/javascript")
         elif self.path == "/bundle.js":
-            self.send_utf8_file("../webgl-keyboard/dist/bundle.js", "application/javascript")
+            self.send_utf8_file(
+                "../webgl-keyboard/dist/bundle.js", "application/javascript")
         else:
             message_bytes = b"<html><body><h1>Hello world</h1></body></html>"
             self.send_utf8_bytes(message_bytes, "text/html")
 
     def do_POST(self) -> None:
         """Handler for HTTP POST requests."""
-        #print("HTTP POST Request, path: " + self.path)
-        #print("client_address: " + str(self.client_address))
-        #print("request_version: " + self.request_version)
-        #print("headers: " + str(self.headers))
+        # print("HTTP POST Request, path: " + self.path)
+        # print("client_address: " + str(self.client_address))
+        # print("request_version: " + self.request_version)
+        # print("headers: " + str(self.headers))
 
-        content_length =  self.headers.get("Content-Length", 0)
+        content_length = self.headers.get("Content-Length", 0)
 
         response = self.rfile.read(int(content_length))
 
         self.server.settings = json.loads(response.decode("utf-8"))
 
-        parse_mappedEvdevID_and_send_settings(self.server.settings, self.server.settings_queue)
+        parse_mappedEvdevID_and_send_settings(
+            self.server.settings, self.server.settings_queue)
+
+#        # prepare the loaded settings data for usage with hid data.
+#
+#        print(self.server.settings)
+#        for profile in self.server.settings:
+#            # try:
+#            for key in profile["keyData"]:
+#                list_of_hid_reports = []  # type: List[List[int]]
+#                single_hid = []  # type: List[int]
+#                if "mappedEvdevID" in profile["keyData"][key]:
+#                    key_reports_strings = profile["keyData"][key][
+#                        "mappedEvdevID"].split("|")
+#                    for i in key_reports_strings:
+#                        single_hid = [int(x) for x in i.split(":")]
+#                        list_of_hid_reports.append(single_hid)
+#                    profile["keyData"][key]["mappedEvdevID"] = list_of_hid_reports
+#            # if "profile" in key:
+#            # except KeyError as error:
+#        print(self.server.settings)
+#
+#        # Send new settings to main thread.
+#        self.server.settings_queue.put_nowait(self.server.settings)
 
         self.send_response(200)
         self.end_headers()
@@ -190,7 +225,6 @@ class RequestHandler(BaseHTTPRequestHandler):
         file = open(file_name, mode='rb')
         file_as_bytes = file.read()
         file.close()
-
         self.send_utf8_bytes(file_as_bytes, mime_type)
 
     def send_utf8_bytes(self, message_bytes: bytes, mime_type: str) -> None:
@@ -233,7 +267,6 @@ def parse_mappedEvdevID_and_send_settings(profile_list, settings_queue):
                 key_object["mappedEvdevID"] = hid_report_list
                 continue
 
-
             delay_list = []
             for key_string in hid_report_list_string.split("|"):
 
@@ -252,7 +285,6 @@ def parse_mappedEvdevID_and_send_settings(profile_list, settings_queue):
 
             key_object["mappedEvdevID"] = hid_report_list
             key_object["delay_list"] = delay_list
-
 
     # Send new settings to main thread.
     settings_queue.put_nowait(new_settings)

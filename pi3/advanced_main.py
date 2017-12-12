@@ -2,6 +2,7 @@
 
 from queue import Queue, Empty
 from threading import Thread, Event
+from collections import OrderedDict
 import socket
 import time
 from typing import List
@@ -71,109 +72,6 @@ class HidDataSocket():
             print("error: " + error.strerror)
             print("client " + str(self.address) + " disconnected")
             return False
-
-
-class KeyRemapper:
-
-    """Map one key to multiple keys."""
-
-    def __init__(self, settings) -> None:
-        """Argument `settings` is profile JSON dictionary."""
-        self.settings = settings
-
-        if len(self.settings) == 0:
-            self.current_profile = None
-        else:
-            self.current_profile = self.settings[0]
-
-    def set_new_settings(self, settings) -> None:
-        """Argument `settings` is profile JSON dictionary."""
-        self.settings = settings
-
-        if len(self.settings) == 0:
-            self.current_profile = None
-        else:
-            self.current_profile = self.settings[0]
-
-    def change_profile(self, evdev_id: int) -> bool:
-        """"Returns True if profile changed"""
-
-        if self.current_profile == None:
-            return False
-
-        try:
-            profile_list = self.current_profile["keyData"][str(evdev_id)]["profiles"]
-
-            if len(profile_list) == 0:
-                return False
-
-            # change to first profile in the list
-            next_id = profile_list[0]
-
-            (result, profile_index) = self.profile_id_to_index(next_id)
-            if not result:
-                print("profile id " + str(next_id) + " does not exists")
-                return False
-
-            self.current_profile = self.settings[profile_index]
-            print("changed profile index to " + str(profile_index) + ", id: " + str(next_id))
-
-            return True
-        except KeyError:
-            pass
-
-        return False
-
-    def profile_id_to_index(self, profile_id: int) -> (bool, int):
-        """Returns (True, index) if profile id exists"""
-
-        for i in range(0, len(self.settings)):
-            profile = self.settings[i]
-            if "profileID" not in profile:
-                continue
-
-            if profile["profileID"] == profile_id:
-                return (True, i)
-
-        return (False, 0)
-
-
-    def remap_key(self, evdev_id: int) -> List[List[int]]:
-        """
-        Remaps one key to multiple keys.
-
-        Key id values are evdev id numbers.
-
-        Returns list containing lists of keys. List of keys
-        represents keys that are included in one USB hid report.
-
-        Key "mappedEvdevID" value is a list like
-        [[1,2,3], [4,5,6]]
-
-        """
-
-        if self.current_profile == None:
-            return [[evdev_id]]
-
-        try:
-            return self.current_profile["keyData"][str(evdev_id)]["mappedEvdevID"]
-        except KeyError as error:
-            pass
-
-        return [[evdev_id]]
-
-
-    def remap_key_delays_list(self, evdev_id: int) -> List[int]:
-
-        if self.current_profile == None:
-            return []
-
-        try:
-            return self.current_profile["keyData"][str(evdev_id)]["delay_list"]
-        except KeyError as error:
-            pass
-
-        return []
 
 
 class KeyboardManager:
@@ -287,6 +185,163 @@ class KeyboardManager:
                 break
 
 
+def mapProfiles(settings):
+    profileMap = {}
+    i = 0
+    print(settings)
+    while i < len(settings):
+        if "profileID" in settings[i]:
+            index = settings[i]["profileID"]
+            profileMap[index] = i
+        i = i + 1
+
+    return profileMap
+
+
+def cutfrom(key: int, elements: OrderedDict):
+    """Expects that the key is in the elements list and
+    remove all elements after and including that position."""
+
+    while (key in elements):
+        print(key)
+        elements.popitem(last=True)
+
+
+class KeyRemapper:
+
+    """Map one key to multiple keys."""
+
+    def __init__(self, settings) -> None:
+        """Argument `settings` is profile JSON dictionary."""
+        if not ("keyData" in settings[0]):
+            settings = [{"keyData": {}}]
+        self.settings = settings
+        self.profileMap = mapProfiles(
+            self.settings)  # Profile ID mapped to index in the list
+        self.current_profile = (
+            -1, 0)  # TODO send current mode for the front end.
+        self.old_profiles = OrderedDict([self.current_profile])
+        self.forget = []
+
+    # New settings retunrs the first mod
+    def set_new_settings(self, settings) -> None:
+        """Argument `settings` is profile JSON dictionary."""
+        if not ("keyData" in settings[0]):
+            settings = [{'keyData': {}}]
+        self.settings = settings
+        self.profileMap = mapProfiles(
+            self.settings)  # Profile ID mapped to index in the list
+        self.current_profile = (
+            -1, 0)  # TODO send current mode for the front end.
+        self.old_profiles = OrderedDict([self.current_profile])
+        self.forget = []
+
+    def remap_key(self, key_event) -> List[List[int]]:
+        """
+        REMAPS one key to multiple keys.
+
+        also specialized in handling the profile changes.
+
+        Key id values are evdev id numbers.
+
+        Returns a Tuple(List[List[int]], Bool)
+        containing the output evdevID inside a list structure(List[List[int]]) and
+        Bool wether to tell to remove all keys marked as pressed effectively rising them.
+        """
+        evdevId = key_event.code
+        empty_nothing = []
+        empty_key = []
+        empty_key.append(empty_nothing)  # type: List[List[int]]
+
+        # ----------------------------key up
+        if key_event.value == 0:
+
+            # key is lifted up so it nolonger needs to be inored
+            if evdevId in self.forget:
+                self.forget.remove(evdevId)
+                return (empty_key, False)
+
+            # return from swapped profiles
+            if evdevId in self.old_profiles:
+                print("returned from a mode")
+                cutfrom(evdevId, self.old_profiles)
+                self.current_profile = self.old_profiles.popitem(
+                    last=True)  # TODO send current mode for the front end.
+                self.old_profiles[
+                    self.current_profile[0]] = self.current_profile[1]
+                return (empty_key, True)
+
+            # Do we actually have settings for this button
+            if str(evdevId) in self.settings[self.current_profile[1]]["keyData"]:
+
+                # the current "action" or "setting"
+                keyMapping = self.settings[
+                    self.current_profile[1]]["keyData"][str(evdevId)]
+
+                if "mappedEvdevID" in keyMapping:
+                    return (keyMapping["mappedEvdevID"], False)
+
+            key = [evdevId]
+            mapped_key = []
+            mapped_key.append(key)  # type: List[List[int]]
+            return (mapped_key, False)
+
+        # -----------------------key down
+        elif key_event.value == 1:
+
+            # Ignore old down pressed profile switch buttons
+            if evdevId in self.old_profiles:
+                return (empty_key, False)
+
+            # Ignore keys set to forget. Necessary in context of toggle switch
+            # hotkey combinations.
+            if evdevId in self.forget:
+                return (empty_key, False)
+
+            # Do we actually have settings for this button
+            if str(evdevId) in self.settings[self.current_profile[1]]["keyData"]:
+
+                # the current "action" or "setting"
+                keyMapping = self.settings[
+                    self.current_profile[1]]["keyData"][str(evdevId)]
+
+                if "profiles" in keyMapping:
+                    # if evdevId not in self.old_profiles:
+
+                    # Toggle to different profile
+                    if keyMapping["toggle"]:
+
+                        for button in self.old_profiles:
+                            if not button == -1:
+                                self.forget.append(button)
+                        self.current_profile = (
+                            -1, self.profileMap[keyMapping["profiles"][0]])
+                        # TODO send current mode for the front end.
+                        print(self.current_profile)
+                        self.old_profiles = OrderedDict([self.current_profile])
+                        return (empty_key, True)
+
+                    # Temporary switch while button pressed
+                    self.current_profile = (
+                        evdevId, self.profileMap[keyMapping["profiles"][0]])
+                    # TODO send current mode for the front end.
+
+                    self.old_profiles[
+                        self.current_profile[0]] = self.current_profile[1]
+                    print(self.old_profiles)
+                    return (empty_key, True)
+
+                if "mappedEvdevID" in keyMapping:
+                    return (keyMapping["mappedEvdevID"], False)
+
+        print(key_event.value)
+        key = []
+        key.append(evdevId)
+        mapped_key = []
+        mapped_key.append(key)  # type: List[List[int]]
+        return(mapped_key, False)
+
+
 KEYBOARD_ADDED = 0
 KEYBOARD_REMOVED = 1
 
@@ -345,11 +400,11 @@ def main():
 
 def run(web_server_manager: WebServerManager, hid_data_socket: HidDataSocket, hid_report: HidReport, keyboard_manager: KeyboardManager) -> None:
 
-
     print("waiting for settings from web server thread")
     key_remapper = KeyRemapper(web_server_manager.get_settings_queue().get())
     print("received settings from web server thread")
 
+    clean = False
     keyboard_manager.request_clear_key_events()
 
     while True:
@@ -364,15 +419,19 @@ def run(web_server_manager: WebServerManager, hid_data_socket: HidDataSocket, hi
         except Empty:
             pass
 
-
         for event in keyboard_manager.get_key_events():
             if event.value == 1:
                 web_server_manager.get_heatmap_queue().put_nowait(event.code)
 
-                if key_remapper.change_profile(event.code):
-                    continue
+                # if key_remapper.change_profile(event.code):
+                #    continue
 
-            new_keys_list = key_remapper.remap_key(event.code)
+            # profile handling
+            tuple_data = key_remapper.remap_key(event)
+            print(tuple_data)
+            new_keys_list = tuple_data[0]
+            clean = tuple_data[1]
+            # profile handling
 
             if len(new_keys_list) == 1:
                 key_list = new_keys_list[0]
@@ -381,16 +440,19 @@ def run(web_server_manager: WebServerManager, hid_data_socket: HidDataSocket, hi
                 if event.value == 1:
                     for k in key_list:
                         hid_report.add_key(k)
-                    send_and_reset_if_client_disconnected(hid_data_socket, hid_report, keyboard_manager)
+                    send_and_reset_if_client_disconnected(
+                        hid_data_socket, hid_report, keyboard_manager)
 
                 # key_up = 0
                 elif event.value == 0:
                     for k in key_list:
                         hid_report.remove_key(k)
-                    send_and_reset_if_client_disconnected(hid_data_socket, hid_report, keyboard_manager)
+                    send_and_reset_if_client_disconnected(
+                        hid_data_socket, hid_report, keyboard_manager)
             else:
                 if event.value == 1:
-                    delays_list = key_remapper.remap_key_delays_list(event.code)
+                    # delays_list = key_remapper.remap_key_delays_list(
+                    #    event.code)
 
                     for i in range(0, len(new_keys_list)):
                         key_list = new_keys_list[i]
@@ -407,8 +469,10 @@ def run(web_server_manager: WebServerManager, hid_data_socket: HidDataSocket, hi
                         send_and_reset_if_client_disconnected(
                             hid_data_socket, hid_report, keyboard_manager)
 
-                        if i < len(delays_list):
-                            time.sleep(delays_list[i])
+                        # if i < len(delays_list):
+                        #    time.sleep(delays_list[i])
+        if clean:
+            hid_report.clear()
 
 
 def send_and_reset_if_client_disconnected(hid_data_socket: HidDataSocket, hid_report: HidReport, keyboard_manager: KeyboardManager) -> None:

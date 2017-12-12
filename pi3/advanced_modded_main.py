@@ -2,6 +2,7 @@
 
 from queue import Queue, Empty
 from threading import Thread, Event
+from collections import OrderedDict
 import socket
 import time
 from typing import List
@@ -72,22 +73,53 @@ class HidDataSocket():
             return False
 
 
+def mapProfiles(settings):
+    profileMap = {}
+    i = 0
+    print(settings)
+    while i < len(settings):
+        if "profileID" in settings[i]:
+            index = settings[i]["profileID"]
+            profileMap[index] = i
+        i = i + 1
+
+    return profileMap
+
+
+def cutfrom(key: int, elements: OrderedDict):
+    """Expects that the key is in the elements list and
+    remove all elements after and including that position."""
+
+    while (key in elements):
+        elements.popitem(last=True)
+
+
 class KeyRemapper:
 
     """Map one key to multiple keys."""
 
     def __init__(self, settings) -> None:
         """Argument `settings` is profile JSON dictionary."""
+        if not ("keyData" in settings[0]):
+            settings = [{"keyData": {}}]
         self.settings = settings
-        self.current_profile = 0
-        self.full_profile_history = [0]
-        self.self.currently_pressed = []
+        self.profileMap = mapProfiles(
+            self.settings)  # Profile ID mapped to index in the list
+        self.current_profile = (-1, 0)
+        self.old_profiles = OrderedDict([self.current_profile])
 
+    # New settings retunrs the first mod
     def set_new_settings(self, settings) -> None:
         """Argument `settings` is profile JSON dictionary."""
+        if not ("keyData" in settings[0]):
+            settings = [{'keyData': {}}]
         self.settings = settings
+        self.profileMap = mapProfiles(
+            self.settings)  # Profile ID mapped to index in the list
+        self.current_profile = (-1, 0)
+        self.old_profiles = OrderedDict([self.current_profile])
 
-    def remap_key(self, key_event: int) -> List[List[int]]:
+    def remap_key(self, key_event) -> List[List[int]]:
         """
         Currently is specialized in handling the profile changes.
 
@@ -98,6 +130,93 @@ class KeyRemapper:
         Returns list containing lists of keys. List of keys
         represents keys that are included in one USB hid report.
         """
+        evdevId = key_event.code
+        empty_nothing = []
+        empty_key = []
+        empty_key.append(empty_nothing)  # type: List[List[int]]
+
+        if key_event.value == 0:  # key up
+
+            if evdevId in self.old_profiles:
+                print("returned from a mode")
+                cutfrom(evdevId, self.old_profiles)
+                self.current_profile = self.old_profiles.popitem(last=True)
+                self.old_profiles[
+                    self.current_profile[0]] = self.current_profile[1]
+                return (empty_key, True)
+
+            if str(evdevId) in self.settings[self.current_profile[1]]["keyData"]:
+                try:
+                    keyMapping = self.settings[
+                        self.current_profile[1]]["keyData"][str(evdevId)]
+                except KeyError:
+                    print("Key has no special effect")
+                    key = []
+                    key.append(evdevId)
+                    mapped_key = []
+                    mapped_key.append(key)  # type: List[List[int]]
+                    return (mapped_key, False)
+
+                if "mappedEvdevID" in keyMapping:
+                    return (keyMapping["mappedEvdevID"], False)
+
+            key = [evdevId]
+            mapped_key = []
+            mapped_key.append(key)  # type: List[List[int]]
+            return (mapped_key, False)
+
+        elif key_event.value == 1:  # key down
+
+            if evdevId in self.old_profiles:
+                return (empty_key, False)
+
+            # print("kissa" + str(evdevId))
+            # print(self.settings)
+            # print(self.current_profile)
+            # print(self.settings[self.current_profile[1]])
+            # fst = (self.settings[self.current_profile[1]])
+            # print(fst['keyData'])
+            if str(evdevId) in self.settings[self.current_profile[1]]["keyData"]:
+
+                # try:
+                keyMapping = self.settings[
+                    self.current_profile[1]]["keyData"][str(evdevId)]
+                # except KeyError:
+                #    print("Key has no special effect")
+                #    key = []
+                #    key.append(evdevId)
+                #    mapped_key = []
+                #    mapped_key.append(key)  # type: List[List[int]]
+                #    return (mapped_key, False)
+
+                if "profiles" in keyMapping:
+                    if evdevId not in self.old_profiles:
+                        self.current_profile = (evdevId, self.profileMap[
+                            keyMapping["profiles"][0]])
+                        self.old_profiles[
+                            self.current_profile[0]] = self.current_profile[1]
+                        print(self.old_profiles)
+                        return (empty_key, True)
+
+                if "mappedEvdevID" in keyMapping:
+                    return (keyMapping["mappedEvdevID"], False)
+            else:
+                pass
+               # print("kissa")
+               # print(self.settings[self.current_profile[1]]["keyData"])
+               # print("1")
+               # print(self.settings)
+               # print("2")
+               # print(self.settings[self.current_profile[1]])
+               # print("3")
+               # print(evdevId)
+
+        print(key_event.value)
+        key = []
+        key.append(evdevId)
+        mapped_key = []
+        mapped_key.append(key)  # type: List[List[int]]
+        return(mapped_key, False)
 
         # If full_profile_history goes trough any staying changes the currently
         # pressed buttons have to be all risen except for the profile change
@@ -108,71 +227,76 @@ class KeyRemapper:
 
         # "clean" means doing the previous
 
-        list_of_hid_reports = []  # type: List[List[int]]
-        single_hid = []  # type: List[int]
+        # list_of_hid_reports = []  # type: List[List[int]]
+        # empty_hid = []  # type: List[int]
+        # tells which keys have to be risen in the next operation.
+        # clean = False
 
-        try:
-            mapdata = self.settings[self.current_profile][
-                "keyData"][key_event.code]
+        # try:
+        #        print(self.current_profile)
+        #        mapdata = self.settings[self.current_profile][
+        #            "keyData"][str(key_event.code)]
+        #
+        #        if "mappedEvdevID" in mapdata:
+        #            list_of_hid_reports = mapdata["mappedEvdevID"]
+        #
+        #        if "profiles" in mapdata:
+        #            list_of_hid_reports.append(empty_hid)
+        #
+        # TODO follow keyboard limitations. Uper limit to the list of
+        # currently_pressed_profiles needed?
+        #
+        # Profiles start from 1 apparently and lists usually start from 0
 
-            if "mappedEvdevID" in mapdata:
-                list_of_hid_reports = mapdata["mappedEvdevID"]
+        # key_down = 1
+        #        if key_event.value == 1:
+        #            self.currently_pressed_profiles.append(list_of_hid_reports)
+        #            if "profiles" in mapdata:
+        #                if mapdata["toggle"]:
+        #                    self.currently_pressed_profiles = []
+        #                    self.current_profile = self.profileMap[
+        #                        mapdata["profiles"][0]]
+        # clean all buttons
+        # clean = True  # doesn't include mod buttons
+        #                    self.full_profile_history = [
+        #                        self.profileMap[mapdata["profiles"][0]]]
+        #
+        #                else:
+        #                    self.full_profile_history.append(self.current_profile)
+        #                    print(self.settings)
+        #                    print(self.profileMap)
+        #                    self.current_profile = self.profileMap[
+        #                        mapdata["profiles"][0]]
+        #
+        # clean but no mods should be cleaned
+        # clean = True  # doesn't include mod buttons
+        #
+        # key_up = 0
+        # else:   # if key_event.value == 0:
+        #            self.currently_pressed_profiles.remove(list_of_hid_reports)
+        #
+        #            if "profiles" in mapdata:
+        #                profile = self.profileMap[mapdata["profiles"][0]]
+        #                if profile in self.full_profile_history:
+        #                    KeyRemapper.cutfrom(profile, self.full_profile_history)
+        #                    clean = True
+        #                    if len(self.full_profile_history) > 0:
+        #                        self.current_profile = self.full_profile_history[
+        #                            len(self.full_profile_history) - 1]
+        #                    else:
+        #                        self.full_profile_history = []
+        #                        self.current_profile = 0
 
-            if "profiles" in mapdata:
+        # except KeyError as error:
+        #    empty_hid.append(key_event.code)
+        #    list_of_hid_reports.append(empty_hid)
 
-                list_of_hid_reports.append(single_hid)
+        # TODO debug and make this all work
+        # TODO we need the ability to send button up command for all
+        # buttons that have to be risen in mode change.
 
-            # TODO follow keyboard limitations. Uper limit to the list of
-            # currently_pressed needed?
-
-            # key_down = 1
-            if key_event.value == 1:
-                self.currently_pressed.append(list_of_hid_reports)
-                if "profiles" in mapdata:
-                    if mapdata["toggle"]:
-                        self.currently_pressed = []
-                        self.full_profile_history = [0]
-                        self.current_profile = mapdata["profiles"][0]
-                        # TODO clean all
-
-                    else:
-                        self.full_profile_history.append(self.current_profile)
-                        self.current_profile = mapdata["profiles"][0]
-                        # TODO clean but no mods cleaned
-
-            # key_up = 0
-            else:   # if key_event.value == 0:
-                self.currently_pressed.remove(list_of_hid_reports)
-
-                if "profiles" in mapdata:
-                    profile = mapdata["profiles"][0]
-                    if profile in self.full_profile_history:
-                        self.cutfrom(profile, self.full_profile_history)
-                        # TODO clea but some mods not necessarily cleaned
-                        if len(self.full_profile_history) > 0:
-                            self.current_profile = self.full_profile_history[
-                                len(self.full_profile_history) - 1]
-                        else:
-                            self.full_profile_history = [0]
-                            self.current_profile = 0
-
-        except KeyError as error:
-            single_hid.append(key_event.code)
-            list_of_hid_reports.append(single_hid)
-
-            # TODO debug and make this all work
-            # TODO we need the ability to send button up command for all
-            # buttons that have to be risen in mode change.
-
-        return list_of_hid_reports  # TODO
-
-    def cutfrom(key: int, elements: list):
-        """Expects that the key is in the elements list and
-        remove all elements after and including that position."""
-
-        i = elements.index(key)
-        while (len(elements) >= i):
-            elements.pop([i])
+        # the key press to add, and a value whether every previous key press
+        # should be cleaned
 
 
 class KeyboardManager:
@@ -333,6 +457,7 @@ def run(web_server_manager: WebServerManager, hid_data_socket: HidDataSocket, hi
 
     keypresses = ""
     keyspressed = 0
+    clean = False
     print("waiting for settings from web server thread")
     key_remapper = KeyRemapper(web_server_manager.get_settings_queue().get())
     print("received settings from web server thread")
@@ -352,10 +477,20 @@ def run(web_server_manager: WebServerManager, hid_data_socket: HidDataSocket, hi
             pass
 
         for event in keyboard_manager.get_key_events():
+
+            if event.value == 1:
+                web_server_manager.get_heatmap_queue().put_nowait(event.code)
+
             heatmap_key = str(event)[
                 str(event).find("code") + 5:str(event).find("code") + 7]
-            print(event)
-            new_keys_list = key_remapper.remap_key(event.code)
+            # print(event)
+
+            # profile handling
+            tuple_data = key_remapper.remap_key(event)
+            print(tuple_data)
+            new_keys_list = tuple_data[0]
+            clean = tuple_data[1]
+            # profile handling
 
             if len(new_keys_list) == 1:
                 key_list = new_keys_list[0]
@@ -365,7 +500,7 @@ def run(web_server_manager: WebServerManager, hid_data_socket: HidDataSocket, hi
                     for k in key_list:
                         hid_report.add_key(k)
                         keypresses += heatmap_key + "|"
-                        print(keypresses)
+                        # print(keypresses)
                         keyspressed += 1
                         if keyspressed == 10:
                             f = open('heatmap_data.txt', 'w')
@@ -381,7 +516,7 @@ def run(web_server_manager: WebServerManager, hid_data_socket: HidDataSocket, hi
                 if event.value == 1:
                     for report in new_keys_list:
                         key_list = report
-                        print(key_list)
+                        # print(key_list)
                         for k in key_list:
                             hid_report.add_key(k)
                             keypresses += heatmap_key + "|"
@@ -398,10 +533,12 @@ def run(web_server_manager: WebServerManager, hid_data_socket: HidDataSocket, hi
                             hid_report.remove_key(k)
                         send_and_reset_if_client_disconnected(
                             hid_data_socket, hid_report, keyboard_manager)
-                            # break
+                        # break
 
                 # pass
                 # TODO: Handle more complicated key remaps.
+        if clean:
+            hid_report.clear()
         send_and_reset_if_client_disconnected(
             hid_data_socket, hid_report, keyboard_manager)
         # break
@@ -426,21 +563,21 @@ def heatmap() -> None:
             heatmap_stats[int(key)] = int(val)
     statfile.close()
 
-    print(heatmap_stats)
+    # print(heatmap_stats)
 
     hmdata = open("heatmap_data.txt", 'r')
     statfile = open("heatmap_stats.txt", 'w')
     key_presses = hmdata.read().split('|')
     hmdata.close()
-    print(key_presses)
+    # print(key_presses)
 
     for kpress in key_presses:
         if kpress is not "":
             heatmap_stats[int(kpress)] = heatmap_stats[int((kpress).rstrip())]
             heatmap_stats[int(kpress)] += 1
-            print(heatmap_stats[int(kpress)])
+            # print(heatmap_stats[int(kpress)])
 
-    print(heatmap_stats)
+    # print(heatmap_stats)
 
     if heatmap_stats is not "":
         statfile.write(str(heatmap_stats))

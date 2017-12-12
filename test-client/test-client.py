@@ -8,6 +8,7 @@ HID_REPORT_SIZE_BYTES = 8
 
 # Functions
 
+
 def try_to_connect(socket_object: socket.SocketType, server_address: str, port_number: int) -> bool:
     try:
         socket_object.connect((server_address, port_number))
@@ -16,6 +17,7 @@ def try_to_connect(socket_object: socket.SocketType, server_address: str, port_n
         return False
     return True
 
+
 def connection_retry_loop(socket_object: socket.SocketType, server_address: str, port_number: int) -> None:
     while True:
         if try_to_connect(socket_object, server_address, port_number):
@@ -23,7 +25,8 @@ def connection_retry_loop(socket_object: socket.SocketType, server_address: str,
             break
         else:
             print("trying to reconnect to the server in 5 seconds")
-            time.sleep(5.0)
+            time.sleep(0.5)
+
 
 def main() -> None:
     if len(sys.argv) <= 2:
@@ -35,7 +38,7 @@ def main() -> None:
     server_address = sys.argv[1]
     port_number = int(sys.argv[2])
 
-    f = open('heatmap_data.txt','w')
+    f = open('heatmap_data.txt', 'w')
 
     try:
         print("trying to connect to the server")
@@ -51,10 +54,13 @@ def main() -> None:
                 print("server disconnected ")
                 print("trying to reconnect")
                 socket_object.close()
-                socket_object = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                connection_retry_loop(socket_object, server_address, port_number)
+                socket_object = socket.socket(
+                    socket.AF_INET, socket.SOCK_STREAM)
+                connection_retry_loop(
+                    socket_object, server_address, port_number)
             elif byte_count != HID_REPORT_SIZE_BYTES:
-                print("error: USB HID report size " + str(byte_count) + " bytes is unsupported")
+                print("error: USB HID report size " +
+                      str(byte_count) + " bytes is unsupported")
                 socket_object.close()
                 exit(-1)
             else:
@@ -71,7 +77,7 @@ def main() -> None:
                         print("     ", end='')
                     else:
                         print("{0:0=#4x} ".format(data[i]), end='')
-                        f.write("{0:0=#4x} ".format(data[i]))    
+                        f.write("{0:0=#4x} ".format(data[i]))
                 print("|")
 
     except OSError as error:

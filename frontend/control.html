@@ -25,6 +25,7 @@
 <button onclick="postKeys(parsePostdata(),'/')">Post</button>
 </div>
 <div class="helpwrapper">
+<<<<<<< HEAD
   <div class="innerwrapper" id="helpbox">In order to map keys, you must first choose a key from the visualized keyboard and then input the new key def to the textbox at bottom.</br></br>Use the keynames shown on the visualized keyboard, or alternatively, EVDEV-names.</br></br>For simultaneous keystrokes, separate keys with ':'. For separate strokes, use '|'. You can chain these if you want - examples: k:i:s:s:a, k:i:s:s:a|k|i|s|s|a, a:b:c|c:b:a. For quickly defining a string with no special symbols to a key, use write("string"). To repeat something, use repeat("",count). To insert delays, use delay(seconds).</br></br>To define a key that changes a profile, use Profiles("Profile-2") or with profile-IDs Profiles("2"). You may use either profile names or IDs. To define a mode change button, use Mode("Profile-1/1",booleanfortoggle).</br></br>In order to submit a change locally, click Submit. To post it to the server, click Post.</div>
   </div>
   <div class="optionswrapper" id="options">
@@ -32,11 +33,16 @@
       <button onclick="toggleDisplaymode()">Toggle display mode</button>
       <button onclick="toggleHeatmap()">Toggle heatmap</button>
       <button onclick="tempHeatmap()">Temporary heatmap</button>
+=======
+  <div class="innerwrapper" id="helpbox"></div>
+>>>>>>> 7d50d2306b414999ab51591c766cf0a1da1e0425
       </div>
-      </div>
+      <div class="optionswrapper" id="options">
+        <div class="innerwrapper">
+        <button onclick="toggleDisplaymode()">Toggle display mode</button>
+        <button onclick="toggleHeatmap()">Toggle heatmap</button>
+        </div>
 </div>
-</div>
-<body>
 <script src="script.js"></script>
 </body>
 </html>

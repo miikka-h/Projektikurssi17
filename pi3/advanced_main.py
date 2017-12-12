@@ -220,6 +220,8 @@ class KeyRemapper:
             self.settings)  # Profile ID mapped to index in the list
         self.current_profile = (
             -1, 0)  # TODO send current mode for the front end.
+        web_server_manager = WebServerManager()
+        web_server_manager.get_profile_queue().put_nowait(self.current_profile[1])
         self.old_profiles = OrderedDict([self.current_profile])
         self.forget = []
 
@@ -416,6 +418,12 @@ def run(web_server_manager: WebServerManager, hid_data_socket: HidDataSocket, hi
             new_settings = web_server_manager.get_settings_queue().get(
                 block=False)
             key_remapper.set_new_settings(new_settings)
+        except Empty:
+            pass
+
+        try:
+            current_profile = web_server_manager.get_profile_queue().get(block=False)
+
         except Empty:
             pass
 

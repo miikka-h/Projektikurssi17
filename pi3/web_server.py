@@ -20,8 +20,9 @@ class WebServerManager():
         web_server_settings = ("", 8080)
         self.settings_queue = Queue()
         self.heatmap_queue = Queue()
+        self.current_profile_queue = Queue()
         self.web_server_thread = Thread(group=None, target=WebServer, args=(
-            web_server_settings, self.settings_queue, self.heatmap_queue, self.exit_event))
+            web_server_settings, self.settings_queue, self.heatmap_queue, self.current_profile_queue, self.exit_event))
         self.web_server_thread.start()
 
     def close(self):
@@ -34,6 +35,9 @@ class WebServerManager():
 
     def get_heatmap_queue(self) -> Queue:
         return self.heatmap_queue
+
+    def get_profile_queue(self) -> Queue:
+        return self.current_profile_queue
 
 
 class Heatmap:
@@ -60,6 +64,7 @@ class Heatmap:
 
 HEATMAP_FILE_NAME = 'heatmap_stats.txt'
 PROFILE_DATA_FILE_NAME = 'data.txt'
+CURRENT_PROFILE_FILE_NAME = 'curprofile.txt'
 
 
 # Class WebServer inherits HTTPServer class which is from Python standard library.
@@ -71,7 +76,7 @@ class WebServer(HTTPServer):
 
     # Type annotations of this constructor are optional.
 
-    def __init__(self, address_and_port: Tuple[str, int], settings_queue: Queue, heatmap_queue: Queue, exit_event: Event) -> None:
+    def __init__(self, address_and_port: Tuple[str, int], settings_queue: Queue, heatmap_queue: Queue, current_profile_queue: Queue, exit_event: Event) -> None:
 
         # Run constructor from HTTPServer first. Note the RequestHandler class.
         super().__init__(address_and_port, RequestHandler)
@@ -80,6 +85,8 @@ class WebServer(HTTPServer):
         # them from RequestHandler's methods.
         self.settings_queue = settings_queue
 
+        self.current_profile_queue = current_profile_queue
+
         # Check exit event every 0.5 seconds if there is no new TCP
         # connections.
         self.timeout = 0.5
@@ -87,11 +94,17 @@ class WebServer(HTTPServer):
         # Initialize profiles
 
         self.settings = [{}]
-
+        
         if os.path.exists(PROFILE_DATA_FILE_NAME):
             with open(PROFILE_DATA_FILE_NAME, 'r') as profiles_file:
                 file_contents = profiles_file.read()
                 self.settings = json.loads(file_contents)
+
+        self.current_profile = 0
+        if os.path.exists(CURRENT_PROFILE_FILE_NAME):
+            with open(CURRENT_PROFILE_FILE_NAME, 'r') as curprofile_file:
+                file_contents = curprofile_file.read()
+                self.current_profile = json.loads(file_contents)
 
         # Initialize heatmap
 
@@ -106,6 +119,8 @@ class WebServer(HTTPServer):
         # Main thread is waiting for profiles/settings so lets send them.
         parse_mappedEvdevID_and_send_settings(
             self.settings, self.settings_queue)
+
+        set_current_profile(self.current_profile, self.current_profile_queue)
 
         print("web server running")
         while True:
@@ -134,6 +149,11 @@ class WebServer(HTTPServer):
         with open(HEATMAP_FILE_NAME, 'w') as outfile:
             outfile.write(self.heatmap.json_string())
 
+        # Save information about current profile.
+        with open(CURRENT_PROFILE_FILE_NAME, 'w') as outfile:
+            json.dump(self.current_profile, outfile)
+
+
         print("web server exited")
 
 
@@ -160,6 +180,10 @@ class RequestHandler(BaseHTTPRequestHandler):
         # get heatmap statistics in json form
         elif self.path == "/heatmap.api":
             text = self.server.heatmap.json_string()
+            message_bytes = text.encode()
+            self.send_utf8_bytes(message_bytes, "text/json")
+        elif self.path == "/curprofile.api":
+            text = str(self.server.current_profile)
             message_bytes = text.encode()
             self.send_utf8_bytes(message_bytes, "text/json")
         elif self.path == "/":
@@ -239,6 +263,9 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.wfile.flush()
 
 
+def set_current_profile(current_profile, current_profile_queue):
+    current_profile_queue.put_nowait(current_profile)
+
 def parse_mappedEvdevID_and_send_settings(profile_list, settings_queue):
     """
     Parse key "mappedEvdevID" value "1:2:3|4:5:6" to
@@ -288,3 +315,4 @@ def parse_mappedEvdevID_and_send_settings(profile_list, settings_queue):
 
     # Send new settings to main thread.
     settings_queue.put_nowait(new_settings)
+    

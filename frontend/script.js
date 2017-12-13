@@ -109,7 +109,8 @@ var chosenProfile;
 kbProfiles[0] = chosenProfile;
 var chosenKey = "";
 var heatmapModeOn = false;
-var tempheatmapModeOn = false;
+var oldactive = 1;
+var currheatmap = "";
 
 //Executes function calls when the page is loaded.
 window.onload = function() {
@@ -117,8 +118,34 @@ window.onload = function() {
     initiateKeyboard();
     addProfilecards();
     changeProfile(kbProfiles[0].profileID,document.getElementById("profile-" + kbProfiles[0].profileID));
-    document.getElementById("helpbox").innerHTML = 'In order to map keys, you must first choose a key from the visualized keyboard and then input the new key def to the textbox at bottom.</br></br>Use the keynames shown on the visualized keyboard, or alternatively, EVDEV-names.</br></br>For simultaneous keystrokes, separate keys with :. For separate strokes, use |. You can chain these if you want - examples: k:i:s:s:a, k:i:s:s:a|k|i|s|s|a, a:b:c|c:b:a. For quickly defining a string with no special symbols to a key, use write("string"). To repeat something, use repeat("",count). To insert delays, use delay(seconds).</br></br>To define a key that changes a profile, use Profiles("Profile-2") or with profile-IDs Profiles("2"). You may use either profile names or IDs. To define a mode change button, use Mode("Profile-1/1",booleanfortoggle).</br></br>In order to submit a change locally, click Submit. To post it to the server, click Post.';
-  };
+    var getActive = setInterval(function(){
+    refreshActiveprofile();
+    },3000);
+    createHelp("Basics",'In order to map keys, you must first choose a key from the visualized keyboard and then input the new key def to the textbox at bottom. Use the keynames shown on the visualized keyboard, or alternatively, EVDEV-names. For simultaneous keystrokes, separate keys with :. For separate strokes, use |. You can chain these if you want - examples: k:i:s:s:a, k:i:s:s:a|k|i|s|s|a, a:b:c|c:b:a.',1);
+    createHelp("Commands",'For quickly defining a string with no special symbols to a key, use write("string"). To repeat something, use repeat("",count). To insert delays, use delay(seconds).</br></br>To define a key that changes a profile, use Profiles("Profile-2") or with profile-IDs Profiles("2"). You may use either profile names or IDs. To define a mode change button, use Mode("Profile-1/1",booleanfortoggle).',2);
+    createHelp("Connectors, TL;DR","a|b - Separate reports. a:b - Same report.",3)
+    createHelp("Commands, TL;DR",'write(""),repeat("",int),delay(number),Profiles(int/string),Mode(int/string,bool)',4);
+};
+
+function createHelp(helpname,helptext,helpid){
+var wrapperdiv = document.createElement("div");
+var clickdiv = document.createElement("button");
+clickdiv.className = "helpclicker closed";
+clickdiv.setAttribute("helpID",helpid);
+clickdiv.textContent = helpname;
+clickdiv.addEventListener("click",function(){
+document.getElementById(this.getAttribute("helpID")).classList.toggle("hidden");
+this.classList.toggle("closed");
+this.classList.toggle("open");
+},false)
+var textcontainer = document.createElement("div");
+textcontainer.className = "helptext hidden";
+textcontainer.textContent = helptext;
+textcontainer.id = helpid;
+wrapperdiv.appendChild(clickdiv);
+wrapperdiv.appendChild(textcontainer);
+document.getElementById("helpbox").appendChild(wrapperdiv);
+}
 
 // Builds the visualized keyboard based on an array. Array has rows of keys, with each key containing two values - the displayed characters and the width in relation to a "normal" key.
 function initiateKeyboard() {
@@ -154,7 +181,7 @@ function initiateKeyboard() {
                 document.getElementById("buttonhelp-" + this.getAttribute("keyName")).textContent = "Mapped as: " + this.getAttribute("keyName");
                 } else {
                 if(chosenProfile.getKeybyName(this.getAttribute("keyName")).mappedEvdevName !== undefined){
-                document.getElementById("buttonhelp-" + this.getAttribute("keyName")).textContent = "Mapped as: " + chosenProfile.getKeybyName(this.getAttribute("keyName")).mappedEvdevName;
+                document.getElementById("buttonhelp-" + this.getAttribute("keyName")).textContent = "Mapped as: " + chosenProfile.getKeybyName(this.getAttribute("keyName")).mappedEvdevName.replace(/KEY_/g,"").toLowerCase();;
                 } else if (chosenProfile.getKeybyName(this.getAttribute("keyName")).toggle === true) {
                 document.getElementById("buttonhelp-" + this.getAttribute("keyName")).textContent = "Toggle profile: " + getProfilebyID(chosenProfile.getKeybyName(this.getAttribute("keyName")).profiles[0]).profileName;                    
                 } else {
@@ -291,9 +318,22 @@ function toggleDisplaymode(notify) {
     }
 }
 
+function refreshActiveprofile(){
+    var activeID = getJson('/curprofile.api');
+    activeID = parseInt(activeID);
+    if(getProfilebyID(activeID) !== false){
+    document.getElementById("profile-" + oldactive).classList.remove("activeprofile");
+    document.getElementById("profile-" + activeID).classList.add("activeprofile");
+    oldactive = activeID;
+    }
+}
+
 //Function that shows heatmap visualization on keyboard layout
-function toggleHeatmap(heatmapApi) {
+function toggleHeatmap(heatmapApi, isInterval) {
     //get heatmap statistics from json file
+    if (heatmapApi !== "") {
+        currheatmap = heatmapApi;
+    }
     var heatmapStats = getJson(heatmapApi);
    // var heatmapStats = '{"56": 8, "15": 24, "29": 57, "30": 48, "35": 9, "18": 10, "20": 17, "108": 11, "28": 16, "42": 45, "19": 35, "45": 2, "51": 7, "47": 11, "31": 37, "72": 2, "71": 2, "77": 2, "76": 1, "2": 3, "3": 19, "4": 1, "5": 1, "57": 58, "58": 14, "33": 13, "34": 11, "9": 11, "10": 8, "7": 5, "8": 6, "105": 41, "46": 16, "14": 65, "6": 10, "12": 8, "106": 26, "36": 1, "23": 5, "25": 13, "50": 5, "24": 8, "22": 18, "49": 7, "32": 5, "52": 7, "38": 13, "43": 3, "11": 11, "53": 4, "100": 4, "48": 3, "21": 2, "37": 4, "17": 4, "63": 1, "41": 31, "86": 1, "44": 5}';
     try{
@@ -328,7 +368,7 @@ function toggleHeatmap(heatmapApi) {
                           
                 if (chosenLayout.layoutArray[i][j][0]!== ""){
                 
-                if(!heatmapModeOn){
+                if(!heatmapModeOn || isInterval){
                 var comparenumber = heatmapIDs.indexOf(parseEvdevName(getRealname(chosenLayout.layoutArray[i][j][0])).toString());
                 var scalar = 0;
                 if (comparenumber >= 0)
@@ -357,7 +397,18 @@ function toggleHeatmap(heatmapApi) {
             }
         }
     }
-    heatmapModeOn = !heatmapModeOn;
+    if(isInterval !== true){
+        heatmapModeOn = !heatmapModeOn;
+    }
+    if(heatmapModeOn === true && isInterval !== true){
+      var pollHeatmap =  setInterval(function(){
+        if(heatmapModeOn === false){
+            clearInterval(pollHeatmap);
+            return;
+        }
+        toggleHeatmap(currheatmap, true);
+        }, 5000);
+    }
 }
 
 
@@ -701,7 +752,7 @@ function postKeys(data, urli) {
 //Prototype to load a profile
 function loadProfiles() {
     var profilesJsonInitial = getJson("/json.api");
-  //  var profilesJsonInitial = '[{}]'
+   // var profilesJsonInitial = '[{}]'
    // profilesJson[0] = new Profile("Profile-1", 1, []);
    try {
     profilesJson = JSON.parse(profilesJsonInitial);
@@ -801,11 +852,6 @@ function repeat(string,count){
     string  = string + "|" + oneCount;
     }
     return string;
-}
-
-//Creates error messages on the UI.
-window.onerror = function (errorMsg, url, lineNumber) {
-    createNotification('Error: ' + errorMsg,true);
 }
 
 //Used for defining a function that either browses profiles or toggles them.

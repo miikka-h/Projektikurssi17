@@ -226,7 +226,7 @@ class KeyRemapper:
         self.forget = []
 
     # New settings retunrs the first mod
-    def set_new_settings(self, settings) -> None:
+    def set_new_settings(self, settings, web_server_manager) -> None:
         """Argument `settings` is profile JSON dictionary."""
         if not ("keyData" in settings[0]):
             settings = [{'keyData': {}}]
@@ -240,7 +240,6 @@ class KeyRemapper:
         self.current_profile = (
             -1, first[0])  # TODO send current mode for the front end.
         self.old_profiles = OrderedDict([self.current_profile])
-        web_server_manager = WebServerManager()
         web_server_manager.get_profile_queue().put_nowait(self.current_profile[1])
         print("Lähetettiin seuraava profiili:")
         print(self.current_profile[1])
@@ -425,7 +424,7 @@ def run(web_server_manager: WebServerManager, hid_data_socket: HidDataSocket, hi
         try:
             new_settings = web_server_manager.get_settings_queue().get(
                 block=False)
-            key_remapper.set_new_settings(new_settings)
+            key_remapper.set_new_settings(new_settings, web_server_manager)
         except Empty:
             pass
 

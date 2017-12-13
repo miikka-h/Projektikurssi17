@@ -43,6 +43,7 @@ class WebServerManager():
 class Heatmap:
     def __init__(self):
         self.heatmap_data = {}
+        self.tempHeatmap_data = {}
 
     def add_keypress(self, evdev_id: int) -> None:
         key = str(evdev_id)
@@ -51,6 +52,12 @@ class Heatmap:
             self.heatmap_data[key] = self.heatmap_data[key] + 1
         except KeyError:
             self.heatmap_data[key] = 1
+
+        try:
+            self.tempHeatmap_data[key] = self.tempHeatmap_data[key] + 1
+        except KeyError:
+            self.tempHeatmap_data[key] = 1
+            
 
     def get_heatmap_data(self):
         return self.heatmap_data
@@ -61,8 +68,22 @@ class Heatmap:
     def set_heatmap_data(self, heatmap_data) -> None:
         self.heatmap_data = heatmap_data
 
+    def get_tempHeatmap_data(self):
+        return self.tempHeatmap_data
+
+    def json_tempString(self) -> str:
+        return json.dumps(self.tempHeatmap_data)
+
+    def set_tempHeatmap_data(self, tempHeatmap_data) -> None:
+        self.tempHeatmap_data = tempHeatmap_data
+
+
+    def reset_tempHeatmap_data(self) -> None:
+        self.tempHeatmap_data = {}
+
 
 HEATMAP_FILE_NAME = 'heatmap_stats.txt'
+#TEMPHEATMAT_FILE_NAME = 'temp_heatmap_stats.txt'
 PROFILE_DATA_FILE_NAME = 'data.txt'
 CURRENT_PROFILE_FILE_NAME = 'curprofile.txt'
 
@@ -136,6 +157,7 @@ class WebServer(HTTPServer):
                 while True:
                     evdev_id = heatmap_queue.get(block=False)
                     self.heatmap.add_keypress(evdev_id)
+                    
             except Empty:
                 pass
 
@@ -187,6 +209,15 @@ class RequestHandler(BaseHTTPRequestHandler):
         # get heatmap statistics in json form
         elif self.path == "/heatmap.api":
             text = self.server.heatmap.json_string()
+            message_bytes = text.encode()
+            self.send_utf8_bytes(message_bytes, "text/json")
+        elif self.path == "/resetHeatmap.api":
+            self.server.heatmap.reset_tempHeatmap_data()
+            text = self.server.heatmap.json_tempString()
+            message_bytes = text.encode()
+            self.send_utf8_bytes(message_bytes, "text/json")
+        elif self.path == "/tempHeatmap.api":
+            text = self.server.heatmap.json_tempString()
             message_bytes = text.encode()
             self.send_utf8_bytes(message_bytes, "text/json")
         elif self.path == "/curprofile.api":

@@ -154,8 +154,10 @@ function initiateKeyboard() {
                 } else {
                 if(chosenProfile.getKeybyName(this.getAttribute("keyName")).mappedEvdevName !== undefined){
                 document.getElementById("buttonhelp-" + this.getAttribute("keyName")).textContent = "Mapped as: " + chosenProfile.getKeybyName(this.getAttribute("keyName")).mappedEvdevName;
+                } else if (chosenProfile.getKeybyName(this.getAttribute("keyName")).toggle === true) {
+                document.getElementById("buttonhelp-" + this.getAttribute("keyName")).textContent = "Toggle profile: " + getProfilebyID(chosenProfile.getKeybyName(this.getAttribute("keyName")).profiles[0]).profileName;                    
                 } else {
-                document.getElementById("buttonhelp-" + this.getAttribute("keyName")).textContent = "Mapped as: Profiles, " + chosenProfile.getKeybyName(this.getAttribute("keyName")).profiles;                    
+                document.getElementById("buttonhelp-" + this.getAttribute("keyName")).textContent = "Switch profile: " + getProfilebyID(chosenProfile.getKeybyName(this.getAttribute("keyName")).profiles[0]).profileName;                    
                 }
             }
                 document.getElementById("buttonhelp-" + this.getAttribute("keyName")).style.display = "block";                
@@ -239,7 +241,14 @@ function addKeycard(keyName, mappedEvdevName, keyID) {
     }, false);
     keyCard.setAttribute("keyName", keyName);
     textCard.textContent = keyName + " - " + mappedEvdevName;
-    if(chosenProfile.getKeybyName(keyName).profiles !== undefined) textCard.textContent = keyName + " - " + "Profiles: " + chosenProfile.getKeybyName(keyName).profiles;
+ //   if(chosenProfile.getKeybyName(keyName).profiles !== undefined) textCard.textContent = keyName + " - " + "Profiles: " + chosenProfile.getKeybyName(keyName).profiles;
+
+                if (chosenProfile.getKeybyName(keyName).toggle === true) {
+                textCard.textContent = keyName + " - " + "Toggle profile: " + getProfilebyID(chosenProfile.getKeybyName(keyName).profiles[0]).profileName;                    
+                } else if (chosenProfile.getKeybyName(keyName).toggle === false) {
+                textCard.textContent = keyName + " - " + "Switch profile: " + getProfilebyID(chosenProfile.getKeybyName(keyName).profiles[0]).profileName;                    
+                }
+
     var deleteButton = document.createElement("button");
     deleteButton.className = "deletebutton";
     deleteButton.id = "delete-" + keyName;
@@ -399,6 +408,7 @@ function addProfilecard(profile) {
     profileCard.id = "profile-" + profile.profileID;
     profileCard.setAttribute("profileID", profile.profileID);
     profileCard.addEventListener("click", function() { //Adding a listener to the profile card.
+        document.getElementById("button-" + chosenKey).classList.remove("chosen");
         changeProfile(this.getAttribute("profileID"), this);
     }, false);
     var deleteButton = document.createElement("button");
@@ -463,6 +473,8 @@ function modifyKey(keyName) {
     }
     chosenKey = keyName;
     keyfield.textContent = keyName.replace("kp", "") + ":";
+    document.getElementById("inputmod").focus();
+    document.getElementById("inputmod").select();
 }
 
 //Deletes a key definition from the keydata, since we don't need "unmodifieds" - it's unnecessary information.
@@ -497,7 +509,12 @@ function submitMod() {
         if(chosenKeylocal.profiles !== undefined){
             delete chosenKeylocal.mappedEvdevName;
             delete chosenKeylocal.mappedEvdevID;
-            document.getElementById("keycard-" + chosenKey + "-text").textContent = chosenKeylocal.displayName + " - " + "Profiles: " + chosenKeylocal.profiles;
+        //    document.getElementById("keycard-" + chosenKey + "-text").textContent = chosenKeylocal.displayName + " - " + "Profiles: " + chosenKeylocal.profiles;
+                if (chosenProfile.getKeybyName(chosenKey).toggle === true) {
+                document.getElementById("keycard-" + chosenKey + "-text").textContent = chosenKeylocal.displayName + " - " + "Toggle profile: " + getProfilebyID(chosenProfile.getKeybyName(chosenKey).profiles[0]).profileName;                    
+                } else {
+                document.getElementById("keycard-" + chosenKey + "-text").textContent = chosenKeylocal.displayName + " - " + "Switch profile: " + getProfilebyID(chosenProfile.getKeybyName(chosenKey).profiles[0]).profileName;                    
+                }
         }
         if (chosenKeylocal.EvdevID == chosenKeylocal.mappedEvdevID) {
             deleteKey(chosenKeylocal);
@@ -665,7 +682,7 @@ function postKeys(data, urli) {
       };
 
       postRequest.onerror = function onError(e) {
-        createNotification("Error " + e.target.status + " occurred.",true);
+        createNotification("Error " + e.target.status + " occurred. Failed to post the keys. Check web server status.",true);
     }
     postRequest.open("POST", urli, true);
     postRequest.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
@@ -676,7 +693,7 @@ function postKeys(data, urli) {
 //Prototype to load a profile
 function loadProfiles() {
     var profilesJsonInitial = getJson("/json.api");
-   // var profilesJsonInitial = '[{}]'
+  //  var profilesJsonInitial = '[{}]'
    // profilesJson[0] = new Profile("Profile-1", 1, []);
    try {
     profilesJson = JSON.parse(profilesJsonInitial);
@@ -787,6 +804,7 @@ window.onerror = function (errorMsg, url, lineNumber) {
 function Profiles(profiles,toggle){
     var profilesArray = [];
     var profileIDArray = [];
+    profiles = profiles.toString();
     if(profiles.includes(",") && toggle !== true){
     profilesArray = profiles.split(',');
     } else {
@@ -815,6 +833,7 @@ function Profiles(profiles,toggle){
 
 //Can be used to make a button to work as shift or capslock.
 function Mode(profile,toggle){
+    profile = profile.toString();
     if(profile.includes(",")){
         profile = profile.split(',');
         profile = profile[0];

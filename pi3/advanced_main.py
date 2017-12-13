@@ -186,7 +186,9 @@ class KeyboardManager:
 
 
 def mapProfiles(settings):
-    profileMap = {}
+    """Profile ID mapped to index in the list in an OrderedDict"""
+
+    profileMap = OrderedDict()
     i = 0
     print(settings)
     while i < len(settings):
@@ -219,9 +221,7 @@ class KeyRemapper:
         self.profileMap = mapProfiles(
             self.settings)  # Profile ID mapped to index in the list
         self.current_profile = (
-            -1, 0)  # TODO send current mode for the front end.
-        web_server_manager = WebServerManager()
-        web_server_manager.get_profile_queue().put_nowait(self.current_profile[1])
+            -1, 0)
         self.old_profiles = OrderedDict([self.current_profile])
         self.forget = []
 
@@ -233,8 +233,12 @@ class KeyRemapper:
         self.settings = settings
         self.profileMap = mapProfiles(
             self.settings)  # Profile ID mapped to index in the list
+        first = self.profileMap.popitem(last=False)
+        print("profileMap and first index(ID) from there => " +
+              str(self.profileMap) + str(first))
+        self.profileMap[first[0]] = first[1]
         self.current_profile = (
-            -1, 0)  # TODO send current mode for the front end.
+            -1, first[0])  # TODO send current mode for the front end.
         self.old_profiles = OrderedDict([self.current_profile])
         self.forget = []
 

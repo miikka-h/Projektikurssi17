@@ -220,6 +220,8 @@ class KeyRemapper:
         self.settings = settings
         self.profileMap = mapProfiles(
             self.settings)  # Profile ID mapped to index in the list
+        # current_profile[0] = evdevId that was used to choose this profile if exists
+        # current_profile[1]= list location of the profile in settings
         self.current_profile = (
             -1, 0)
         self.old_profiles = OrderedDict([self.current_profile])
@@ -237,15 +239,18 @@ class KeyRemapper:
         print("profileMap and first index(ID) from there => " +
               str(self.profileMap) + str(first))
         self.profileMap[first[0]] = first[1]
+        # current_profile[0] = evdevId that was used to choose this profile if exists
+        # current_profile[1]= list location of the profile in settings
         self.current_profile = (
-            -1, first[0])  # TODO send current mode for the front end.
+            -1, 0)  # TODO send current mode for the front end.
         self.old_profiles = OrderedDict([self.current_profile])
-        web_server_manager.get_profile_queue().put_nowait(self.current_profile[1])
+        web_server_manager.get_profile_queue().put_nowait(
+            [first[0]])
         print("Lähetettiin seuraava profiili:")
         print(self.current_profile[1])
         self.forget = []
 
-    def remap_key(self, key_event) -> List[List[int]]:
+    def remap_key(self, key_event, web_server_manager) -> List[List[int]]:
         """
         REMAPS one key to multiple keys.
 
@@ -275,7 +280,12 @@ class KeyRemapper:
                 print("returned from a mode")
                 cutfrom(evdevId, self.old_profiles)
                 self.current_profile = self.old_profiles.popitem(
-                    last=True)  # TODO send current mode for the front end.
+                    last=True)  # TODO send current mode for the front end. Maybe unnecessary if.
+                if "profileID" in self.settings[self.current_profile[1]]:
+                    profileID = self.settings[self.current_profile[1]
+                                              ]["profileID"]
+                    web_server_manager.get_profile_queue().put_nowait(profileID)
+
                 self.old_profiles[
                     self.current_profile[0]] = self.current_profile[1]
                 return (empty_key, True)
@@ -308,6 +318,9 @@ class KeyRemapper:
                 return (empty_key, False)
 
             # Do we actually have settings for this button
+            # self.current_profile[0] => evdevID   self.current_profile[1] => indeksi
+            # self.current_profile[1] => profiili ID ?
+            print("kissa ei ole puussa" + str(self.current_profile))
             if str(evdevId) in self.settings[self.current_profile[1]]["keyData"]:
 
                 # the current "action" or "setting"
@@ -325,7 +338,11 @@ class KeyRemapper:
                                 self.forget.append(button)
                         self.current_profile = (
                             -1, self.profileMap[keyMapping["profiles"][0]])
-                        # TODO send current mode for the front end.
+                        # TODO send current mode for the front end. if Might not be needed.
+                        if "profileID" in self.settings[self.current_profile[1]]:
+                            profileID = self.settings[self.current_profile[1]
+                                                      ]["profileID"]
+                            web_server_manager.get_profile_queue().put_nowait(profileID)
                         print(self.current_profile)
                         self.old_profiles = OrderedDict([self.current_profile])
                         return (empty_key, True)
@@ -334,7 +351,12 @@ class KeyRemapper:
                     self.current_profile = (
                         evdevId, self.profileMap[keyMapping["profiles"][0]])
                     # TODO send current mode for the front end.
-
+                    if "profileID" in self.settings[self.current_profile[1]]:
+                        profileID = self.settings[self.current_profile[1]
+                                                  ]["profileID"]
+                        web_server_manager.get_profile_queue().put_nowait(profileID)
+                    web_server_manager.get_profile_queue().put_nowait(
+                        self.current_profile[1])
                     self.old_profiles[
                         self.current_profile[0]] = self.current_profile[1]
                     print(self.old_profiles)
@@ -349,6 +371,19 @@ class KeyRemapper:
         mapped_key = []
         mapped_key.append(key)  # type: List[List[int]]
         return(mapped_key, False)
+
+    def remap_key_delays_list(self, evdevID):
+        delayList = []
+        print(evdevID)
+        if str(evdevID) in self.settings[self.current_profile[1]]["keyData"]:
+            print(self.settings[self.current_profile[1]]["keyData"])
+            if "delay_list" in self.settings[self.current_profile[1]]["keyData"][str(evdevID)]:
+                print(self.settings[self.current_profile[1]]
+                      ["keyData"][str(evdevID)])
+                delayList = self.settings[self.current_profile[1]
+                                          ]["keyData"][str(evdevID)]["delay_list"]
+        print(delayList)
+        return delayList
 
 
 KEYBOARD_ADDED = 0
@@ -428,12 +463,6 @@ def run(web_server_manager: WebServerManager, hid_data_socket: HidDataSocket, hi
         except Empty:
             pass
 
-        try:
-            current_profile = web_server_manager.get_profile_queue().get(block=False)
-
-        except Empty:
-            pass
-
         for event in keyboard_manager.get_key_events():
             if event.value == 1:
                 web_server_manager.get_heatmap_queue().put_nowait(event.code)
@@ -442,7 +471,7 @@ def run(web_server_manager: WebServerManager, hid_data_socket: HidDataSocket, hi
                 #    continue
 
             # profile handling
-            tuple_data = key_remapper.remap_key(event)
+            tuple_data = key_remapper.remap_key(event, web_server_manager)
             print(tuple_data)
             new_keys_list = tuple_data[0]
             clean = tuple_data[1]
@@ -466,8 +495,8 @@ def run(web_server_manager: WebServerManager, hid_data_socket: HidDataSocket, hi
                         hid_data_socket, hid_report, keyboard_manager)
             else:
                 if event.value == 1:
-                    # delays_list = key_remapper.remap_key_delays_list(
-                    #    event.code)
+                    delays_list = key_remapper.remap_key_delays_list(
+                        event.code)
 
                     for i in range(0, len(new_keys_list)):
                         key_list = new_keys_list[i]
@@ -484,8 +513,8 @@ def run(web_server_manager: WebServerManager, hid_data_socket: HidDataSocket, hi
                         send_and_reset_if_client_disconnected(
                             hid_data_socket, hid_report, keyboard_manager)
 
-                        # if i < len(delays_list):
-                        #    time.sleep(delays_list[i])
+                        if i < len(delays_list):
+                            time.sleep(delays_list[i])
         if clean:
             hid_report.clear()
 

@@ -11,6 +11,16 @@ button{
     border-style:solid;
 }
 
+.title {
+    width: 100%;
+    text-align: center;
+    display:inline-block;
+    text-decoration: underline;
+    margin-bottom: 5px;
+    font-size: 1.2em;
+    color: white;
+}
+
 .rowwrapper {
     display:inline-flex;
     height:30px;

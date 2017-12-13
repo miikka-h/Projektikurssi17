@@ -123,7 +123,7 @@ window.onload = function() {
     },3000);
     createHelp("Basics",'In order to map keys, you must first choose a key from the visualized keyboard and then input the new key def to the textbox at bottom. Use the keynames shown on the visualized keyboard, or alternatively, EVDEV-names. For simultaneous keystrokes, separate keys with :. For separate strokes, use |. You can chain these if you want - examples: k:i:s:s:a, k:i:s:s:a|k|i|s|s|a, a:b:c|c:b:a.',1);
     createHelp("Commands",'For quickly defining a string with no special symbols to a key, use write("string"). To repeat something, use repeat("",count). To insert delays, use delay(seconds).</br></br>To define a key that changes a profile, use Profiles("Profile-2") or with profile-IDs Profiles("2"). You may use either profile names or IDs. To define a mode change button, use Mode("Profile-1/1",booleanfortoggle).',2);
-    createHelp("Connectors, TL;DR","a|b - Separate reports. a:b - Same report.",3)
+    createHelp("Connectors, TL;DR","a|b - Separate reports. a:b - Same report. $number - delay.",3)
     createHelp("Commands, TL;DR",'write(""),repeat("",int),delay(number),Profiles(int/string),Mode(int/string,bool)',4);
 };
 
@@ -624,20 +624,27 @@ function parseMapping(mapping, chosenKeylocal){
     } else {
     if(mapping.includes(":")){var mappingArray = mapping.split(":")} else {var mappingArray = []; mappingArray[0] = mapping;};
     for(var i = 0; i<mappingArray.length; i++){
-    if(getRealname(mappingArray[i])===undefined && mappingArray[i].includes("delay(") == false || mappingArray[i]==="" && mappingArray[i].includes("delay(") == false){
+    if(getRealname(mappingArray[i])===undefined && mappingArray[i].includes("delay(") == false  && mappingArray[i].includes("$")==false || mappingArray[i]==="" && mappingArray[i].includes("delay(") == false && mappingArray[i].includes("$")==false){
         createNotification("Invalid input with " + mappingArray[i] + "!",true);
         return chosenKeylocal.mappedEvdevName;
     } else {
         if(realnameString!==""){
-        if(mappingArray[i].includes("delay(") == false){
+        if(mappingArray[i].includes("delay(") == false && mappingArray[i].includes("$")==false){
         realnameString = realnameString + ":" + getRealname(mappingArray[i]);
+        } else if(mappingArray[i].includes("$")==true && !isNaN(mappingArray[i].substring(1, mappingArray[i].length-1))) {
+            realnameString = realnameString + ":" + mappingArray[i];
         } else {
-        realnameString = realnameString;
-        createNotification("Don't use delay with ':'!",true);
-        }
+            realnameString = realnameString;
+            createNotification("Don't use delay with ':'!",true);
+            }
         } else {
-        if(mappingArray[i].includes("delay(") == false){
+        if(mappingArray[i].includes("delay(") == false && mappingArray[i].includes("$")==false){
             realnameString = getRealname(mappingArray[i]);
+        } else if(mappingArray[i].includes("$")==true && !isNaN(mappingArray[i].substring(1, mappingArray[i].length-1))) {
+            realnameString = mappingArray[i];
+        } else if(mappingArray[i].includes("$")==true && isNaN(mappingArray[i].substring(1, mappingArray[i].length-1))) {
+            createNotification("Invalid input after $!",true);
+            return chosenKeylocal.mappedEvdevName;
         } else {
             realnameString = eval(mappingArray[i]);
         }

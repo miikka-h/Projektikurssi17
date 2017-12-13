@@ -631,8 +631,6 @@ function parseMapping(mapping, chosenKeylocal){
         if(realnameString!==""){
         if(mappingArray[i].includes("delay(") == false && mappingArray[i].includes("$")==false){
         realnameString = realnameString + ":" + getRealname(mappingArray[i]);
-        } else if(mappingArray[i].includes("$")==true && !isNaN(mappingArray[i].substring(1, mappingArray[i].length))) {
-            realnameString = realnameString + ":" + mappingArray[i];
         } else {
             realnameString = realnameString;
             createNotification("Don't use delay with ':'!",true);

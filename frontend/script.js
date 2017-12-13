@@ -631,7 +631,7 @@ function parseMapping(mapping, chosenKeylocal){
         if(realnameString!==""){
         if(mappingArray[i].includes("delay(") == false && mappingArray[i].includes("$")==false){
         realnameString = realnameString + ":" + getRealname(mappingArray[i]);
-        } else if(mappingArray[i].includes("$")==true && !isNaN(mappingArray[i].substring(1, mappingArray[i].length-1))) {
+        } else if(mappingArray[i].includes("$")==true && !isNaN(mappingArray[i].substring(1, mappingArray[i].length))) {
             realnameString = realnameString + ":" + mappingArray[i];
         } else {
             realnameString = realnameString;
@@ -640,9 +640,9 @@ function parseMapping(mapping, chosenKeylocal){
         } else {
         if(mappingArray[i].includes("delay(") == false && mappingArray[i].includes("$")==false){
             realnameString = getRealname(mappingArray[i]);
-        } else if(mappingArray[i].includes("$")==true && !isNaN(mappingArray[i].substring(1, mappingArray[i].length-1))) {
+        } else if(mappingArray[i].includes("$")==true && !isNaN(mappingArray[i].substring(1, mappingArray[i].length))) {
             realnameString = mappingArray[i];
-        } else if(mappingArray[i].includes("$")==true && isNaN(mappingArray[i].substring(1, mappingArray[i].length-1))) {
+        } else if(mappingArray[i].includes("$")==true && isNaN(mappingArray[i].substring(1, mappingArray[i].length))) {
             createNotification("Invalid input after $!",true);
             return chosenKeylocal.mappedEvdevName;
         } else {

@@ -100,7 +100,7 @@ class WebServer(HTTPServer):
                 file_contents = profiles_file.read()
                 self.settings = json.loads(file_contents)
 
-        self.current_profile = 0
+        self.current_profile = 1
         if os.path.exists(CURRENT_PROFILE_FILE_NAME):
             with open(CURRENT_PROFILE_FILE_NAME, 'r') as curprofile_file:
                 file_contents = curprofile_file.read()
@@ -138,6 +138,13 @@ class WebServer(HTTPServer):
                     self.heatmap.add_keypress(evdev_id)
             except Empty:
                 pass
+
+            try:
+                while True:
+                    self.current_profile = current_profile_queue.get(block=False)
+                    print("kissa istuu puussa " + str(self.current_profile))                    
+            except Empty:
+                pass    
 
         self.server_close()
 
@@ -218,6 +225,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         parse_mappedEvdevID_and_send_settings(
             self.server.settings, self.server.settings_queue)
+        print("abcdefghijklmn")
 
 #        # prepare the loaded settings data for usage with hid data.
 #

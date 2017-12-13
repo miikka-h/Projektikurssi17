@@ -339,7 +339,7 @@ def parse_mappedEvdevID_and_send_settings(profile_list, settings_queue):
                 if key_string[:1] == "$":
                     if len(key_string) > 1:
                         delay_number_string = key_string[1:]
-                        delay_number = int(delay_number_string)
+                        delay_number = float(delay_number_string)
                         delay_list.pop()
                         delay_list.append(delay_number)
                     continue

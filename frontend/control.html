@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -10,10 +11,12 @@
 <div class="wrapper" id="bigwrap">
 <div class="inputwrapper" id="inputwrap"><textarea readonly class="areainput" id="ainput"></textarea></div>
 <div class="profilewrapper" id="profwrap">
-<div class="innerwrapper" id="profcards"></div>
+<div class="title">PROFILES</div>
+<div class="innerwrapper titlewrapper" id="profcards"></div>
 </div>
 <div class="keyexpwrapper" id="keyexpwrap">
-<div class="innerwrapper" id="keydefs"></div>
+<div class="title">BINDINGS</div>
+<div class="innerwrapper titlewrapper" id="keydefs"></div>
 </div>
 <div class="keyboardwrapper" id="kbwrap"></div>
 <div class="submitchangeswrapper" id="scwrap">
@@ -25,13 +28,15 @@
 <button onclick="postKeys(parsePostdata(),'/')">Post</button>
 </div>
 <div class="helpwrapper">
-    <div class="innerwrapper" id="helpbox"></div>
+    <div class="title">HELP</div>
+    <div class="innerwrapper titlewrapper" id="helpbox"></div>
   </div>
   <div class="optionswrapper" id="options">
       <div class="innerwrapper">
       <button onclick="toggleDisplaymode()">Toggle display mode</button>
-      <button onclick="toggleHeatmap()">Toggle heatmap</button>
-      <button onclick="tempHeatmap()">Temporary heatmap</button>
+      <button onclick="toggleHeatmap('heatmap.api')">Toggle heatmap</button>
+      <button onclick="toggleHeatmap('tempHeatmap.api')">Toggle temporary heatmap</button>
+      <button onclick="toggleHeatmap('resetHeatmap.api')">Reset temporary heatmap</button>
 
       </div>
     </div>

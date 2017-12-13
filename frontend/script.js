@@ -109,6 +109,7 @@ var chosenProfile;
 kbProfiles[0] = chosenProfile;
 var chosenKey = "";
 var heatmapModeOn = false;
+var tempheatmapModeOn = false;
 
 //Executes function calls when the page is loaded.
 window.onload = function() {
@@ -291,9 +292,9 @@ function toggleDisplaymode(notify) {
 }
 
 //Function that shows heatmap visualization on keyboard layout
-function toggleHeatmap() {
+function toggleHeatmap(heatmapApi) {
     //get heatmap statistics from json file
-    var heatmapStats = getJson("/heatmap.api");
+    var heatmapStats = getJson(heatmapApi);
    // var heatmapStats = '{"56": 8, "15": 24, "29": 57, "30": 48, "35": 9, "18": 10, "20": 17, "108": 11, "28": 16, "42": 45, "19": 35, "45": 2, "51": 7, "47": 11, "31": 37, "72": 2, "71": 2, "77": 2, "76": 1, "2": 3, "3": 19, "4": 1, "5": 1, "57": 58, "58": 14, "33": 13, "34": 11, "9": 11, "10": 8, "7": 5, "8": 6, "105": 41, "46": 16, "14": 65, "6": 10, "12": 8, "106": 26, "36": 1, "23": 5, "25": 13, "50": 5, "24": 8, "22": 18, "49": 7, "32": 5, "52": 7, "38": 13, "43": 3, "11": 11, "53": 4, "100": 4, "48": 3, "21": 2, "37": 4, "17": 4, "63": 1, "41": 31, "86": 1, "44": 5}';
     try{
     //Parse heatmap stats in to a dict
@@ -341,6 +342,13 @@ function toggleHeatmap() {
                 button.style.color = "white";
                 button.style.boxShadow = "0px 0px " + parseInt(25 + Math.round(scalar*25)) + "px " + button.style.backgroundColor + ",0px 0px " + parseInt(25 + Math.round(scalar*25)) + "px " + button.style.backgroundColor;
             }
+            else if (heatmapStats == "") {
+                button.style.backgroundColor = "";
+                button.style.color = "";
+                button.style.boxShadow = "";
+                heatmapModeOn = !heatmapModeOn;
+            }
+
             else {
                 button.style.backgroundColor = "";
                 button.style.color = "";
@@ -350,8 +358,8 @@ function toggleHeatmap() {
         }
     }
     heatmapModeOn = !heatmapModeOn;
-
 }
+
 
 // Adds new profile cards, deleting any that had been there before.
 function addProfilecards() {

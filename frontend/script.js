@@ -122,9 +122,14 @@ window.onload = function() {
     refreshActiveprofile();
     },3000);
     createHelp("Basics",'In order to map keys, you must first choose a key from the visualized keyboard and then input the new key def to the textbox at bottom. Use the keynames shown on the visualized keyboard, or alternatively, EVDEV-names. For simultaneous keystrokes, separate keys with :. For separate strokes, use |. You can chain these if you want - examples: k:i:s:s:a, k:i:s:s:a|k|i|s|s|a, a:b:c|c:b:a.',1);
-    createHelp("Commands",'For quickly defining a string with no special symbols to a key, use write("string"). To repeat something, use repeat("",count). To insert delays, use delay(seconds).</br></br>To define a key that changes a profile, use Profiles("Profile-2") or with profile-IDs Profiles("2"). You may use either profile names or IDs. To define a mode change button, use Mode("Profile-1/1",booleanfortoggle).',2);
+    createHelp("Submitting your changes",'To submit changes, simply press enter while the text field is active, or alternatively press the "Submit" or "Post" button.',5)
+    createHelp("Deleting and editing",'You can delete profiles and keydefs by clicking the "x" buttons. Defining a key to the original value will also delete the definition. You can change the profile names with the edit buttons on the tags, and you can re-edit a key by either normally selecting it from the board or selecting the key definition card.',6);
+    createHelp("Defining a profile change button",'A normal change: Mode("Profile name"/Profile ID,true) or Profiles("Profile name"/Profile ID,true). A shift type change: Mode("Profile name"/Profile ID) or Profiles("Profile name"/Profile ID,true).',7)
+    createHelp("Commands",'For quickly defining a string with no special symbols to a key, use write("string"). To repeat something, use repeat("",count) - if you wish to do separate reports inside repeat, use > instead of |. To insert delays, use delay(seconds). To define a key that changes a profile, use Profiles("Profile-2") or with profile-IDs Profiles("2"). You may use either profile names or IDs. To define a mode change button, use Mode("Profile-1/1",booleanfortoggle).',2);
     createHelp("Connectors, TL;DR","a|b - Separate reports. a:b - Same report. $number - delay.",3)
-    createHelp("Commands, TL;DR",'write(""),repeat("",int),delay(number),Profiles(int/string),Mode(int/string,bool)',4);
+    createHelp("Commands, TL;DR",'write(""),w(""),repeat("",int),delay(number),Profiles(int/string),Mode(int/string,bool)',4);
+    createHelp("Heatmaps",'You can toggle either a long term heatmap or temporary heatmap. Temporary heatmaps will not be saved and will only connect data until you reset it. The long term heatmap requires file removal to be reset, as it is supposed to be the all-time data.',8);
+    createHelp("Display mode",'The display mode toggle toggles between original names on the visualized keyboard and the mapped definitions.',9);
 };
 
 function createHelp(helpname,helptext,helpid){
@@ -181,7 +186,7 @@ function initiateKeyboard() {
                 document.getElementById("buttonhelp-" + this.getAttribute("keyName")).textContent = "Mapped as: " + this.getAttribute("keyName");
                 } else {
                 if(chosenProfile.getKeybyName(this.getAttribute("keyName")).mappedEvdevName !== undefined){
-                document.getElementById("buttonhelp-" + this.getAttribute("keyName")).textContent = "Mapped as: " + chosenProfile.getKeybyName(this.getAttribute("keyName")).mappedEvdevName.replace(/KEY_/g,"").toLowerCase();;
+                document.getElementById("buttonhelp-" + this.getAttribute("keyName")).textContent = "Mapped as: " + chosenProfile.getKeybyName(this.getAttribute("keyName")).mappedEvdevName.replace(/KEY_/g,"").toLowerCase();
                 } else if (chosenProfile.getKeybyName(this.getAttribute("keyName")).toggle === true) {
                 document.getElementById("buttonhelp-" + this.getAttribute("keyName")).textContent = "Toggle profile: " + getProfilebyID(chosenProfile.getKeybyName(this.getAttribute("keyName")).profiles[0]).profileName;                    
                 } else {
@@ -268,7 +273,7 @@ function addKeycard(keyName, mappedEvdevName, keyID) {
         document.getElementById("button-" + chosenKey).classList.add("chosen");
     }, false);
     keyCard.setAttribute("keyName", keyName);
-    textCard.textContent = keyName + " - " + mappedEvdevName;
+    textCard.textContent = keyName + " - " + chosenProfile.getKeybyName(keyName).mappedEvdevName.replace(/KEY_/g,"").toLowerCase();
  //   if(chosenProfile.getKeybyName(keyName).profiles !== undefined) textCard.textContent = keyName + " - " + "Profiles: " + chosenProfile.getKeybyName(keyName).profiles;
 
                 if (chosenProfile.getKeybyName(keyName).toggle === true) {
@@ -305,8 +310,8 @@ function toggleDisplaymode(notify) {
                 if (chosenLayout.realNames === false && chosenProfile.getKeybyName(chosenLayout.layoutArray[i][j][0]) !== undefined) {
                     if(chosenProfile.getKeybyName(chosenLayout.layoutArray[i][j][0]).mappedEvdevName !== undefined){
                     var getLayoutnameinput = chosenProfile.getKeybyName(chosenLayout.layoutArray[i][j][0]).mappedEvdevName;
-                    getLayoutnameinput = getLayoutnameinput.replace(/KEY_/g, "");
-                    button.textContent = getLayoutnameinput;
+                    getLayoutnameinput = getLayoutnameinput.replace(/KEY_/g, "").toLowerCase();;
+                    button.textContent = getLayoutnameinput.toLowerCase();
                     } else {
                     var getLayoutnameinput = "Profile: " + chosenProfile.getKeybyName(chosenLayout.layoutArray[i][j][0]).profiles;
                     button.textContent = getLayoutnameinput;
@@ -477,7 +482,7 @@ function addProfilecard(profile) {
     editButton.id = "edit-" + profile.profileID;
     deleteButton.id = "delete-" + profile.profileID;
     editButton.setAttribute("profileID", profile.profileID);
-    editButton.textContent = "Edit";
+    editButton.textContent = "Name";
     deleteButton.setAttribute("profileID", profile.profileID);
     deleteButton.textContent = "x";
     deleteButton.addEventListener("click", function() { //Adding a listener to the button that deletes the profile.
@@ -556,14 +561,14 @@ function submitMod() {
         var mapping = document.getElementById("inputmod").value;
         var chosenKeylocal = chosenProfile.getKeybyName(chosenKey);
         var button = document.getElementById("button-" + chosenKey);
-        if(mapping.includes("Profiles(") || mapping.includes("Mode(")){
+        if(mapping.includes("Profiles(") || mapping.includes("Mode(") || mapping.includes("profiles(") ){
             chosenKeylocal.profiles = eval(mapping);
         } else {
             delete chosenKeylocal.profiles;
             delete chosenKeylocal.toggle;
             chosenKeylocal.mappedEvdevName = parseMapping(mapping, chosenKeylocal);
             chosenKeylocal.mappedEvdevID = parseEvdevName(chosenKeylocal.mappedEvdevName);
-            document.getElementById("keycard-" + chosenKey + "-text").textContent = chosenKeylocal.displayName + " - " + chosenKeylocal.mappedEvdevName;
+            document.getElementById("keycard-" + chosenKey + "-text").textContent = chosenKeylocal.displayName + " - " +  chosenKeylocal.mappedEvdevName.replace(/KEY_/g,"").toLowerCase();
         }
         if(chosenKeylocal.profiles !== undefined){
             delete chosenKeylocal.mappedEvdevName;
@@ -580,7 +585,7 @@ function submitMod() {
             button.textContent = chosenKeylocal.displayName;
         }
         if (chosenLayout.realNames === false) {
-            button.textContent = chosenKeylocal.mappedEvdevName.replace(/KEY_/g, "");
+            button.textContent = chosenKeylocal.mappedEvdevName.replace(/KEY_/g, "").toLowerCase();
         }
         document.getElementById("ainput").textContent = JSON.stringify(parsePostdata(), null, 4);
     postKeys(parsePostdata(),"/update-profile");
@@ -610,10 +615,10 @@ function getProfilebyName(profileName) {
 //Parses the string sent from submit, splitting it at designated char and then searching for the 'real names' or 'evdev names' of the mapped keystrokes, returning the resulting string of all those names.
 function parseMapping(mapping, chosenKeylocal){
     var realnameString = "";
-    if (mapping.includes("|") || mapping.includes("write(") || mapping.includes("repeat(")) {
+    if (mapping.includes("|") || mapping.includes("write(") || mapping.includes("repeat(") || mapping.includes("w(")) {
         var mappingArray = mapping.split("|");
         for (var i = 0; i < mappingArray.length; i++) {
-            if(mappingArray[i].includes("write(") || mappingArray[i].includes("repeat(")) mappingArray[i] = eval(mappingArray[i]);
+            if(mappingArray[i].includes("write(") || mappingArray[i].includes("repeat(") || mappingArray[i].includes("w(")) mappingArray[i] = eval(mappingArray[i]);
             if (realnameString !== "" && realnameString.slice(-1)!=="|") {
                 realnameString = realnameString + ":" + parseMapping(mappingArray[i]);
             } else {
@@ -848,10 +853,19 @@ function write(string){
 } catch(err) {
     createNotification(err,true);
 }
-    }
+}
+
+function w(string){
+    return write(string);
+}
 
 //Function to repeat a string or key.
 function repeat(string,count){
+    string = string.replace(/>/g,'|');
+    if(count>50){
+        count=50;
+        createNotification("Unreasonably high amount of repeats! Limiting to fifty.",true);
+    }
     var oneCount = string;
     for(var i = 1; i<count; i++){
     string  = string + "|" + oneCount;
@@ -888,6 +902,10 @@ function Profiles(profiles,toggle){
         chosenProfile.getKeybyName(chosenKey).toggle = false;
     }
     return profileIDArray;
+}
+
+function profiles(profiles,toggle){
+    return Profiles(profiles,toggle);
 }
 
 //Can be used to make a button to work as shift or capslock.

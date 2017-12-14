@@ -273,13 +273,15 @@ function addKeycard(keyName, mappedEvdevName, keyID) {
         document.getElementById("button-" + chosenKey).classList.add("chosen");
     }, false);
     keyCard.setAttribute("keyName", keyName);
-    textCard.textContent = keyName + " - " + chosenProfile.getKeybyName(keyName).mappedEvdevName.replace(/KEY_/g,"").toLowerCase();
+    
  //   if(chosenProfile.getKeybyName(keyName).profiles !== undefined) textCard.textContent = keyName + " - " + "Profiles: " + chosenProfile.getKeybyName(keyName).profiles;
 
                 if (chosenProfile.getKeybyName(keyName).toggle === true) {
                 textCard.textContent = keyName + " - " + "Toggle profile: " + getProfilebyID(chosenProfile.getKeybyName(keyName).profiles[0]).profileName;                    
                 } else if (chosenProfile.getKeybyName(keyName).toggle === false) {
                 textCard.textContent = keyName + " - " + "Switch profile: " + getProfilebyID(chosenProfile.getKeybyName(keyName).profiles[0]).profileName;                    
+                } else {
+                    textCard.textContent = keyName + " - " + chosenProfile.getKeybyName(keyName).mappedEvdevName.replace(/KEY_/g,"").toLowerCase();
                 }
 
     var deleteButton = document.createElement("button");
@@ -325,6 +327,8 @@ function toggleDisplaymode(notify) {
 
 function refreshActiveprofile(){
     var activeID = getJson('/curprofile.api');
+  // var activeID = "[1]";
+    if(activeID.includes('[')) activeID = JSON.parse(activeID);
     activeID = parseInt(activeID);
     if(getProfilebyID(activeID) !== false){
     document.getElementById("profile-" + oldactive).classList.remove("activeprofile");
@@ -852,6 +856,7 @@ function write(string){
     return newString;
 } catch(err) {
     createNotification(err,true);
+    return "";
 }
 }
 
